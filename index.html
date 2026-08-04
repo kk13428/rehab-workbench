@@ -34,7 +34,8 @@ body{
 .appbar .sub{font-size:11px;opacity:.85;margin-top:1px}
 .appbar .pt{
   margin-left:auto;font-size:11px;background:rgba(255,255,255,.18);
-  padding:4px 10px;border-radius:20px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;
+  padding:4px 10px;border-radius:20px;white-space:nowrap;max-width:150px;
+  overflow:hidden;text-overflow:ellipsis;cursor:pointer;border:none;color:#fff;
 }
 /* ---- content ---- */
 main{max-width:520px;margin:0 auto;padding:14px 14px 24px}
@@ -73,7 +74,7 @@ main{max-width:520px;margin:0 auto;padding:14px 14px 24px}
 .pills input{display:none}
 .pills input:checked + span{color:#fff}
 .pills label:has(input:checked){background:var(--primary);border-color:var(--primary);color:#fff}
-/* ---- slider ---- */
+/* slider */
 .slider-row{display:flex;align-items:center;gap:12px}
 input[type=range]{
   -webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:3px;
@@ -88,7 +89,7 @@ input[type=range]::-webkit-slider-thumb{
   padding:7px 6px;border-radius:10px;font-size:15px;flex:none;
 }
 .slider-hint{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
-/* ---- checklist / exam ---- */
+/* checklist / exam */
 .exam-item{
   display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px dashed var(--line);
 }
@@ -103,6 +104,14 @@ input[type=range]::-webkit-slider-thumb{
 .exam-item .deg{display:none;flex:none}
 .exam-item .deg.show{display:block}
 .exam-item select{padding:7px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;background:#fff;outline:none}
+/* imaging pills */
+.img-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.img-pills label{
+  padding:8px 14px;border:1.5px solid var(--line);border-radius:20px;font-size:13px;
+  color:var(--muted);cursor:pointer;transition:all .15s;background:#fbfcfe;
+}
+.img-pills input{display:none}
+.img-pills label:has(input:checked){background:var(--primary);border-color:var(--primary);color:#fff}
 /* video card */
 .video-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .vcard{
@@ -114,7 +123,7 @@ input[type=range]::-webkit-slider-thumb{
 }
 .vcard .vt{padding:8px 10px;font-size:12px;font-weight:600}
 .vcard .vt small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
-/* ---- scale chips & filter ---- */
+/* scale chips & filter */
 .filter{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
 .fchip{
   flex:none;padding:7px 14px;border-radius:20px;border:1.5px solid var(--line);background:#fff;
@@ -135,7 +144,20 @@ input[type=range]::-webkit-slider-thumb{
 .scale-card .sn small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
 .scale-items{display:none;margin:-4px 0 14px;padding:14px;background:#f8fbfe;border:1px dashed var(--line);border-radius:12px}
 .scale-items.show{display:block}
-/* ---- plan ---- */
+/* score items */
+.score-item{padding:12px 0;border-bottom:1px dashed var(--line)}
+.score-item:last-child{border-bottom:none}
+.score-item .q{font-size:13.5px;font-weight:600;margin-bottom:8px}
+.score-item .q small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
+.scale-total{
+  display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-top:12px;
+  background:#eef4ff;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--primary);
+}
+.scale-total .grade{padding:3px 10px;border-radius:14px;font-size:12px;color:#fff}
+.grade.g1{background:var(--ok)}
+.grade.g2{background:var(--warn)}
+.grade.g3{background:var(--danger)}
+/* plan */
 .phase{
   border:1.5px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden;background:#fff;
 }
@@ -157,7 +179,7 @@ input[type=range]::-webkit-slider-thumb{
   border-radius:20px;padding:6px 12px;font-size:12.5px;margin:0 6px 6px 0;
 }
 .tchip .x{cursor:pointer;font-weight:700;opacity:.7}
-/* ---- buttons ---- */
+/* buttons */
 .btn{
   display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;
   background:var(--primary);color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(30,111,217,.28);
@@ -167,7 +189,7 @@ input[type=range]::-webkit-slider-thumb{
 .btn.ghost{background:#fff;color:var(--primary);border:1.5px solid var(--primary);box-shadow:none}
 .btn-row{display:flex;gap:10px}
 .btn-row .btn{flex:1}
-/* ---- report ---- */
+/* report */
 .report{
   background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;border:1px solid var(--line);
 }
@@ -180,7 +202,7 @@ input[type=range]::-webkit-slider-thumb{
 .report .kv .k{flex:none;width:88px;color:var(--muted)}
 .report .kv .v{flex:1}
 .report .note{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px}
-/* ---- bottom nav ---- */
+/* bottom nav */
 .tabbar{
   position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;
   border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -191,7 +213,7 @@ input[type=range]::-webkit-slider-thumb{
 }
 .tab .ic{font-size:19px;line-height:1}
 .tab.on{color:var(--primary);font-weight:700;background:#eef4ff}
-/* ---- modal ---- */
+/* modal */
 .modal-mask{
   position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:40;display:none;
   align-items:flex-end;justify-content:center;
@@ -199,7 +221,7 @@ input[type=range]::-webkit-slider-thumb{
 .modal-mask.show{display:flex}
 .modal{
   background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px;
-  animation:slideup .25s ease;
+  animation:slideup .25s ease;max-height:80vh;overflow-y:auto;
 }
 @keyframes slideup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 .modal h3{font-size:16px;margin-bottom:12px}
@@ -214,7 +236,24 @@ input[type=range]::-webkit-slider-thumb{
 }
 .video-box .vb-note{font-size:12px;opacity:.85;padding:0 20px;text-align:center}
 .modal .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6}
-/* ---- print ---- */
+/* patient list */
+.plist .pcard{
+  display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--line);
+  border-radius:12px;margin-bottom:10px;background:#fff;cursor:pointer;transition:all .15s;
+}
+.plist .pcard.on{border-color:var(--primary);background:#f0f7ff}
+.plist .pcard .pav{
+  width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex:none;
+}
+.plist .pcard .pn{flex:1;font-size:14px;font-weight:600}
+.plist .pcard .pn small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
+.plist .pcard .del{
+  padding:6px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:12px;color:var(--danger);
+  background:#fff;cursor:pointer;flex:none;
+}
+.plist .pcard .del:hover{border-color:var(--danger)}
+/* print */
 @media print{
   body{padding:0;background:#fff}
   .appbar,.tabbar,.btn-row,.modal-mask{display:none !important}
@@ -224,7 +263,6 @@ input[type=range]::-webkit-slider-thumb{
   .report{box-shadow:none;border:none;padding:0}
   .card{box-shadow:none}
 }
-/* empty state */
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 0}
 </style>
 </head>
@@ -236,7 +274,7 @@ input[type=range]::-webkit-slider-thumb{
     <div class="t">康复临床工作台</div>
     <div class="sub">S·O·A·P 一体化评估工具</div>
   </div>
-  <div class="pt" id="appPatient">未录入</div>
+  <button class="pt" id="appPatient" title="切换患者">未选择患者</button>
 </div>
 
 <main>
@@ -247,11 +285,11 @@ input[type=range]::-webkit-slider-thumb{
       <div class="row">
         <div class="field">
           <label>姓名</label>
-          <input type="text" id="fName" placeholder="请输入姓名" value="张三">
+          <input type="text" id="fName" placeholder="请输入姓名">
         </div>
         <div class="field" style="flex:.6">
           <label>年龄</label>
-          <input type="number" id="fAge" min="1" max="120" value="45">
+          <input type="number" id="fAge" min="1" max="120">
         </div>
       </div>
       <div class="field">
@@ -264,15 +302,24 @@ input[type=range]::-webkit-slider-thumb{
       </div>
       <div class="field">
         <label>主诉 / 基本情况</label>
-        <textarea id="fComplaint" placeholder="如：腰痛伴右下肢放射痛 2 周">腰痛伴右下肢放射痛 2 周</textarea>
+        <textarea id="fComplaint" placeholder="如：腰痛伴右下肢放射痛 2 周"></textarea>
       </div>
       <div class="field">
         <label>VAS 疼痛评分（0-10）</label>
         <div class="slider-row">
-          <input type="range" id="fVas" min="0" max="10" step="0.5" value="6">
-          <div class="slider-val" id="vasVal">6</div>
+          <input type="range" id="fVas" min="0" max="10" step="0.5" value="0">
+          <div class="slider-val" id="vasVal">0</div>
         </div>
         <div class="slider-hint"><span>无痛</span><span>剧痛</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="n">◈</span>影像学检查</h3>
+      <div class="step-desc">勾选已做的影像学检查，填写检查所见</div>
+      <div class="img-pills" id="imgTypes"></div>
+      <div class="field">
+        <label>检查所见 / 影像学发现</label>
+        <textarea id="fImg" placeholder="如：L4/5 椎间盘突出，神经根受压"></textarea>
       </div>
     </div>
   </section>
@@ -348,6 +395,16 @@ input[type=range]::-webkit-slider-thumb{
   <div class="tab" data-sec="sec-report"><span class="ic">📄</span>报告导出</div>
 </div>
 
+<!-- patient modal -->
+<div class="modal-mask" id="patientMask">
+  <div class="modal">
+    <span class="close" id="patientClose">✕</span>
+    <h3>患者档案</h3>
+    <div class="plist" id="patientList"></div>
+    <button class="btn" id="btnAddPatient" style="margin-top:6px">＋ 新建患者档案</button>
+  </div>
+</div>
+
 <!-- video modal -->
 <div class="modal-mask" id="videoMask">
   <div class="modal">
@@ -355,15 +412,19 @@ input[type=range]::-webkit-slider-thumb{
     <h3 id="videoTitle">检查示范</h3>
     <div class="video-box" id="videoBox">
       <div class="play">▶</div>
-      <div class="vb-note" id="videoNote">演示视频占位，可在代码顶部 VIDEOS 常量填入真实视频地址</div>
+      <div class="vb-note" id="videoNote">演示视频占位</div>
     </div>
-    <div class="hint">注：小样中演示视频为占位，正式版将接入真实检查示范视频。</div>
+    <div class="hint">注：把视频文件放进本地 videos 目录并重新部署即可显示（见代码顶部说明）。</div>
   </div>
 </div>
 
 <script>
-/* ================= 数据定义（可替换） ================= */
-// 演示视频：填入真实 mp4 地址即可自动播放；留空显示占位
+/* ============================================================
+   演示视频：
+   - 本地路径 videos/ 下的 mp4 会在部署时自动上传到线上
+   - url 填相对路径（如 'videos/slr.mp4'）即可，无需改地址
+   - url 留空则显示占位
+   ============================================================ */
 const VIDEOS = {
   slr:   { name: '直腿抬高试验',   desc: '腰椎间盘突出筛查', url: '' },
   slump: { name: 'Slump 试验',     desc: '神经张力测试',     url: '' },
@@ -371,20 +432,65 @@ const VIDEOS = {
   thompson: { name: 'Thompson 试验', desc: '跟腱断裂筛查',   url: '' }
 };
 
-// 量表数据：按疾病类型筛选
+/* ---- 量表定义：含真实题目 + 计分分级 ---- */
+const IMAGING_TYPES = ['X线','CT','MRI','超声','肌电图'];
 const SCALES = [
-  { id:'vas',    name:'VAS 疼痛评分',          disease:'疼痛', desc:'0-10 视觉模拟评分',      items:[{label:'疼痛程度',max:10,step:0.5}] },
-  { id:'oddi',   name:'ODI 功能障碍指数',       disease:'疼痛', desc:'腰椎功能障碍',          items:[{label:'功能障碍程度',max:100,step:1}] },
-  { id:'hhd',    name:'改良 HHD 徒手肌力',      disease:'骨科', desc:'肌力评定 0-5 级',       items:[{label:'受累肌群力量',max:5,step:0.5}] },
-  { id:'rom',    name:'关节活动度 ROM',         disease:'骨科', desc:'主动/被动活动范围',      items:[{label:'活动度受限',max:100,step:1}] },
-  { id:'bfc',    name:'Borg 呼吸困难量表',      disease:'心肺', desc:'呼吸困难程度 0-10',     items:[{label:'呼吸困难程度',max:10,step:0.5}] },
-  { id:'sixmwt', name:'6 分钟步行试验',         disease:'心肺', desc:'心肺耐力评估',          items:[{label:'步行距离(m)',max:600,step:1}] },
-  { id:'bbs',    name:'Berg 平衡量表',          disease:'神经', desc:'平衡功能 0-56 分',       items:[{label:'平衡得分',max:56,step:1}] },
-  { id:'adl',    name:'Barthel 指数 ADL',       disease:'神经', desc:'日常生活能力 0-100',    items:[{label:'ADL 得分',max:100,step:1}] }
+  { id:'vas',    name:'VAS 疼痛评分',     disease:'疼痛', desc:'0-10 视觉模拟评分',
+    items:[{label:'当前疼痛程度', max:10, step:0.5, hint:'0=无痛  10=剧痛'}],
+    grade: t => t<4 ? {label:'轻度', c:1} : t<7 ? {label:'中度', c:2} : {label:'重度', c:3} },
+  { id:'oddi',   name:'ODI 功能障碍指数',  disease:'疼痛', desc:'腰椎功能障碍 · 10 题，每题 0-5 分',
+    items:[
+      {label:'疼痛强度', max:5, step:1}, {label:'生活自理能力', max:5, step:1},
+      {label:'提物', max:5, step:1},     {label:'行走', max:5, step:1},
+      {label:'坐立', max:5, step:1},     {label:'站立', max:5, step:1},
+      {label:'睡眠', max:5, step:1},     {label:'社会生活', max:5, step:1},
+      {label:'旅行', max:5, step:1},     {label:'综合影响', max:5, step:1}
+    ],
+    grade: t => t<=10 ? {label:'轻度', c:1} : t<=20 ? {label:'中度', c:2} : {label:'重度', c:3} },
+  { id:'hhd',    name:'改良 HHD 徒手肌力', disease:'骨科', desc:'受累肌群 · 0-5 级',
+    items:[
+      {label:'肩外展肌', max:5, step:1}, {label:'肘屈曲肌', max:5, step:1},
+      {label:'腕背伸肌', max:5, step:1}, {label:'髋屈曲肌', max:5, step:1},
+      {label:'膝伸展肌', max:5, step:1}, {label:'踝背屈肌', max:5, step:1}
+    ],
+    grade: t => t>=24 ? {label:'接近正常', c:1} : t>=14 ? {label:'中度减退', c:2} : {label:'重度减退', c:3} },
+  { id:'rom',    name:'关节活动度 ROM',    disease:'骨科', desc:'主要关节活动 · 度数',
+    items:[
+      {label:'肩关节前屈', max:180, step:5}, {label:'肘关节屈曲', max:150, step:5},
+      {label:'髋关节屈曲', max:135, step:5}, {label:'膝关节屈曲', max:150, step:5},
+      {label:'踝关节背屈', max:30, step:1}
+    ],
+    grade: t => t>=600 ? {label:'良好', c:1} : t>=450 ? {label:'中度受限', c:2} : {label:'明显受限', c:3} },
+  { id:'bfc',    name:'Borg 呼吸困难量表', disease:'心肺', desc:'呼吸困难程度 · 0-10',
+    items:[{label:'呼吸困难程度', max:10, step:1, hint:'0=完全没有  10=极重'}],
+    grade: t => t<=3 ? {label:'轻度', c:1} : t<=6 ? {label:'中度', c:2} : {label:'重度', c:3} },
+  { id:'sixmwt', name:'6 分钟步行试验',    disease:'心肺', desc:'心肺耐力 · 米',
+    items:[{label:'步行距离', max:600, step:10, hint:'单位：米'}],
+    grade: t => t>=450 ? {label:'良好', c:1} : t>=300 ? {label:'中度减退', c:2} : {label:'重度减退', c:3} },
+  { id:'bbs',    name:'Berg 平衡量表',      disease:'神经', desc:'平衡功能 · 14 题，每题 0-4 分',
+    items:[
+      {label:'坐→站', max:4, step:1},   {label:'独立站立', max:4, step:1},
+      {label:'无支撑坐', max:4, step:1}, {label:'站→坐', max:4, step:1},
+      {label:'转移', max:4, step:1},     {label:'闭眼站立', max:4, step:1},
+      {label:'双足并拢站立', max:4, step:1}, {label:'前伸够物', max:4, step:1},
+      {label:'拾起地上物品', max:4, step:1}, {label:'转身向后看', max:4, step:1},
+      {label:'转体 360°', max:4, step:1}, {label:'双脚交替踏台阶', max:4, step:1},
+      {label:'前后脚站立', max:4, step:1}, {label:'单腿站立', max:4, step:1}
+    ],
+    grade: t => t>=45 ? {label:'低跌倒风险', c:1} : t>=40 ? {label:'中跌倒风险', c:2} : {label:'高跌倒风险', c:3} },
+  { id:'adl',    name:'Barthel 指数 ADL',  disease:'神经', desc:'日常生活能力 · 10 项，每项 0-10 分',
+    items:[
+      {label:'进食', max:10, step:5},  {label:'洗澡', max:10, step:5},
+      {label:'修饰（洗脸/刷牙）', max:10, step:5}, {label:'穿衣', max:10, step:5},
+      {label:'大便控制', max:10, step:5}, {label:'小便控制', max:10, step:5},
+      {label:'用厕', max:10, step:5},  {label:'床椅转移', max:10, step:5},
+      {label:'平地行走', max:10, step:5}, {label:'上下楼梯', max:10, step:5}
+    ],
+    grade: t => t>=90 ? {label:'基本自理', c:1} : t>=60 ? {label:'中度依赖', c:2} : {label:'重度依赖', c:3} }
 ];
 const DISEASES = ['疼痛','骨科','心肺','神经'];
 
-// 方案模板（基于 VAS 分档 + 自定义疗法）
+/* ---- 方案模板 ---- */
 const PLAN_TEMPLATE = {
   acute: {
     title: '急性期', range: '0-2 周',
@@ -414,18 +520,48 @@ const PLAN_TEMPLATE = {
     ]
   }
 };
+const EXAM_ITEMS = [
+  { id:'palp', name:'触诊',   desc:'压痛点 / 肌肉紧张' },
+  { id:'rom',  name:'活动度', desc:'关节活动范围受限' },
+  { id:'musc', name:'肌力',   desc:'肌力下降 / 萎缩' },
+  { id:'temp', name:'皮温',   desc:'局部温度异常' },
+  { id:'adl',  name:'ADL',    desc:'日常生活能力受限' }
+];
 
-/* ================= 状态 ================= */
-const state = {
-  patient: { name:'张三', age:45, gender:'男', complaint:'腰痛伴右下肢放射痛 2 周', vas:6 },
-  exam: {},        // id -> { done, deg }
-  scales: [],      // 选中的量表 id
-  scores: {},      // scaleId -> 各 item 值（存数组）
-  plan: null,      // 生成的方案
-  customTher: []   // 自定义疗法列表
-};
+/* ============================================================
+   多患者档案管理（localStorage 持久化）
+   ============================================================ */
+const STORAGE_KEY = 'rehab_patients_v1';
+let patients = loadPatients();
+let currentId = null;
+if (!patients.length) {
+  patients = [makePatient('张三','45','男','腰痛伴右下肢放射痛 2 周', 6)];
+}
+ensureCurrent();
+function makePatient(name,age,gender,complaint,vas){
+  return {
+    id: 'p' + Date.now() + Math.random().toString(36).slice(2,6),
+    name: name||'', age: age||'', gender: gender||'男',
+    complaint: complaint||'', vas: vas!=null?vas:0,
+    imaging: { types: [], findings: '' },
+    exam: {}, scales: [], scores: {},
+    plan: null, customTher: [],
+    createdAt: Date.now()
+  };
+}
+function loadPatients(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return [];
+}
+function savePatients(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(patients)); }catch(e){}
+}
+function ensureCurrent(){
+  if (!currentId || !patients.find(p=>p.id===currentId)) currentId = patients[0].id;
+}
+function cur(){ return patients.find(p=>p.id===currentId) || patients[0]; }
 
-/* ================= 通用 ================= */
+/* ---- 通用 ---- */
 const $ = s => document.querySelector(s);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function toast(msg){
@@ -434,7 +570,7 @@ function toast(msg){
   document.body.appendChild(t);setTimeout(()=>t.remove(),1800);
 }
 
-/* tab 切换 */
+/* ---- tab 切换 ---- */
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
@@ -443,32 +579,110 @@ document.querySelectorAll('.tab').forEach(tab=>{
     const sec=document.getElementById(tab.dataset.sec);
     sec.classList.add('active');
     if(tab.dataset.sec==='sec-plan') renderPlanPreview();
+    if(tab.dataset.sec==='sec-report') renderReport();
   });
 });
 
-/* ================= 1 基础信息 ================= */
+/* ============================================================
+   患者档案弹层
+   ============================================================ */
+function renderPatientList(){
+  const box=$('#patientList');
+  box.innerHTML = patients.map(p=>{
+    const on = p.id===currentId;
+    const d = new Date(p.createdAt);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+    return `<div class="pcard ${on?'on':''}" data-id="${p.id}">
+      <div class="pav">${esc((p.name||'?').charAt(0))}</div>
+      <div class="pn">${esc(p.name||'未命名')}<small>${p.age||'?'} 岁 · ${p.gender||'?'} · 建档 ${dateStr}</small></div>
+      ${on?'':`<button class="del" data-del="${p.id}">删除</button>`}
+    </div>`;
+  }).join('') || '<div class="empty">暂无患者，点击下方新建</div>';
+  box.querySelectorAll('.pcard').forEach(c=>{
+    c.addEventListener('click',()=>{
+      currentId=c.dataset.id; savePatients();
+      $('#patientMask').classList.remove('show');
+      refreshAll();
+    });
+  });
+  box.querySelectorAll('.del').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id=b.dataset.del;
+      if(!confirm('确认删除该患者档案？该操作不可恢复。')) return;
+      patients = patients.filter(p=>p.id!==id);
+      if(currentId===id) currentId=null;
+      ensureCurrent(); savePatients();
+      renderPatientList(); refreshAll();
+    });
+  });
+}
+function openPatientModal(){ renderPatientList(); $('#patientMask').classList.add('show'); }
+$('#appPatient').addEventListener('click', openPatientModal);
+$('#patientClose').addEventListener('click', ()=>$('#patientMask').classList.remove('show'));
+$('#patientMask').addEventListener('click', e=>{ if(e.target.id==='patientMask')$('#patientMask').classList.remove('show'); });
+$('#btnAddPatient').addEventListener('click',()=>{
+  patients.push(makePatient('','','男','',0));
+  currentId = patients[patients.length-1].id;
+  savePatients();
+  renderPatientList();
+  $('#patientMask').classList.remove('show');
+  refreshAll();
+  toast('已新建患者档案');
+});
+
+/* ============================================================
+   1 基础信息 + 影像学
+   ============================================================ */
+function refreshInfo(){
+  const p=cur();
+  $('#fName').value=p.name;
+  $('#fAge').value=p.age;
+  document.querySelectorAll('input[name=gender]').forEach(r=>{ if(r.value===p.gender) r.checked=true; });
+  $('#fComplaint').value=p.complaint;
+  $('#fVas').value=p.vas;
+  $('#vasVal').textContent=p.vas;
+  $('#fVas').style.setProperty('--fill',(p.vas/10*100)+'%');
+  $('#fImg').value=p.imaging.findings;
+  // imaging pills
+  $('#imgTypes').innerHTML = IMAGING_TYPES.map(t=>{
+    const on=p.imaging.types.includes(t);
+    return `<label><input type="checkbox" value="${t}" ${on?'checked':''}><span>${t}</span></label>`;
+  }).join('');
+  $('#imgTypes').querySelectorAll('input').forEach(c=>c.addEventListener('change',()=>{
+    const p=cur();
+    const t=c.value;
+    const i=p.imaging.types.indexOf(t);
+    if(i>=0) p.imaging.types.splice(i,1); else p.imaging.types.push(t);
+    savePatients();
+  }));
+}
 function bindInfo(){
   const vas=$('#fVas');
-  const upd=()=>{ $('#vasVal').textContent=vas.value; vas.style.setProperty('--fill',(vas.value/10*100)+'%'); state.patient.vas=parseFloat(vas.value); };
-  vas.addEventListener('input',upd); upd();
-  $('#fName').addEventListener('input',e=>{ state.patient.name=e.target.value; $('#appPatient').textContent=e.target.value||'未录入'; });
-  $('#fAge').addEventListener('input',e=>state.patient.age=e.target.value);
-  document.querySelectorAll('input[name=gender]').forEach(r=>r.addEventListener('change',e=>state.patient.gender=e.target.value));
-  $('#fComplaint').addEventListener('input',e=>state.patient.complaint=e.target.value);
+  vas.addEventListener('input',()=>{
+    $('#vasVal').textContent=vas.value;
+    vas.style.setProperty('--fill',(vas.value/10*100)+'%');
+    cur().vas=parseFloat(vas.value); savePatients();
+  });
+  $('#fName').addEventListener('input',e=>{ cur().name=e.target.value; savePatients(); updatePatientChip(); });
+  $('#fAge').addEventListener('input',e=>{ cur().age=e.target.value; savePatients(); });
+  document.querySelectorAll('input[name=gender]').forEach(r=>r.addEventListener('change',e=>{ cur().gender=e.target.value; savePatients(); }));
+  $('#fComplaint').addEventListener('input',e=>{ cur().complaint=e.target.value; savePatients(); });
+  $('#fImg').addEventListener('input',e=>{ cur().imaging.findings=e.target.value; savePatients(); });
+}
+function updatePatientChip(){
+  const p=cur();
+  $('#appPatient').textContent = (p.name?p.name:'未选择患者') + (p.age?` · ${p.age}岁`:'');
 }
 
-/* ================= 2 客观评估 ================= */
-const EXAM_ITEMS = [
-  { id:'palp', name:'触诊',        desc:'压痛点 / 肌肉紧张' },
-  { id:'rom',  name:'活动度',      desc:'关节活动范围受限' },
-  { id:'musc', name:'肌力',        desc:'肌力下降 / 萎缩' },
-  { id:'temp', name:'皮温',        desc:'局部温度异常' },
-  { id:'adl',  name:'ADL',         desc:'日常生活能力受限' }
-];
+/* ============================================================
+   2 客观评估
+   ============================================================ */
 function renderExam(){
   const box=$('#examList');
+  const p=cur();
   box.innerHTML = EXAM_ITEMS.map(it=>{
-    const s=state.exam[it.id]||{done:false,deg:''};
+    const s=p.exam[it.id]||{done:false,deg:''};
     return `<div class="exam-item">
       <div class="chk ${s.done?'on':''}" data-id="${it.id}">✓</div>
       <div class="en">${it.name}<small>${it.desc}</small></div>
@@ -482,18 +696,21 @@ function renderExam(){
   }).join('');
   box.querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
     const id=c.dataset.id;
-    state.exam[id]=state.exam[id]||{done:false,deg:''};
-    state.exam[id].done=!state.exam[id].done;
-    c.classList.toggle('on',state.exam[id].done);
+    const p=cur();
+    p.exam[id]=p.exam[id]||{done:false,deg:''};
+    p.exam[id].done=!p.exam[id].done;
+    c.classList.toggle('on',p.exam[id].done);
     const sel=box.querySelector(`select.deg[data-id="${id}"]`);
-    sel.classList.toggle('show',state.exam[id].done);
-    if(!state.exam[id].done){ sel.value=''; state.exam[id].deg=''; }
+    sel.classList.toggle('show',p.exam[id].done);
+    if(!p.exam[id].done){ sel.value=''; p.exam[id].deg=''; }
+    savePatients();
   }));
   box.querySelectorAll('select').forEach(s=>s.addEventListener('change',e=>{
-    state.exam[e.target.dataset.id]=state.exam[e.target.dataset.id]||{done:true};
-    state.exam[e.target.dataset.id].deg=e.target.value;
+    const p=cur();
+    p.exam[e.target.dataset.id]=p.exam[e.target.dataset.id]||{done:true};
+    p.exam[e.target.dataset.id].deg=e.target.value;
+    savePatients();
   }));
-  // 特殊检查视频
   const vg=$('#examVideos');
   vg.innerHTML = Object.entries(VIDEOS).map(([k,v])=>`
     <div class="vcard" data-vid="${k}">
@@ -502,8 +719,6 @@ function renderExam(){
     </div>`).join('');
   vg.querySelectorAll('.vcard').forEach(c=>c.addEventListener('click',()=>openVideo(c.dataset.vid)));
 }
-
-/* video modal */
 function openVideo(id){
   const v=VIDEOS[id];
   $('#videoTitle').textContent=v.name;
@@ -511,14 +726,16 @@ function openVideo(id){
   if(v.url){
     box.innerHTML=`<video src="${esc(v.url)}" controls autoplay style="width:100%;height:100%;border-radius:12px"></video>`;
   }else{
-    box.innerHTML=`<div class="play">▶</div><div class="vb-note">${v.name} · ${v.desc}<br><br>演示视频占位，可在代码顶部 VIDEOS 常量填入真实视频地址</div>`;
+    box.innerHTML=`<div class="play">▶</div><div class="vb-note">${v.name} · ${v.desc}<br><br>演示视频占位：将视频放入本地 videos 目录并重新部署即可显示</div>`;
   }
   $('#videoMask').classList.add('show');
 }
 $('#videoClose').addEventListener('click',()=>$('#videoMask').classList.remove('show'));
 $('#videoMask').addEventListener('click',e=>{ if(e.target.id==='videoMask')$('#videoMask').classList.remove('show'); });
 
-/* ================= 3 量表匹配 ================= */
+/* ============================================================
+   3 量表匹配 + 填写计分
+   ============================================================ */
 function renderScaleFilter(){
   const box=$('#scaleFilter');
   box.innerHTML = ['全部',...DISEASES].map((d,i)=>`<div class="fchip ${i===0?'on':''}" data-f="${i===0?'':d}">${d}</div>`).join('');
@@ -529,34 +746,44 @@ function renderScaleFilter(){
   }));
 }
 function renderScaleList(filter=''){
+  const p=cur();
   const list=SCALES.filter(s=>!filter||s.disease===filter);
   const box=$('#scaleList');
   box.innerHTML = list.map(s=>{
-    const on=state.scales.includes(s.id);
+    const on=p.scales.includes(s.id);
     return `<div class="scale-card ${on?'on':''}" data-id="${s.id}">
       <div class="sb">✓</div>
       <div class="sn">${s.name}<small>${s.disease} · ${s.desc}</small></div>
     </div>`;
   }).join('') + (list.length?'':`<div class="empty">该分类暂无量表</div>`);
   box.querySelectorAll('.scale-card').forEach(c=>c.addEventListener('click',()=>{
+    const p=cur();
     const id=c.dataset.id;
-    const i=state.scales.indexOf(id);
-    if(i>=0){ state.scales.splice(i,1); delete state.scores[id]; }
-    else state.scales.push(id);
+    const i=p.scales.indexOf(id);
+    if(i>=0){ p.scales.splice(i,1); delete p.scores[id]; }
+    else p.scales.push(id);
+    savePatients();
     renderScaleList(filter); renderScaleScores();
   }));
 }
+function scaleGrade(sc, vals){
+  const total = vals.reduce((a,b)=>a+(b||0),0);
+  const g = sc.grade(total);
+  return { total, full: sc.items.reduce((a,b)=>a+b.max,0), label:g.label, c:g.c };
+}
 function renderScaleScores(){
   const card=$('#scaleScoreCard'), box=$('#scaleScores');
-  if(!state.scales.length){ card.style.display='none'; return; }
+  const p=cur();
+  if(!p.scales.length){ card.style.display='none'; return; }
   card.style.display='block';
-  box.innerHTML = state.scales.map(sid=>{
+  box.innerHTML = p.scales.map(sid=>{
     const sc=SCALES.find(x=>x.id===sid);
     if(!sc) return '';
-    const vals=state.scores[sid]||sc.items.map(()=>0);
-    const html=sc.items.map((it,idx)=>`
-      <div class="field" style="margin-bottom:10px">
-        <label>${sc.name} · ${it.label}</label>
+    const vals=p.scores[sid]||sc.items.map(()=>0);
+    const g=scaleGrade(sc, vals);
+    const itemsHtml=sc.items.map((it,idx)=>`
+      <div class="score-item">
+        <div class="q">${idx+1}. ${it.label}${it.hint?`<small>${it.hint}</small>`:''}</div>
         <div class="slider-row">
           <input type="range" class="srange" min="0" max="${it.max}" step="${it.step}" value="${vals[idx]}"
             data-sid="${sid}" data-idx="${idx}">
@@ -564,91 +791,97 @@ function renderScaleScores(){
         </div>
         <div class="slider-hint"><span>0</span><span>${it.max}</span></div>
       </div>`).join('');
-    return `<h4 style="font-size:13.5px;color:var(--primary);margin:4px 0 6px">${sc.name}</h4>${html}`;
+    return `<h4 style="font-size:13.5px;color:var(--primary);margin:6px 0 4px">${sc.name} · ${sc.desc}</h4>${itemsHtml}
+      <div class="scale-total">总分 ${g.total} / ${g.full}<span class="grade g${g.c}">${g.label}</span></div>`;
   }).join('');
   box.querySelectorAll('.srange').forEach(r=>{
     r.style.setProperty('--fill',(r.value/r.max*100)+'%');
     r.addEventListener('input',()=>{
       const v=parseFloat(r.value);
       r.style.setProperty('--fill',(v/r.max*100)+'%');
-      const sv=r.closest('.field').querySelector('.sv'); if(sv) sv.textContent=v;
-      state.scores[r.dataset.sid]=state.scores[r.dataset.sid]||[];
-      state.scores[r.dataset.sid][+r.dataset.idx]=v;
+      const sv=r.closest('.score-item').querySelector('.sv'); if(sv) sv.textContent=v;
+      const p=cur();
+      p.scores[r.dataset.sid]=p.scores[r.dataset.sid]||[];
+      p.scores[r.dataset.sid][+r.dataset.idx]=v;
+      savePatients();
+      renderScaleScores();
     });
   });
 }
 
-/* ================= 4 方案生成 ================= */
+/* ============================================================
+   4 方案生成
+   ============================================================ */
 function buildPlan(){
-  const vas=state.patient.vas;
-  const custom=state.customTher.slice();
-  const examStr = Object.entries(state.exam).filter(([k,v])=>v.done).map(([k,v])=>{
+  const p=cur();
+  const custom=p.customTher.slice();
+  const examStr = Object.entries(p.exam).filter(([k,v])=>v.done).map(([k,v])=>{
     const name=(EXAM_ITEMS.find(x=>x.id===k)||{}).name||k;
     return name+(v.deg?`(${v.deg})`:'');
   });
-  const plan={
-    vas, examStr, custom,
-    acute: PLAN_TEMPLATE.acute.items.slice(),
-    sub: PLAN_TEMPLATE.sub.items.slice(),
-    chronic: PLAN_TEMPLATE.chronic.items.slice()
-  };
-  // 根据 VAS 档位插入针对性条目
-  if(vas>=7){ plan.acute.unshift('止痛与制动为主，避免负重'); }
-  else if(vas>=4){ plan.acute.unshift('适度活动，避免久坐久站'); }
+  const plan={ vas:p.vas, examStr, custom, acute:[], sub:[], chronic:[] };
+  plan.acute=PLAN_TEMPLATE.acute.items.slice();
+  plan.sub=PLAN_TEMPLATE.sub.items.slice();
+  plan.chronic=PLAN_TEMPLATE.chronic.items.slice();
+  if(p.vas>=7){ plan.acute.unshift('止痛与制动为主，避免负重'); }
+  else if(p.vas>=4){ plan.acute.unshift('适度活动，避免久坐久站'); }
   else { plan.acute.push('轻量活动与日常功能维持'); }
-  // 把自定义疗法并入各阶段末尾
-  ['acute','sub','chronic'].forEach(k=>{
-    custom.forEach(t=>plan[k].push('自定义：'+t));
-  });
+  ['acute','sub','chronic'].forEach(k=>{ custom.forEach(t=>plan[k].push('自定义：'+t)); });
   return plan;
 }
 function renderPlanPreview(){
+  const p=cur();
   const out=$('#planOutput');
-  if(!state.plan){ out.innerHTML='<div class="empty">尚未生成方案 — 点击上方按钮生成</div>'; return; }
-  const p=state.plan;
-  const ph=html=>`<div class="phase ${html.key}"><div class="ph-head"><span class="ph-t">${html.title}</span><span class="ph-d">${html.range}</span></div><ul>${html.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;
+  if(!p.plan){ out.innerHTML='<div class="empty">尚未生成方案 — 点击上方按钮生成</div>'; return; }
+  const pl=p.plan;
+  const ph=o=>`<div class="phase ${o.key}"><div class="ph-head"><span class="ph-t">${o.title}</span><span class="ph-d">${o.range}</span></div><ul>${o.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;
   out.innerHTML=`
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">患者：${esc(state.patient.name)} · VAS ${p.vas} · ${p.examStr.join('、')||'无异常项'}</div>
-    ${ph({key:'acute',...PLAN_TEMPLATE.acute,items:p.acute})}
-    ${ph({key:'sub',...PLAN_TEMPLATE.sub,items:p.sub})}
-    ${ph({key:'chronic',...PLAN_TEMPLATE.chronic,items:p.chronic})}
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">患者：${esc(p.name)} · VAS ${pl.vas} · ${pl.examStr.join('、')||'无异常项'}</div>
+    ${ph({key:'acute',...PLAN_TEMPLATE.acute,items:pl.acute})}
+    ${ph({key:'sub',...PLAN_TEMPLATE.sub,items:pl.sub})}
+    ${ph({key:'chronic',...PLAN_TEMPLATE.chronic,items:pl.chronic})}
   `;
 }
 $('#btnGenPlan').addEventListener('click',()=>{
-  state.plan=buildPlan();
+  cur().plan=buildPlan(); savePatients();
   renderPlanPreview();
   toast('方案已生成，可切到报告页导出');
 });
-/* 自定义疗法 */
 function renderTher(){
+  const p=cur();
   const box=$('#therList');
-  box.innerHTML = state.customTher.map((t,i)=>`<span class="tchip">${esc(t)}<span class="x" data-i="${i}">✕</span></span>`).join('') || '';
+  box.innerHTML = p.customTher.map((t,i)=>`<span class="tchip">${esc(t)}<span class="x" data-i="${i}">✕</span></span>`).join('') || '';
   box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
-    state.customTher.splice(+x.dataset.i,1); renderTher();
+    cur().customTher.splice(+x.dataset.i,1); savePatients(); renderTher();
   }));
 }
 $('#btnAddTher').addEventListener('click',()=>{
   const v=$('#therInput').value.trim();
   if(!v){ toast('请输入疗法内容'); return; }
-  state.customTher.push(v);
+  const p=cur();
+  p.customTher.push(v);
   $('#therInput').value='';
-  renderTher();
-  if(state.plan){ state.plan=buildPlan(); renderPlanPreview(); }
+  savePatients(); renderTher();
+  if(p.plan){ p.plan=buildPlan(); savePatients(); renderPlanPreview(); }
 });
 $('#therInput').addEventListener('keydown',e=>{ if(e.key==='Enter')$('#btnAddTher').click(); });
 
-/* ================= 5 报告导出 ================= */
+/* ============================================================
+   5 报告导出
+   ============================================================ */
 function buildReportHTML(){
-  const p=state.patient;
-  const examItems = EXAM_ITEMS.filter(it=>state.exam[it.id]&&state.exam[it.id].done)
-    .map(it=>`${it.name}（${state.exam[it.id].deg||'异常'}）`);
-  const scaleRows = state.scales.map(sid=>{
+  const p=cur();
+  const examItems = EXAM_ITEMS.filter(it=>p.exam[it.id]&&p.exam[it.id].done)
+    .map(it=>`${it.name}（${p.exam[it.id].deg||'异常'}）`);
+  const scaleRows = p.scales.map(sid=>{
     const sc=SCALES.find(x=>x.id===sid);
-    const vals=(state.scores[sid]||[]);
-    const detail=vals.length?`${sc.items[0].label} ${vals[0]}/${sc.items[0].max}`:'已选未填';
-    return `<div class="kv"><span class="k">${sc.name}</span><span class="v">${detail}</span></div>`;
+    const vals=(p.scores[sid]||[]);
+    const g=scaleGrade(sc, vals);
+    return `<div class="kv"><span class="k">${sc.name}</span><span class="v">${g.total}/${g.full} · ${g.label}</span></div>`;
   }).join('');
-  const plan=state.plan;
+  const imagingRow = p.imaging.types.length ? `<div class="kv"><span class="k">影像检查</span><span class="v">${esc(p.imaging.types.join('、'))}</span></div>
+    ${p.imaging.findings?`<div class="kv"><span class="k">检查所见</span><span class="v">${esc(p.imaging.findings)}</span></div>`:''}` : '<div class="kv"><span class="k">影像检查</span><span class="v">未记录</span></div>';
+  const plan=p.plan;
   const planHTML = plan ? `
     <h4>康复方案</h4>
     <div class="kv"><span class="k">VAS</span><span class="v">${plan.vas} 分</span></div>
@@ -663,10 +896,12 @@ function buildReportHTML(){
       <h2>康复评估报告</h2>
       <div class="r-sub">康复临床工作台 · 生成日期 ${dateStr}</div>
       <h4>基础信息</h4>
-      <div class="kv"><span class="k">姓名</span><span class="v">${esc(p.name)}</span></div>
-      <div class="kv"><span class="k">年龄 / 性别</span><span class="v">${p.age} 岁 · ${p.gender}</span></div>
+      <div class="kv"><span class="k">姓名</span><span class="v">${esc(p.name)||'—'}</span></div>
+      <div class="kv"><span class="k">年龄 / 性别</span><span class="v">${p.age||'—'} 岁 · ${p.gender||'—'}</span></div>
       <div class="kv"><span class="k">主诉</span><span class="v">${esc(p.complaint)||'—'}</span></div>
       <div class="kv"><span class="k">VAS 疼痛</span><span class="v">${p.vas} / 10</span></div>
+      <h4>影像学检查</h4>
+      ${imagingRow}
       <h4>客观评估</h4>
       ${examItems.length?examItems.map(x=>`<div class="kv"><span class="k">异常项</span><span class="v">${esc(x)}</span></div>`).join(''):'<div class="kv"><span class="k">结果</span><span class="v">未记录异常</span></div>'}
       <h4>量表评估</h4>
@@ -676,6 +911,8 @@ function buildReportHTML(){
     </div>`;
 }
 function renderReport(){
+  const p=cur();
+  if(!p.name && !p.complaint){ $('#reportOutput').innerHTML='<div class="empty">请先填写患者基础信息</div>'; return; }
   $('#reportOutput').innerHTML=buildReportHTML();
   $('#exportRow').style.display='flex';
 }
@@ -689,12 +926,27 @@ $('#btnCopy').addEventListener('click',()=>{
   }
 });
 
+/* ---- 切换患者后整体刷新 ---- */
+function refreshAll(){
+  ensureCurrent();
+  updatePatientChip();
+  refreshInfo();
+  renderExam();
+  renderScaleList('');
+  renderScaleScores();
+  renderTher();
+  renderPlanPreview();
+  renderReport();
+}
+
 /* ================= init ================= */
 bindInfo();
 renderExam();
 renderScaleFilter();
 renderScaleList();
 renderTher();
+refreshInfo();
+updatePatientChip();
 </script>
 </body>
 </html>
