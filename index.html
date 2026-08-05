@@ -461,7 +461,7 @@ input[type=range]::-webkit-slider-thumb{
   <div class="modal">
     <span class="close" id="searchClose">✕</span>
     <h3>🔍 康复资料搜索</h3>
-    <input type="search" id="searchInput" placeholder="搜索康复笔记…" autocomplete="off">
+    <input type="search" id="searchInput" placeholder="输入主诉 / 问题，自动检索答案…" autocomplete="off">
     <div id="searchMeta" class="smeta"></div>
     <div id="searchResults"></div>
     <div id="searchDetail" class="snote" style="display:none"></div>
@@ -1007,11 +1007,76 @@ function hl(text, q){
   }
   return out;
 }
-function snippet(text, q){
-  if(!q) return esc(text.slice(0,60)) + (text.length>60?'…':'');
-  const idx = text.toLowerCase().indexOf(q.toLowerCase());
-  const s = Math.max(0, idx-40), e = Math.min(text.length, idx+q.length+60);
-  return (s>0?'…':'') + hl(text.slice(s,e), q) + (e<text.length?'…':'');
+function cleanText(s){
+  return String(s).replace(/[#*>`|]/g,' ').replace(/^\s*:?-{2,}:?\s*$/gm,'').replace(/\s+/g,' ').trim();
+}
+function snippet(text, kw){
+  const t = cleanText(text);
+  if(!kw){ return esc(t.slice(0,70)) + (t.length>70?'…':''); }
+  const idx = t.toLowerCase().indexOf(kw.toLowerCase());
+  if(idx<0) return esc(t.slice(0,70)) + (t.length>70?'…':'');
+  const s = Math.max(0, idx-30), e = Math.min(t.length, idx+kw.length+40);
+  return (s>0?'…':'') + hl(t.slice(s,e), kw) + (e<t.length?'…':'');
+}
+/* 问题分词：按标点切段 + 中文二元组，支持整段主诉检索 */
+function tokenizeQuery(q){
+  const segs = String(q||'').split(/[\s,，、;；。.!！?？:：\/\\]+/).map(s=>s.trim()).filter(s=>s.length>=2);
+  const kws = new Set();
+  for(const seg of segs){
+    kws.add(seg);
+    for(let i=0;i<seg.length-1;i++) kws.add(seg.slice(i,i+2));
+  }
+  return Array.from(kws);
+}
+/* 把笔记按 ## / ### 标题切成可检索的"节" */
+function parseSections(note){
+  const lines = String(note.md||'').split(/\r?\n/);
+  const sections = [];
+  let cur = null;
+  const close = ()=>{ if(cur && cur.body.trim()) sections.push(cur); };
+  for(const line of lines){
+    const h = line.match(/^(#{2,4})\s+(.*)$/);
+    if(h){
+      close();
+      cur = { noteTitle: note.title, heading: h[2].trim(), hkws: new Set(), bkws: new Set(), body: '' };
+      for(const k of tokenizeQuery(h[2])) cur.hkws.add(k);
+    } else if(cur){
+      cur.body += line + '\n';
+      if(line.trim()) for(const k of tokenizeQuery(line.trim())) cur.bkws.add(k);
+    }
+  }
+  close();
+  return sections;
+}
+/* 按关键词稀有度加权排序（稀有词更关键；标题命中加权） */
+function searchSections(sections, queryKws){
+  const freq = new Map();
+  for(const kw of queryKws){
+    let c = 0;
+    for(const s of sections) if(s.hkws.has(kw)||s.bkws.has(kw)) c++;
+    freq.set(kw, c);
+  }
+  const list = sections.map(s=>{
+    let score = 0; const matched = [];
+    for(const kw of queryKws){
+      const c = freq.get(kw)||0;
+      if(!c) continue;
+      if(s.hkws.has(kw)){ score += 3/Math.sqrt(c); matched.push({kw, h:true}); }
+      else if(s.bkws.has(kw)){ score += 1/Math.sqrt(c); matched.push({kw, h:false}); }
+    }
+    return { sec:s, score, matched };
+  }).filter(x=>x.score>0);
+  list.sort((a,b)=> b.score-a.score);
+  return { list, freq };
+}
+function pickHighlight(matched, freq){
+  let best=null, bestC=Infinity;
+  for(const m of matched){
+    const c = (freq.get(m.kw)||1);
+    const rank = m.h ? c/2 : c;
+    if(rank<bestC){ bestC=rank; best=m.kw; }
+  }
+  return best;
 }
 async function loadNotes(){
   if(REHAB_NOTES) return REHAB_NOTES;
@@ -1025,44 +1090,65 @@ async function loadNotes(){
   return REHAB_NOTES;
 }
 function doSearch(){
-  const q = $('#searchInput').value.trim();
+  const raw = $('#searchInput').value.trim();
   $('#searchDetail').style.display='none';
   $('#searchDetail').innerHTML='';
   $('#searchResults').style.display='';
   const box = $('#searchResults');
-  if(!q){
-    $('#searchMeta').textContent='输入关键词，检索康复笔记';
+  const notes = REHAB_NOTES||[];
+  if(!raw){
+    $('#searchMeta').textContent='输入主诉 / 问题描述，自动检索对应答案';
     box.innerHTML='';
     return;
   }
-  const notes = REHAB_NOTES||[];
-  const lq = q.toLowerCase();
-  const hits = notes.map(n=>({
-    n,
-    inTitle: n.title.toLowerCase().includes(lq),
-    inBody: n.md.toLowerCase().includes(lq)
-  })).filter(h=>h.inTitle||h.inBody);
-  $('#searchMeta').textContent = `共 ${notes.length} 篇笔记，命中 ${hits.length} 条`;
-  if(!hits.length){ box.innerHTML='<div class="empty">未找到相关内容</div>'; return; }
-  box.innerHTML = hits.map((h,idx)=>`
-    <button class="sres" data-i="${idx}">
-      <div class="st">${hl(h.n.title, q)}</div>
-      <div class="sp">${snippet(h.n.md, q)}</div>
-    </button>`).join('');
+  const kws = tokenizeQuery(raw);
+  const sections = [];
+  for(const n of notes) sections.push(...parseSections(n));
+  const { list: scored, freq } = searchSections(sections, kws);
+  $('#searchMeta').textContent = `共 ${notes.length} 篇笔记 / ${sections.length} 节，命中 ${scored.length} 节`;
+  if(!scored.length){ box.innerHTML='<div class="empty">未找到相关内容</div>'; return; }
+  box.innerHTML = scored.slice(0,30).map((r,idx)=>{
+    const kw = pickHighlight(r.matched, freq);
+    const path = r.sec.noteTitle + (r.sec.heading ? ' › ' + r.sec.heading : '');
+    return `<button class="sres" data-i="${idx}">
+      <div class="st">${hl(path, kw)}</div>
+      <div class="sp">${snippet(r.sec.body, kw)}</div>
+    </button>`;
+  }).join('');
   box.querySelectorAll('.sres').forEach(b=>b.addEventListener('click',()=>{
-    const n = hits[+b.dataset.i].n;
-    $('#searchResults').style.display='none';
-    const d = $('#searchDetail');
-    d.innerHTML = `<button class="btnback" id="sBack">← 返回结果</button>
-      <h1>${hl(n.title, '')}</h1>${md2html(n.md)}`;
-    d.style.display='block';
-    d.scrollTop=0;
-    $('#sBack').addEventListener('click',()=>{
-      $('#searchDetail').style.display='none';
-      $('#searchResults').style.display='';
-      doSearch();
-    });
+    renderDetail(scored[+b.dataset.i]);
   }));
+}
+function backToResults(){
+  $('#searchDetail').style.display='none';
+  $('#searchResults').style.display='';
+  doSearch();
+}
+function renderDetail(r){
+  const d = $('#searchDetail');
+  $('#searchResults').style.display='none';
+  d.innerHTML = `
+    <div class="sback">
+      <button class="btnback" id="sBack">← 返回结果</button>
+      <button class="btnback" id="sFull" style="float:right">整篇笔记</button>
+    </div>
+    <h1>${esc(r.sec.heading)}</h1>
+    <div style="font-size:11.5px;color:var(--muted);margin:0 0 10px">来源：${esc(r.sec.noteTitle)}</div>
+    ${md2html(r.sec.body)}`;
+  d.style.display='block';
+  d.scrollTop=0;
+  $('#sBack').addEventListener('click', backToResults);
+  $('#sFull').addEventListener('click',()=>{
+    const n = (REHAB_NOTES||[]).find(x=>x.title===r.sec.noteTitle);
+    if(!n) return;
+    d.innerHTML = `
+      <div class="sback">
+        <button class="btnback" id="sBack2">← 返回结果</button>
+      </div>
+      <h1>${esc(n.title)}</h1>${md2html(n.md)}`;
+    d.scrollTop=0;
+    $('#sBack2').addEventListener('click', backToResults);
+  });
 }
 /* ---- 内置 markdown → html（渲染笔记全文，不用 marked）---- */
 function inlineMd(s){
