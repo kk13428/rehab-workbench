@@ -539,10 +539,18 @@ input[type=range]::-webkit-slider-thumb{
    - url 留空则显示占位
    ============================================================ */
 const VIDEOS = {
-  slr:   { name: '直腿抬高试验',   desc: '腰椎间盘突出筛查', url: 'videos/slr.mp4' },
-  slump: { name: 'Slump 试验',     desc: '神经张力测试',     url: 'videos/slump.mp4' },
-  fad:   { name: 'FADIR 试验',     desc: '髋关节撞击筛查',   url: 'videos/fad.mp4' },
-  thompson: { name: 'Thompson 试验', desc: '跟腱断裂筛查',   url: 'videos/thompson.mp4' }
+  slr:   { name: '直腿抬高试验',   desc: '腰椎间盘突出筛查',
+    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/slr.mp4',
+    fallback: 'videos/slr.mp4' },
+  slump: { name: 'Slump 试验',     desc: '神经张力测试',
+    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/slump.mp4',
+    fallback: 'videos/slump.mp4' },
+  fad:   { name: 'FADIR 试验',     desc: '髋关节撞击筛查',
+    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/fad.mp4',
+    fallback: 'videos/fad.mp4' },
+  thompson: { name: 'Thompson 试验', desc: '跟腱断裂筛查',
+    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/thompson.mp4',
+    fallback: 'videos/thompson.mp4' }
 };
 
 /* ---- 量表定义：含真实题目 + 计分分级 ---- */
@@ -1037,11 +1045,18 @@ function openVideo(id){
   const v=VIDEOS[id];
   $('#videoTitle').textContent=v.name;
   const box=$('#videoBox');
-  if(v.url){
-    box.innerHTML=`<video src="${esc(v.url)}" controls autoplay style="width:100%;height:100%;border-radius:12px"></video>`;
-  }else{
-    box.innerHTML=`<div class="play">▶</div><div class="vb-note">${v.name} · ${v.desc}<br><br>演示视频占位：将视频放入本地 videos 目录并重新部署即可显示</div>`;
-  }
+  const candidates=[v.url, v.fallback].filter(Boolean);
+  let ci=0;
+  const play=()=>{
+    if(ci>=candidates.length){
+      box.innerHTML=`<div class="play">▶</div><div class="vb-note">${v.name} · ${v.desc}<br><br>视频加载失败，请检查网络后重试</div>`;
+      return;
+    }
+    const src=candidates[ci++];
+    box.innerHTML=`<video src="${esc(src)}" controls autoplay style="width:100%;height:100%;border-radius:12px"></video>`;
+    box.querySelector('video').addEventListener('error', play);
+  };
+  play();
   $('#videoMask').classList.add('show');
 }
 $('#videoClose').addEventListener('click',()=>$('#videoMask').classList.remove('show'));
