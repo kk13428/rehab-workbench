@@ -301,6 +301,22 @@ input[type=range]::-webkit-slider-thumb{
 .snote hr{border:none;border-top:1.5px solid var(--line);margin:16px 0}
 .snote .sback{margin-bottom:12px}
 .btnback{background:#fff;color:var(--primary);border:1.5px solid var(--primary);border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600;font-family:inherit}
+/* 专项评定组 */
+.assess-card{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#f8fbfe}
+.assess-card h4{font-size:14px;color:var(--primary);display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.assess-card h4 .aic{font-size:15px}
+/* 方案卡片 */
+.pcard2{border:1.5px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden;background:#fff}
+.pcard2 .pc-head{background:#eef4ff;color:var(--primary);font-weight:700;font-size:14px;padding:10px 14px;display:flex;align-items:center;gap:6px}
+.pcard2 ul{padding:10px 14px 12px 32px;font-size:13.5px}
+.pcard2 li{margin-bottom:5px}
+/* 预后 */
+.prog-box{background:#f8fbfe;border:1px dashed var(--line);border-radius:12px;padding:12px 14px}
+.prog-box p{font-size:13px;margin-bottom:6px;line-height:1.6}
+.prog-box p:last-child{margin-bottom:0}
+/* 量表下拉 */
+.score-item select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:#fff;outline:none;color:var(--text)}
+.score-item select:focus{border-color:var(--primary)}
 </style>
 </head>
 <body>
@@ -316,10 +332,10 @@ input[type=range]::-webkit-slider-thumb{
 </div>
 
 <main>
-  <!-- 1 基础信息 -->
+  <!-- 1 病历：诊断/主诉/既往史/影像学 -->
   <section class="section active" id="sec-info">
     <div class="card">
-      <h3><span class="n">1</span>基础信息</h3>
+      <h3><span class="n">◈</span>基本资料</h3>
       <div class="row">
         <div class="field">
           <label>姓名</label>
@@ -338,9 +354,28 @@ input[type=range]::-webkit-slider-thumb{
           <label><input type="radio" name="gender" value="其他"><span>其他</span></label>
         </div>
       </div>
+    </div>
+    <div class="card">
+      <h3><span class="n">1</span>诊断</h3>
+      <div class="step-desc">病类（中经络/中脏腑）与分期</div>
       <div class="field">
-        <label>主诉 / 基本情况</label>
-        <textarea id="fComplaint" placeholder="如：腰痛伴右下肢放射痛 2 周"></textarea>
+        <label>病类诊断</label>
+        <div class="pills" id="diagTypes"></div>
+      </div>
+      <div class="field">
+        <label>疾病分期</label>
+        <div class="pills" id="diagStages"></div>
+      </div>
+      <div class="field">
+        <label>诊断备注</label>
+        <textarea id="fDiagNote" placeholder="如：右侧大脑中动脉供血区脑梗死"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="n">2</span>主诉</h3>
+      <div class="step-desc">症状/体征 + 发生时间</div>
+      <div class="field">
+        <textarea id="fComplaint" placeholder="如：右侧肢体活动不利伴言语含糊 1 月余"></textarea>
       </div>
       <div class="field">
         <label>VAS 疼痛评分（0-10）</label>
@@ -352,22 +387,31 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
     <div class="card">
-      <h3><span class="n">◈</span>影像学检查</h3>
-      <div class="step-desc">勾选已做的影像学检查，填写检查所见</div>
+      <h3><span class="n">3</span>既往史</h3>
+      <div class="step-desc">勾选存在的危险因素</div>
+      <div id="histList"></div>
+      <div class="field" style="margin-top:10px">
+        <label>用药史 / 其他</label>
+        <textarea id="fMeds" placeholder="如：阿司匹林、氯吡格雷、华法林等"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="n">4</span>影像学检查</h3>
+      <div class="step-desc">勾选已做检查，填写所见</div>
       <div class="img-pills" id="imgTypes"></div>
       <div class="field">
         <label>检查所见 / 影像学发现</label>
-        <textarea id="fImg" placeholder="如：L4/5 椎间盘突出，神经根受压"></textarea>
+        <textarea id="fImg" placeholder="如：右侧基底节区梗死灶"></textarea>
       </div>
     </div>
   </section>
 
-  <!-- 2 客观评估 -->
-  <section class="section" id="sec-exam">
+  <!-- 2 查体 -->
+  <section class="section" id="sec-neuro">
     <div class="card">
-      <h3><span class="n">2</span>客观评估</h3>
-      <div class="step-desc">勾选有异常的评估项，并记录程度</div>
-      <div id="examList"></div>
+      <h3><span class="n">1</span>神经系统查体</h3>
+      <div class="step-desc">勾选有异常的查体项并记录程度</div>
+      <div id="neuroList"></div>
     </div>
     <div class="card">
       <h3><span class="n">▶</span>特殊检查视频</h3>
@@ -376,11 +420,20 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </section>
 
-  <!-- 3 量表匹配 -->
+  <!-- 3 专项评定 -->
+  <section class="section" id="sec-assess">
+    <div class="card">
+      <h3><span class="n">◈</span>专项功能评定</h3>
+      <div class="step-desc">言语 / 吞咽 / 运动 / 作业，勾选异常项并记录程度</div>
+      <div id="assessGroups"></div>
+    </div>
+  </section>
+
+  <!-- 4 量表评估 -->
   <section class="section" id="sec-scale">
     <div class="card">
-      <h3><span class="n">3</span>量表精准匹配</h3>
-      <div class="step-desc">按疾病类型筛选量表，可多选</div>
+      <h3><span class="n">◈</span>量表精准匹配</h3>
+      <div class="step-desc">按疾病类型筛选，可多选；滑块计分、下拉分级</div>
       <div class="filter" id="scaleFilter"></div>
       <div id="scaleList"></div>
     </div>
@@ -390,30 +443,39 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </section>
 
-  <!-- 4 方案生成 -->
+  <!-- 5 康复方案 -->
   <section class="section" id="sec-plan">
     <div class="card">
-      <h3><span class="n">4</span>康复方案生成</h3>
-      <div class="step-desc">基于评估结果自动生成分阶段方案</div>
-      <button class="btn" id="btnGenPlan">生成分阶段康复方案</button>
+      <h3><span class="n">1</span>治疗计划</h3>
+      <div class="step-desc">按疾病分期自动生成，含短期/长期目标与回家锻炼</div>
+      <button class="btn" id="btnGenPlan">生成康复方案</button>
       <div id="planOutput" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h3><span class="n">2</span>治疗目的</h3>
+      <div class="step-desc">勾选本次康复目标层面</div>
+      <div id="goalList"></div>
+    </div>
+    <div class="card">
+      <h3><span class="n">3</span>预后分析</h3>
+      <div id="progOutput"><div class="empty">生成方案后自动评估预后</div></div>
     </div>
     <div class="card">
       <h3><span class="n">＋</span>自定义疗法</h3>
       <div class="step-desc">添加物理因子、运动等个性化疗法</div>
       <div class="add-ther">
-        <input type="text" id="therInput" placeholder="如：中频电疗 20min / 臀桥 3×12">
+        <input type="text" id="therInput" placeholder="如：中频电疗 20min / 患侧负重训练">
         <button id="btnAddTher">添加</button>
       </div>
       <div class="therapy-list" id="therList"></div>
     </div>
   </section>
 
-  <!-- 5 报告导出 -->
+  <!-- 6 报告导出 -->
   <section class="section" id="sec-report">
     <div class="card">
-      <h3><span class="n">5</span>报告导出</h3>
-      <div class="step-desc">汇总评估结果与治疗方案</div>
+      <h3><span class="n">◈</span>报告导出</h3>
+      <div class="step-desc">汇总诊断、评估结果与康复方案</div>
       <button class="btn" id="btnGenReport">生成完整报告</button>
       <div id="reportOutput" style="margin-top:14px"></div>
     </div>
@@ -426,11 +488,12 @@ input[type=range]::-webkit-slider-thumb{
 
 <!-- bottom nav -->
 <div class="tabbar">
-  <div class="tab on" data-sec="sec-info"><span class="ic">📋</span>基础信息</div>
-  <div class="tab" data-sec="sec-exam"><span class="ic">🔍</span>客观评估</div>
-  <div class="tab" data-sec="sec-scale"><span class="ic">📊</span>量表匹配</div>
-  <div class="tab" data-sec="sec-plan"><span class="ic">💡</span>方案生成</div>
-  <div class="tab" data-sec="sec-report"><span class="ic">📄</span>报告导出</div>
+  <div class="tab on" data-sec="sec-info"><span class="ic">📋</span>病历</div>
+  <div class="tab" data-sec="sec-neuro"><span class="ic">🔍</span>查体</div>
+  <div class="tab" data-sec="sec-assess"><span class="ic">🗣</span>评定</div>
+  <div class="tab" data-sec="sec-scale"><span class="ic">📊</span>量表</div>
+  <div class="tab" data-sec="sec-plan"><span class="ic">💡</span>方案</div>
+  <div class="tab" data-sec="sec-report"><span class="ic">📄</span>报告</div>
 </div>
 
 <!-- patient modal -->
@@ -485,6 +548,7 @@ const VIDEOS = {
 /* ---- 量表定义：含真实题目 + 计分分级 ---- */
 const IMAGING_TYPES = ['X线','CT','MRI','超声','肌电图'];
 const SCALES = [
+  /* 原保留：疼痛/骨科/心肺 */
   { id:'vas',    name:'VAS 疼痛评分',     disease:'疼痛', desc:'0-10 视觉模拟评分',
     items:[{label:'当前疼痛程度', max:10, step:0.5, hint:'0=无痛  10=剧痛'}],
     grade: t => t<4 ? {label:'轻度', c:1} : t<7 ? {label:'中度', c:2} : {label:'重度', c:3} },
@@ -511,65 +575,215 @@ const SCALES = [
       {label:'踝关节背屈', max:30, step:1}
     ],
     grade: t => t>=600 ? {label:'良好', c:1} : t>=450 ? {label:'中度受限', c:2} : {label:'明显受限', c:3} },
-  { id:'bfc',    name:'Borg 呼吸困难量表', disease:'心肺', desc:'呼吸困难程度 · 0-10',
+  { id:'borg',   name:'Borg 呼吸困难量表', disease:'心肺', desc:'呼吸困难程度 · 0-10',
     items:[{label:'呼吸困难程度', max:10, step:1, hint:'0=完全没有  10=极重'}],
     grade: t => t<=3 ? {label:'轻度', c:1} : t<=6 ? {label:'中度', c:2} : {label:'重度', c:3} },
-  { id:'sixmwt', name:'6 分钟步行试验',    disease:'心肺', desc:'心肺耐力 · 米',
-    items:[{label:'步行距离', max:600, step:10, hint:'单位：米'}],
-    grade: t => t>=450 ? {label:'良好', c:1} : t>=300 ? {label:'中度减退', c:2} : {label:'重度减退', c:3} },
-  { id:'bbs',    name:'Berg 平衡量表',      disease:'神经', desc:'平衡功能 · 14 题，每题 0-4 分',
-    items:[
-      {label:'坐→站', max:4, step:1},   {label:'独立站立', max:4, step:1},
-      {label:'无支撑坐', max:4, step:1}, {label:'站→坐', max:4, step:1},
-      {label:'转移', max:4, step:1},     {label:'闭眼站立', max:4, step:1},
-      {label:'双足并拢站立', max:4, step:1}, {label:'前伸够物', max:4, step:1},
-      {label:'拾起地上物品', max:4, step:1}, {label:'转身向后看', max:4, step:1},
-      {label:'转体 360°', max:4, step:1}, {label:'双脚交替踏台阶', max:4, step:1},
-      {label:'前后脚站立', max:4, step:1}, {label:'单腿站立', max:4, step:1}
-    ],
-    grade: t => t>=45 ? {label:'低跌倒风险', c:1} : t>=40 ? {label:'中跌倒风险', c:2} : {label:'高跌倒风险', c:3} },
-  { id:'adl',    name:'Barthel 指数 ADL',  disease:'神经', desc:'日常生活能力 · 10 项，每项 0-10 分',
-    items:[
-      {label:'进食', max:10, step:5},  {label:'洗澡', max:10, step:5},
-      {label:'修饰（洗脸/刷牙）', max:10, step:5}, {label:'穿衣', max:10, step:5},
-      {label:'大便控制', max:10, step:5}, {label:'小便控制', max:10, step:5},
-      {label:'用厕', max:10, step:5},  {label:'床椅转移', max:10, step:5},
-      {label:'平地行走', max:10, step:5}, {label:'上下楼梯', max:10, step:5}
-    ],
-    grade: t => t>=90 ? {label:'基本自理', c:1} : t>=60 ? {label:'中度依赖', c:2} : {label:'重度依赖', c:3} }
+  /* 第二章 29 个量表 */
+  { id:'fmbal', name:'Fugl-Meyer 平衡量表', disease:'脑卒中', desc:'平衡功能 · 7 项 0-2 分，满分 14',
+    items:[{label:'无支撑坐位',max:2,step:1},{label:'健侧展翅反应',max:2,step:1},{label:'患侧展翅反应',max:2,step:1},{label:'支撑下站立',max:2,step:1},{label:'无支撑站立',max:2,step:1},{label:'健侧单腿站立',max:2,step:1},{label:'患侧单腿站立',max:2,step:1}],
+    grade: t => t>=14 ? {label:'平衡正常',c:1} : t>=7 ? {label:'平衡障碍',c:2} : {label:'严重障碍',c:3} },
+  { id:'mas', name:'改良 Ashworth 痉挛量表', disease:'脑卒中', desc:'肌张力 · 0-1+ 分级',
+    items:[{label:'肌张力分级',options:['0级','1级','1+级','2级','3级','4级']}],
+    grade:(t,v)=> ({label: v[0]||'未评', c: v[0]==='0级'?1:((v[0]==='1级'||v[0]==='1+级')?2:3)}) },
+  { id:'bbs', name:'Berg 平衡量表', disease:'脑卒中', desc:'平衡功能 · 14 题 0-4 分，满分 56',
+    items:[{label:'坐到站',max:4,step:1},{label:'无支撑站立',max:4,step:1},{label:'无靠背坐位',max:4,step:1},{label:'站到坐',max:4,step:1},{label:'转移',max:4,step:1},{label:'闭目站立',max:4,step:1},{label:'双脚并拢站立',max:4,step:1},{label:'上肢前伸',max:4,step:1},{label:'从地面拾物',max:4,step:1},{label:'转身向后看',max:4,step:1},{label:'360度转身',max:4,step:1},{label:'交替踩踏台阶',max:4,step:1},{label:'前后脚站立',max:4,step:1},{label:'单腿站立',max:4,step:1}],
+    grade: t => t>=41 ? {label:'平衡良好',c:1} : t>=21 ? {label:'有一定平衡',c:2} : {label:'高跌倒风险',c:3} },
+  { id:'barthel', name:'Barthel 指数 ADL', disease:'脑卒中', desc:'日常生活能力 · 10 项，满分 100',
+    items:[{label:'进食',max:10,step:5},{label:'洗澡',max:5,step:5},{label:'修饰',max:5,step:5},{label:'穿衣',max:10,step:5},{label:'控制大便',max:10,step:5},{label:'控制小便',max:10,step:5},{label:'如厕',max:10,step:5},{label:'床椅转移',max:15,step:5},{label:'平地行走',max:15,step:5},{label:'上下楼梯',max:10,step:5}],
+    grade: t => t>=91 ? {label:'基本自理',c:1} : t>=61 ? {label:'中度依赖',c:2} : {label:'重度依赖',c:3} },
+  { id:'mmse', name:'简易精神状态检查 MMSE', disease:'脑卒中', desc:'认知功能 · 满分 30',
+    items:[{label:'定向力',max:10,step:1},{label:'即刻记忆力',max:3,step:1},{label:'注意力与计算力',max:5,step:1},{label:'回忆能力',max:3,step:1},{label:'语言能力',max:9,step:1}],
+    grade: t => t>=24 ? {label:'认知完整',c:1} : t>=18 ? {label:'轻度障碍',c:2} : {label:'重度障碍',c:3} },
+  { id:'moca', name:'蒙特利尔认知评估 MoCA', disease:'脑卒中', desc:'认知功能 · 满分 30（教育≤12年加1分）',
+    items:[{label:'视空间/执行功能',max:5,step:1},{label:'命名',max:3,step:1},{label:'注意力',max:6,step:1},{label:'语言',max:3,step:1},{label:'抽象思维',max:2,step:1},{label:'延迟回忆',max:5,step:1},{label:'定向力',max:6,step:1}],
+    grade: t => t>=26 ? {label:'认知正常',c:1} : t>=18 ? {label:'轻度障碍',c:2} : {label:'重度障碍',c:3} },
+  { id:'watian', name:'洼田饮水试验', disease:'脑卒中', desc:'吞咽筛查 · 30ml 温水，观察呛咳',
+    items:[{label:'试验结果',options:['1级(优)','2级(良)','3级(中)','4级(可)','5级(差)']}],
+    grade:(t,v)=>{ const x=v[0]||''; return x.startsWith('1级')?{label:'正常/可疑',c:1}:x.startsWith('2级')?{label:'可疑',c:2}:{label:'吞咽异常',c:3}; } },
+  { id:'brunnstrom', name:'Brunnstrom 分期', disease:'脑卒中', desc:'偏瘫恢复阶段 · 上肢/手/下肢',
+    items:[{label:'上肢',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']},{label:'手',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']},{label:'下肢',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']}],
+    grade:(t,v)=>{ const mp={Ⅰ:1,Ⅱ:2,Ⅲ:3,Ⅳ:4,Ⅴ:5,Ⅵ:6}; const nums=v.map(x=>mp[String(x).charAt(0)]||0); const best=Math.max.apply(null,nums); return {label:'最高 '+['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ'][best], c:best>=6?1:best>=4?2:3}; } },
+  { id:'asia', name:'ASIA 脊髓损伤分级', disease:'脊髓损伤', desc:'感觉 28 关键点 · 运动 10 关键肌 · A-E',
+    items:[{label:'针刺觉+轻触觉总分(0-224)',max:224,step:2},{label:'10 对关键肌运动总分(0-100)',max:100,step:1},{label:'残损分级',options:['A级-完全性','B级-感觉不完全','C级-运动不完全','D级-运动不完全','E级-正常']}],
+    grade:(t,v)=>{ const g=v[2]||''; return {label:g?g.split('-')[0]:'未评', c:g.startsWith('A')?3:(g.startsWith('B')||g.startsWith('C')?2:1)}; } },
+  { id:'neurop', name:'脊髓损伤神经平面', disease:'脊髓损伤', desc:'身体两侧最高损伤节段',
+    items:[{label:'神经损伤平面',options:['C2','C3','C4','C5','C6','C7','C8','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','L1','L2','L3','L4','L5','S1','S2','S3','S4-S5']}],
+    grade:(t,v)=> ({label: v[0]||'未评', c:1}) },
+  { id:'arat', name:'上肢动作研究测试 ARAT', disease:'脑卒中', desc:'19 项 · 0-3 分，满分 57',
+    items:[{label:'抓握-10cm³积木(16cm)',max:3,step:1},{label:'抓握-10cm³积木(30cm)',max:3,step:1},{label:'抓握-10cm³积木(46cm)',max:3,step:1},{label:'抓握-2.5cm³积木',max:3,step:1},{label:'抓握-1.25cm³积木',max:3,step:1},{label:'抓握-钢管',max:3,step:1},{label:'握力-握力计',max:3,step:1},{label:'握力-玻璃球',max:3,step:1},{label:'握力-小石子',max:3,step:1},{label:'握力-大石子',max:3,step:1},{label:'捏力-拇食对捏钢珠',max:3,step:1},{label:'捏力-拇中对捏钢珠',max:3,step:1},{label:'捏力-拇食对捏小木块',max:3,step:1},{label:'捏力-拇中对捏小木块',max:3,step:1},{label:'捏力-拇食对捏大木块',max:3,step:1},{label:'捏力-拇中对捏大木块',max:3,step:1},{label:'粗大-手放后脑勺',max:3,step:1},{label:'粗大-手放头顶',max:3,step:1},{label:'粗大-手放嘴部',max:3,step:1}],
+    grade: t => t>=57 ? {label:'正常',c:1} : t>=40 ? {label:'中度障碍',c:2} : {label:'重度障碍',c:3} },
+  { id:'wab', name:'西方失语症成套测验 WAB', disease:'脑卒中', desc:'失语商 AQ=(自发言语+听理解/10+复述/10+命名/10)×2',
+    items:[{label:'自发言语(信息量+流畅度)',max:20,step:1},{label:'听理解',max:200,step:5},{label:'复述',max:100,step:5},{label:'命名',max:100,step:5}],
+    grade:(t,v)=>{ const aq=(v[0]+v[1]/10+v[2]/10+v[3]/10)*2; return {label:'AQ '+aq.toFixed(1), c:aq>=93.8?1:aq>=50?2:3}; } },
+  { id:'ssa', name:'标准吞咽功能评估 SSA', disease:'脑卒中', desc:'总分越低吞咽越好',
+    items:[{label:'意识水平',max:2,step:1},{label:'头部/躯干控制',max:2,step:1},{label:'呼吸模式',max:1,step:1},{label:'唇闭合',max:2,step:1},{label:'软腭运动',max:2,step:1},{label:'喉功能',max:2,step:1},{label:'咽反射',max:2,step:1},{label:'自主咳嗽',max:2,step:1},{label:'吞咽5ml水',max:6,step:1},{label:'吞咽60ml水',max:7,step:1}],
+    grade: t => t<6 ? {label:'正常',c:1} : t<=12 ? {label:'轻度障碍',c:2} : t<=20 ? {label:'中度障碍',c:3} : {label:'重度障碍',c:3} },
+  { id:'phq9', name:'患者健康问卷 PHQ-9', disease:'脑卒中', desc:'抑郁筛查 · 9 题 0-3 分',
+    items:[{label:'做事提不起劲或没兴趣',max:3,step:1},{label:'心情低落、沮丧或绝望',max:3,step:1},{label:'入睡困难或睡眠过多',max:3,step:1},{label:'疲倦或没活力',max:3,step:1},{label:'食欲不振或吃太多',max:3,step:1},{label:'觉得自己很糟或很失败',max:3,step:1},{label:'专注困难',max:3,step:1},{label:'动作/说话缓慢或相反',max:3,step:1},{label:'有不如死掉的念头',max:3,step:1}],
+    grade: t => t<=4 ? {label:'无抑郁',c:1} : t<=9 ? {label:'轻度',c:2} : t<=14 ? {label:'中度',c:2} : t<=19 ? {label:'中重度',c:3} : {label:'重度',c:3} },
+  { id:'gad7', name:'广泛性焦虑 GAD-7', disease:'脑卒中', desc:'焦虑筛查 · 7 题 0-3 分',
+    items:[{label:'感觉紧张、焦虑或急切',max:3,step:1},{label:'不能停止或控制担忧',max:3,step:1},{label:'对各种事情过分担忧',max:3,step:1},{label:'很难放松下来',max:3,step:1},{label:'不安而无法静坐',max:3,step:1},{label:'容易烦恼或急躁',max:3,step:1},{label:'感到可怕事情要发生',max:3,step:1}],
+    grade: t => t<=4 ? {label:'无焦虑',c:1} : t<=9 ? {label:'轻度',c:2} : t<=14 ? {label:'中度',c:3} : {label:'重度',c:3} },
+  { id:'holden', name:'Holden 步行功能分级', disease:'脑卒中', desc:'0-5 级步行能力',
+    items:[{label:'步行分级',options:['0级-不能行走','1级-需大量帮助','2级-需少量帮助','3级-需监护/言语指导','4级-平地独立','5级-完全独立']}],
+    grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'级', c:n<='2'?3:n==='3'?2:1}; } },
+  { id:'wisci', name:'脊髓损伤步行指数 WISCI II', disease:'脊髓损伤', desc:'0-20 级，越高辅助越少',
+    items:[{label:'WISCI 分级',options:['0级-不能行走','1-4级-双拐+1人辅助','5-9级-双拐独立','10-14级-单拐独立','15-19级-无器具独立','20级-正常行走']}],
+    grade:(t,v)=>({label: v[0]?v[0].split('-')[0]:'未评', c:(v[0]&&v[0].startsWith('20'))?1:((v[0]&&(v[0].startsWith('15')||v[0].startsWith('10')))?2:3)}) },
+  { id:'frenchay', name:'Frenchay 构音障碍评定', disease:'脑卒中', desc:'8 维度 · a 最佳 / e 最差',
+    items:[{label:'反射',options:['a','b','c','d','e']},{label:'呼吸',options:['a','b','c','d','e']},{label:'唇部',options:['a','b','c','d','e']},{label:'下颌',options:['a','b','c','d','e']},{label:'软腭',options:['a','b','c','d','e']},{label:'喉部',options:['a','b','c','d','e']},{label:'舌部',options:['a','b','c','d','e']},{label:'言语可懂度',options:['a','b','c','d','e']}],
+    grade:(t,v)=>{ const ws=v.filter(x=>x).sort().pop()||'未评'; return {label:'最差 '+ws, c:ws<='b'?1:ws<='c'?2:3}; } },
+  { id:'ssqol', name:'脑卒中生活质量 SS-QOL', disease:'脑卒中', desc:'49 条 12 维度 · 0-100 越高越好',
+    items:[{label:'精力',max:100,step:5},{label:'家庭角色',max:100,step:5},{label:'语言',max:100,step:5},{label:'活动能力',max:100,step:5},{label:'情绪',max:100,step:5},{label:'个性',max:100,step:5},{label:'自理能力',max:100,step:5},{label:'社会角色',max:100,step:5},{label:'思维',max:100,step:5},{label:'上肢功能',max:100,step:5},{label:'视力',max:100,step:5},{label:'工作/生产力',max:100,step:5}],
+    grade:(t,v)=>{ const n=v.filter(x=>typeof x==='number'&&x>=0).length; const avg=n?t/n:0; return {label:'均分'+Math.round(avg), c:avg>=70?1:avg>=40?2:3}; } },
+  { id:'mrs', name:'改良 Rankin 量表 mRS', disease:'脑卒中', desc:'功能结局 · 0-6 分',
+    items:[{label:'mRS 评分',options:['0分-完全无症状','1分-无明显残疾','2分-轻度残疾','3分-中度残疾','4分-中重度残疾','5分-重度残疾','6分-死亡']}],
+    grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'分', c:(n==='0'||n==='1'||n==='2')?1:n==='3'?2:3}; } },
+  { id:'fim', name:'功能独立性测量 FIM', disease:'脊髓损伤', desc:'18 项 · 1-7 分 · 满分 126',
+    items:[{label:'进食',max:7,step:1},{label:'梳洗',max:7,step:1},{label:'洗澡',max:7,step:1},{label:'穿上身衣',max:7,step:1},{label:'穿下身衣',max:7,step:1},{label:'如厕',max:7,step:1},{label:'膀胱管理',max:7,step:1},{label:'直肠管理',max:7,step:1},{label:'床椅转移',max:7,step:1},{label:'坐厕转移',max:7,step:1},{label:'浴池转移',max:7,step:1},{label:'行走/轮椅',max:7,step:1},{label:'上下楼梯',max:7,step:1},{label:'理解',max:7,step:1},{label:'表达',max:7,step:1},{label:'社会交往',max:7,step:1},{label:'解决问题',max:7,step:1},{label:'记忆',max:7,step:1}],
+    grade:t => ({label:'FIM '+t+'/126', c:t>=108?1:t>=54?2:3}) },
+  { id:'nihss', name:'美国国立卫生研究院卒中量表 NIHSS', disease:'脑卒中', desc:'神经功能缺损 · 0-42 分',
+    items:[{label:'意识水平',max:3,step:1},{label:'意识提问',max:2,step:1},{label:'意识指令',max:2,step:1},{label:'最佳凝视',max:2,step:1},{label:'视野',max:3,step:1},{label:'面瘫',max:3,step:1},{label:'上肢运动',max:4,step:1},{label:'下肢运动',max:4,step:1},{label:'肢体共济失调',max:2,step:1},{label:'感觉',max:2,step:1},{label:'最佳语言',max:3,step:1},{label:'构音障碍',max:2,step:1},{label:'忽视症',max:2,step:1}],
+    grade: t => t<=1 ? {label:'正常',c:1} : t<=4 ? {label:'轻度',c:1} : t<=15 ? {label:'中度',c:2} : {label:'重度',c:3} },
+  { id:'tenmwt', name:'10 米步行测试', disease:'脑卒中', desc:'步行速度 m/s（MCID 0.14-0.17）',
+    items:[{label:'舒适步速 (m/s)',max:2,step:0.01,hint:'14m 通道中段 10m 计时'}],
+    grade: t => t>=0.8 ? {label:'正常社区步速',c:1} : t>=0.4 ? {label:'步速下降',c:2} : {label:'明显下降',c:3} },
+  { id:'sixmwt', name:'6 分钟步行试验', disease:'心肺', desc:'步行耐力 · 米',
+    items:[{label:'步行距离',max:600,step:10,hint:'单位：米'}],
+    grade: t => t>=450 ? {label:'良好',c:1} : t>=300 ? {label:'中度减退',c:2} : {label:'重度减退',c:3} },
+  { id:'penn', name:'Penn 痉挛频率量表', disease:'脑卒中', desc:'痉挛发作频率',
+    items:[{label:'痉挛频率',options:['0分-无痉挛','1分-刺激可诱发','2分-偶有≤1次/小时','3分-时有>1次/小时','4分-频繁>10次/小时']}],
+    grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'分', c:n==='0'?1:(n==='1'||n==='2')?2:3}; } },
+  { id:'clonus', name:'Clonus 踝阵挛分级', disease:'脑卒中', desc:'踝阵挛次数',
+    items:[{label:'踝阵挛',options:['0级-无','1级-1~3次','2级-4~6次','3级-7~9次','4级-≥10次']}],
+    grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'级', c:n==='0'?1:(n==='1'||n==='2')?2:3}; } },
+  { id:'carr', name:'Carr-Shepherd 运动功能评定', disease:'脑卒中', desc:'8 项 · 0-6 分 · 满分 48',
+    items:[{label:'仰卧位到健侧翻身',max:6,step:1},{label:'仰卧位到坐位',max:6,step:1},{label:'坐位平衡',max:6,step:1},{label:'坐位到站立位',max:6,step:1},{label:'步行',max:6,step:1},{label:'上肢功能',max:6,step:1},{label:'手部运动',max:6,step:1},{label:'手的精细活动',max:6,step:1}],
+    grade: t => t>=33 ? {label:'轻度障碍',c:1} : t>=17 ? {label:'中度障碍',c:2} : {label:'重度障碍',c:3} },
+  { id:'scim', name:'脊髓独立性评估 SCIM', disease:'脊髓损伤', desc:'总分 0-100，越高越独立',
+    items:[{label:'自我照顾(0-20)',max:20,step:1},{label:'呼吸与括约肌(0-40)',max:40,step:1},{label:'移动能力(0-40)',max:40,step:1}],
+    grade: t => t>=80 ? {label:'基本独立',c:1} : t>=40 ? {label:'中度依赖',c:2} : {label:'重度依赖',c:3} },
+  { id:'minibest', name:'mini-BESTest 平衡评定', disease:'脑卒中', desc:'14 项 · 0-2 分 · 满分 28',
+    items:[{label:'坐到站',max:2,step:1},{label:'站到坐',max:2,step:1},{label:'单腿站立',max:2,step:1},{label:'向前扰动反应',max:2,step:1},{label:'向后扰动反应',max:2,step:1},{label:'侧方扰动反应',max:2,step:1},{label:'闭眼站立',max:2,step:1},{label:'斜坡站立',max:2,step:1},{label:'双足并拢站立',max:2,step:1},{label:'行走中转头',max:2,step:1},{label:'行走跨步',max:2,step:1},{label:'绕过障碍物',max:2,step:1},{label:'计时起身走',max:2,step:1},{label:'行走中转身',max:2,step:1}],
+    grade: t => t>=20 ? {label:'平衡良好',c:1} : t>=10 ? {label:'中度障碍',c:2} : {label:'明显障碍',c:3} }
 ];
-const DISEASES = ['疼痛','骨科','心肺','神经'];
+const DISEASES = ['脑卒中','脊髓损伤','疼痛','骨科','心肺'];
 
-/* ---- 方案模板 ---- */
-const PLAN_TEMPLATE = {
-  acute: {
-    title: '急性期', range: '0-2 周',
-    items: [
-      '制动与姿势教育，避免诱发动作',
-      '冰敷 15min，2 次/日，控制炎症',
-      '被动关节活动度训练（无痛范围）',
-      '物理因子：中频电疗 / 超声波，消炎镇痛'
-    ]
+/* ---- 诊断与分期 ---- */
+const DIAG_TYPES = ['中经络','中脏腑'];
+const DIAG_STAGES = ['急性期(≤2周)','恢复期(2周-6月)','后遗症期(>6月)'];
+
+/* ---- 既往史（危险因素）---- */
+const HISTORY_ITEMS = [
+  { id:'htn',    name:'高血压',         desc:'最主要危险因素' },
+  { id:'dm',     name:'糖尿病',         desc:'影响预后' },
+  { id:'hpl',    name:'高脂血症',       desc:'动脉粥样硬化基础' },
+  { id:'af',     name:'心房颤动/心脏病', desc:'心源性栓塞来源' },
+  { id:'stroke', name:'既往卒中史',     desc:'复发风险高' },
+  { id:'tia',    name:'TIA 史',         desc:'预警信号' },
+  { id:'mi',     name:'心肌梗死史',     desc:'血管基础差' },
+  { id:'smoke',  name:'吸烟',           desc:'危险因素' },
+  { id:'alcohol',name:'饮酒',           desc:'危险因素' }
+];
+
+/* ---- 神经系统查体 ---- */
+const NEURO_ITEMS = [
+  { id:'conscious', name:'意识状态',     desc:'清醒/嗜睡/昏睡/昏迷' },
+  { id:'cortex',    name:'高级皮层功能', desc:'记忆力/视空间/反应' },
+  { id:'cranial',   name:'颅神经',       desc:'十二对颅神经检查' },
+  { id:'motor',     name:'运动系统',     desc:'肌力/肌张力/ROM/步态' },
+  { id:'sensory',   name:'感觉系统',     desc:'浅/深/复合感觉' },
+  { id:'reflex',    name:'反射',         desc:'腱反射/浅反射' },
+  { id:'patho',     name:'病理征',       desc:'Babinski/Chaddock/Oppenheim/Gordon' },
+  { id:'meningeal', name:'脑膜刺激征',   desc:'颈强直/Kernig/Brudzinski' },
+  { id:'cardio',    name:'心脏与血管',   desc:'心律/血管杂音' }
+];
+
+/* ---- 专项评定（言语/吞咽/运动/作业）---- */
+const ASSESS_GROUPS = {
+  speech: { title:'言语评定', icon:'🗣', items:[
+    { id:'aphasia',    name:'失语症',     desc:'WAB 自发言语/听理解/复述/命名' },
+    { id:'dysarthria', name:'构音障碍',   desc:'Frenchay 8 维度' },
+    { id:'funccomm',   name:'功能性沟通', desc:'说/理解/读/写' }
+  ]},
+  swallow: { title:'吞咽评定', icon:'💧', items:[
+    { id:'watian', name:'洼田饮水试验',       desc:'30ml 温水，观察呛咳' },
+    { id:'oral',   name:'口腔功能',           desc:'唇闭合/舌运动/软腭上抬/咽反射' },
+    { id:'ssa',    name:'SSA 标准吞咽评估',   desc:'初步评估+5ml+60ml' },
+    { id:'vst',    name:'V-VST 容积粘度测试', desc:'不同容积/粘度' },
+    { id:'vfss',   name:'VFSS/FEES 仪器检查', desc:'造影或内镜' }
+  ]},
+  motor: { title:'运动评定', icon:'🏃', items:[
+    { id:'mmt',        name:'徒手肌力 MMT',    desc:'0-5 级关键肌群' },
+    { id:'tonus',      name:'肌张力(MAS)',     desc:'Ashworth 分级' },
+    { id:'rom',        name:'关节活动度 ROM',  desc:'被动/主动活动范围' },
+    { id:'brunnstrom', name:'Brunnstrom 分期', desc:'上肢/手/下肢' },
+    { id:'balance',    name:'平衡功能',        desc:'BBS / Fugl-Meyer' },
+    { id:'gait',       name:'步行功能',        desc:'Holden / 10MWT / 6MWT' },
+    { id:'coor',       name:'协调性',          desc:'指鼻/跟膝胫试验' }
+  ]},
+  ot: { title:'作业评定', icon:'✋', items:[
+    { id:'badl',   name:'BADL 基本日常活动',   desc:'Barthel 指数' },
+    { id:'iadl',   name:'IADL 工具性日常活动', desc:'购物/烹饪/电话/财务' },
+    { id:'cog',    name:'认知功能',           desc:'MMSE / MoCA' },
+    { id:'upper',  name:'上肢及手功能',       desc:'Brunnstrom / FMA-UE' },
+    { id:'psych',  name:'心理状态',           desc:'PHQ-9 / GAD-7' },
+    { id:'vision', name:'视觉功能',           desc:'视野/单侧忽略' }
+  ]}
+};
+
+/* ---- 治疗目的（三个层面）---- */
+const GOALS = [
+  { id:'body',         name:'身体水平', desc:'改善运动感觉、言语吞咽、认知等功能' },
+  { id:'activity',     name:'活动水平', desc:'提高日常生活活动(ADL)能力' },
+  { id:'participation',name:'参与水平', desc:'提高社会参与和生活质量' }
+];
+
+/* ---- 各分期治疗计划 / 短长期目标 / 回家锻炼（第〇章）---- */
+const TREAT = {
+  '急性期(≤2周)': ['体位管理与良肢位摆放','促醒治疗(意识障碍)','被动关节活动度训练','吞咽功能训练与进食指导','病情稳定48h后床边康复'],
+  '恢复期(2周-6月)': ['PT物理治疗：坐位/站立/步行训练','OT作业治疗：日常生活活动训练','言语治疗：失语症/构音障碍训练','吞咽治疗：吞咽功能训练','认知功能训练','物理因子治疗','痉挛处理(药物/肉毒毒素)','针灸推拿等中医治疗'],
+  '后遗症期(>6月)': ['维持性训练防止功能退化','ADL与社区生活能力训练','矫形器具使用与训练','心理行为支持','家庭康复计划与随访']
+};
+const STROKE_PLAN = {
+  '急性期(≤2周)': {
+    short: ['稳定生命体征，防治并发症','良肢位摆放、被动关节活动(每日3-4次)、定时体位转换','24小时内完成洼田饮水试验吞咽筛查','1周内完成初次康复评定','2周内完成床上翻身、坐位维持5分钟以上'],
+    long:  ['预防并发症，最大限度减轻障碍','为恢复期功能重建打基础']
   },
-  sub: {
-    title: '亚急性期', range: '2-6 周',
-    items: [
-      '恢复关节活动度：牵伸 + 主动 ROM',
-      '核心稳定性训练：臀桥、鸟狗式',
-      '肌力强化：等长→等张渐进抗阻',
-      '本体感觉与平衡训练'
-    ]
+  '恢复期(2周-6月)': {
+    short: ['坐位平衡训练(有支撑→无支撑)','站立训练(辅助→独立)','床-椅转移训练','系统言语治疗和吞咽训练','认知功能评估与训练','步行训练(辅助→独立)','手精细功能训练','基本日常生活活动训练'],
+    long:  ['最大限度改善功能障碍','约80%患者恢复步行(含辅助)，约50%上肢恢复实用功能','基本ADL独立完成，重返家庭']
   },
-  chronic: {
-    title: '慢性期', range: '6 周+',
-    items: [
-      '功能性与专项动作模式训练',
-      '力量峰值训练 + 耐力训练',
-      '重返运动/工作前的功能测试',
-      '家庭康复计划与复发预防宣教'
-    ]
+  '后遗症期(>6月)': {
+    short: ['维持已有功能，防止退化','IADL训练：购物/烹饪/使用电话','社区步行逐步增加距离','家庭康复计划坚持执行'],
+    long:  ['维持功能，提高生活质量','回归家庭和社会，从事力所能及的活动']
   }
 };
+const HOME_EX = {
+  '急性期(≤2周)': [
+    '被动关节活动：家属活动患侧肩肘腕髋膝踝，每日2-3次每次10分钟',
+    '良肢位摆放：每1-2小时变换',
+    'Bobath握手：双手交叉患侧拇指在上，每日2-3组每组15-20次',
+    '桥式运动：仰卧屈膝抬臀，每日2-3次每组10个'
+  ],
+  '恢复期(2周-6月)': [
+    '坐位训练：靠坐→床边无支撑端坐',
+    '翻身训练：仰卧到侧卧，每日多次',
+    '坐位平衡：重心转移、躯干旋转',
+    '患侧下肢抬举：每组10次每日3组',
+    '站立训练：助行器或家属扶持，重心转移',
+    '坐站转移：每日多次',
+    '步行训练：助行器或扶持，少量多次',
+    '手部锻炼：用力握拳2-3秒再张开，每遍10次一天3遍'
+  ],
+  '后遗症期(>6月)': [
+    '社区步行：安全环境下逐步增加距离，每日1-2次',
+    'ADL训练：独立穿衣、进食、洗漱',
+    '手精细功能：捡豆子、写字、使用工具'
+  ]
+};
+
+/* 原骨科 EXAM_ITEMS 保留（兼容旧数据） */
 const EXAM_ITEMS = [
   { id:'palp', name:'触诊',   desc:'压痛点 / 肌肉紧张' },
   { id:'rom',  name:'活动度', desc:'关节活动范围受限' },
@@ -585,22 +799,39 @@ const STORAGE_KEY = 'rehab_patients_v1';
 let patients = loadPatients();
 let currentId = null;
 if (!patients.length) {
-  patients = [makePatient('张三','45','男','腰痛伴右下肢放射痛 2 周', 6)];
+  patients = [makePatient('张三','65','男','右侧肢体活动不利伴言语含糊 1 月余', 4)];
 }
 ensureCurrent();
+function normalize(p){
+  if(!p) return p;
+  p.diagnosis = p.diagnosis || { type:'', stage:'', note:'' };
+  p.history = p.history || { items:[], meds:'' };
+  p.imaging = p.imaging || { types:[], findings:'' };
+  p.neuro = p.neuro || {};
+  p.assess = p.assess || {};
+  ['speech','swallow','motor','ot'].forEach(k=>{ if(!p.assess[k]) p.assess[k]={}; });
+  p.exam = p.exam || {};
+  p.scales = p.scales || []; p.scores = p.scores || {};
+  p.goals = p.goals || {};
+  p.plan = p.plan || null; p.customTher = p.customTher || [];
+  return p;
+}
 function makePatient(name,age,gender,complaint,vas){
-  return {
+  return normalize({
     id: 'p' + Date.now() + Math.random().toString(36).slice(2,6),
     name: name||'', age: age||'', gender: gender||'男',
     complaint: complaint||'', vas: vas!=null?vas:0,
+    diagnosis: { type:'', stage:'', note:'' },
+    history: { items:[], meds:'' },
     imaging: { types: [], findings: '' },
-    exam: {}, scales: [], scores: {},
+    neuro: {}, assess: { speech:{}, swallow:{}, motor:{}, ot:{} },
+    exam: {}, scales: [], scores: {}, goals: {},
     plan: null, customTher: [],
     createdAt: Date.now()
-  };
+  });
 }
 function loadPatients(){
-  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw).map(normalize); }catch(e){}
   return [];
 }
 function savePatients(){
@@ -628,7 +859,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('on');
     const sec=document.getElementById(tab.dataset.sec);
     sec.classList.add('active');
-    if(tab.dataset.sec==='sec-plan') renderPlanPreview();
+    if(tab.dataset.sec==='sec-plan'){ renderPlanPreview(); renderProg(); }
     if(tab.dataset.sec==='sec-report') renderReport();
   });
 });
@@ -682,30 +913,48 @@ $('#btnAddPatient').addEventListener('click',()=>{
 });
 
 /* ============================================================
-   1 基础信息 + 影像学
+   1 病历：诊断 / 主诉 / 既往史 / 影像学
    ============================================================ */
+function renderPills(sel, opts, current, cb){
+  const box=$(sel);
+  box.innerHTML = opts.map(o=>`<label><input type="radio" name="${sel}" value="${o}" ${current===o?'checked':''}><span>${o}</span></label>`).join('');
+  box.querySelectorAll('input').forEach(r=>r.addEventListener('change',()=>{ if(r.checked) cb(r.value); }));
+}
 function refreshInfo(){
   const p=cur();
   $('#fName').value=p.name;
   $('#fAge').value=p.age;
   document.querySelectorAll('input[name=gender]').forEach(r=>{ if(r.value===p.gender) r.checked=true; });
+  renderPills('#diagTypes', DIAG_TYPES, p.diagnosis.type, v=>{ cur().diagnosis.type=v; savePatients(); });
+  renderPills('#diagStages', DIAG_STAGES, p.diagnosis.stage, v=>{ cur().diagnosis.stage=v; savePatients(); });
+  $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
   $('#fVas').value=p.vas;
   $('#vasVal').textContent=p.vas;
   $('#fVas').style.setProperty('--fill',(p.vas/10*100)+'%');
-  $('#fImg').value=p.imaging.findings;
-  // imaging pills
+  $('#histList').innerHTML = HISTORY_ITEMS.map(it=>{
+    const on=p.history.items.includes(it.id);
+    return `<div class="exam-item"><div class="chk ${on?'on':''}" data-id="${it.id}">✓</div><div class="en">${it.name}<small>${it.desc}</small></div></div>`;
+  }).join('');
+  $('#histList').querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
+    const p=cur(); const id=c.dataset.id;
+    const i=p.history.items.indexOf(id);
+    if(i>=0) p.history.items.splice(i,1); else p.history.items.push(id);
+    c.classList.toggle('on',p.history.items.includes(id));
+    savePatients();
+  }));
+  $('#fMeds').value=p.history.meds;
   $('#imgTypes').innerHTML = IMAGING_TYPES.map(t=>{
     const on=p.imaging.types.includes(t);
     return `<label><input type="checkbox" value="${t}" ${on?'checked':''}><span>${t}</span></label>`;
   }).join('');
   $('#imgTypes').querySelectorAll('input').forEach(c=>c.addEventListener('change',()=>{
-    const p=cur();
-    const t=c.value;
+    const p=cur(); const t=c.value;
     const i=p.imaging.types.indexOf(t);
     if(i>=0) p.imaging.types.splice(i,1); else p.imaging.types.push(t);
     savePatients();
   }));
+  $('#fImg').value=p.imaging.findings;
 }
 function bindInfo(){
   const vas=$('#fVas');
@@ -718,6 +967,8 @@ function bindInfo(){
   $('#fAge').addEventListener('input',e=>{ cur().age=e.target.value; savePatients(); });
   document.querySelectorAll('input[name=gender]').forEach(r=>r.addEventListener('change',e=>{ cur().gender=e.target.value; savePatients(); }));
   $('#fComplaint').addEventListener('input',e=>{ cur().complaint=e.target.value; savePatients(); });
+  $('#fDiagNote').addEventListener('input',e=>{ cur().diagnosis.note=e.target.value; savePatients(); });
+  $('#fMeds').addEventListener('input',e=>{ cur().history.meds=e.target.value; savePatients(); });
   $('#fImg').addEventListener('input',e=>{ cur().imaging.findings=e.target.value; savePatients(); });
 }
 function updatePatientChip(){
@@ -726,13 +977,12 @@ function updatePatientChip(){
 }
 
 /* ============================================================
-   2 客观评估
+   2 查体 + 3 专项评定（通用勾选列表）
    ============================================================ */
-function renderExam(){
-  const box=$('#examList');
+function renderCheckList(box, items, getSet){
   const p=cur();
-  box.innerHTML = EXAM_ITEMS.map(it=>{
-    const s=p.exam[it.id]||{done:false,deg:''};
+  box.innerHTML = items.map(it=>{
+    const s=getSet(p)[it.id]||{done:false,deg:''};
     return `<div class="exam-item">
       <div class="chk ${s.done?'on':''}" data-id="${it.id}">✓</div>
       <div class="en">${it.name}<small>${it.desc}</small></div>
@@ -745,22 +995,24 @@ function renderExam(){
     </div>`;
   }).join('');
   box.querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
-    const id=c.dataset.id;
-    const p=cur();
-    p.exam[id]=p.exam[id]||{done:false,deg:''};
-    p.exam[id].done=!p.exam[id].done;
-    c.classList.toggle('on',p.exam[id].done);
+    const p=cur(); const set=getSet(p); const id=c.dataset.id;
+    set[id]=set[id]||{done:false,deg:''};
+    set[id].done=!set[id].done;
+    c.classList.toggle('on',set[id].done);
     const sel=box.querySelector(`select.deg[data-id="${id}"]`);
-    sel.classList.toggle('show',p.exam[id].done);
-    if(!p.exam[id].done){ sel.value=''; p.exam[id].deg=''; }
+    sel.classList.toggle('show',set[id].done);
+    if(!set[id].done){ sel.value=''; set[id].deg=''; }
     savePatients();
   }));
   box.querySelectorAll('select').forEach(s=>s.addEventListener('change',e=>{
-    const p=cur();
-    p.exam[e.target.dataset.id]=p.exam[e.target.dataset.id]||{done:true};
-    p.exam[e.target.dataset.id].deg=e.target.value;
+    const p=cur(); const set=getSet(p); const id=e.target.dataset.id;
+    set[id]=set[id]||{done:true};
+    set[id].deg=e.target.value;
     savePatients();
   }));
+}
+function renderNeuro(){
+  renderCheckList($('#neuroList'), NEURO_ITEMS, p=>p.neuro);
   const vg=$('#examVideos');
   vg.innerHTML = Object.entries(VIDEOS).map(([k,v])=>`
     <div class="vcard" data-vid="${k}">
@@ -769,6 +1021,18 @@ function renderExam(){
     </div>`).join('');
   vg.querySelectorAll('.vcard').forEach(c=>c.addEventListener('click',()=>openVideo(c.dataset.vid)));
 }
+function renderAssess(){
+  const box=$('#assessGroups');
+  box.innerHTML = Object.entries(ASSESS_GROUPS).map(([key,g])=>`
+    <div class="assess-card">
+      <h4><span class="aic">${g.icon}</span>${g.title}</h4>
+      <div data-group="${key}"></div>
+    </div>`).join('');
+  for(const key of Object.keys(ASSESS_GROUPS)){
+    renderCheckList(box.querySelector(`[data-group="${key}"]`), ASSESS_GROUPS[key].items, p=>p.assess[key]);
+  }
+}
+
 function openVideo(id){
   const v=VIDEOS[id];
   $('#videoTitle').textContent=v.name;
@@ -817,9 +1081,11 @@ function renderScaleList(filter=''){
   }));
 }
 function scaleGrade(sc, vals){
-  const total = vals.reduce((a,b)=>a+(b||0),0);
-  const g = sc.grade(total);
-  return { total, full: sc.items.reduce((a,b)=>a+b.max,0), label:g.label, c:g.c };
+  let total=0; const nums=vals||[];
+  for(const v of nums) if(typeof v==='number'&&v>=0) total+=v;
+  const g=sc.grade(total, vals||[]);
+  const full=sc.items.reduce((a,it)=>a+(it.max!=null?it.max:0),0);
+  return { total, full, label:g.label, c:g.c };
 }
 function renderScaleScores(){
   const card=$('#scaleScoreCard'), box=$('#scaleScores');
@@ -831,18 +1097,31 @@ function renderScaleScores(){
     if(!sc) return '';
     const vals=p.scores[sid]||sc.items.map(()=>0);
     const g=scaleGrade(sc, vals);
-    const itemsHtml=sc.items.map((it,idx)=>`
-      <div class="score-item">
+    const itemsHtml=sc.items.map((it,idx)=>{
+      if(it.options){
+        const val=typeof vals[idx]==='string'?vals[idx]:'';
+        return `<div class="score-item">
+          <div class="q">${idx+1}. ${it.label}</div>
+          <select class="sselect" data-sid="${sid}" data-idx="${idx}">
+            <option value="">请选择…</option>
+            ${it.options.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+      return `<div class="score-item">
         <div class="q">${idx+1}. ${it.label}${it.hint?`<small>${it.hint}</small>`:''}</div>
         <div class="slider-row">
-          <input type="range" class="srange" min="0" max="${it.max}" step="${it.step}" value="${vals[idx]}"
+          <input type="range" class="srange" min="0" max="${it.max}" step="${it.step||1}" value="${typeof vals[idx]==='number'?vals[idx]:0}"
             data-sid="${sid}" data-idx="${idx}">
-          <div class="slider-val sv">${vals[idx]}</div>
+          <div class="slider-val sv">${typeof vals[idx]==='number'?vals[idx]:0}</div>
         </div>
         <div class="slider-hint"><span>0</span><span>${it.max}</span></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+    const hasSelect=sc.items.some(it=>it.options);
+    const totalStr = hasSelect ? '' : `总分 ${g.total} / ${g.full}`;
     return `<h4 style="font-size:13.5px;color:var(--primary);margin:6px 0 4px">${sc.name} · ${sc.desc}</h4>${itemsHtml}
-      <div class="scale-total">总分 ${g.total} / ${g.full}<span class="grade g${g.c}">${g.label}</span></div>`;
+      <div class="scale-total">${totalStr}<span class="grade g${g.c}">${g.label}</span></div>`;
   }).join('');
   box.querySelectorAll('.srange').forEach(r=>{
     r.style.setProperty('--fill',(r.value/r.max*100)+'%');
@@ -857,44 +1136,93 @@ function renderScaleScores(){
       renderScaleScores();
     });
   });
+  box.querySelectorAll('.sselect').forEach(s=>s.addEventListener('change',e=>{
+    const p=cur();
+    p.scores[s.dataset.sid]=p.scores[s.dataset.sid]||[];
+    p.scores[s.dataset.sid][+s.dataset.idx]=e.target.value;
+    savePatients();
+    renderScaleScores();
+  }));
 }
 
 /* ============================================================
    4 方案生成
    ============================================================ */
+function collectAssessStr(p){
+  const names={};
+  NEURO_ITEMS.forEach(x=>names['n:'+x.id]=x.name);
+  Object.entries(ASSESS_GROUPS).forEach(([k,g])=>g.items.forEach(x=>names['a:'+x.id]=x.name));
+  const out=[];
+  Object.entries(p.neuro||{}).forEach(([id,v])=>{ if(v&&v.done) out.push((names['n:'+id]||id)+(v.deg?'('+v.deg+')':'')); });
+  Object.entries(p.assess||{}).forEach(([k,set])=>{ Object.entries(set||{}).forEach(([id,v])=>{ if(v&&v.done) out.push((names['a:'+id]||id)+(v.deg?'('+v.deg+')':'')); }); });
+  return out;
+}
 function buildPlan(){
   const p=cur();
+  const stage=p.diagnosis.stage || DIAG_STAGES[1];
   const custom=p.customTher.slice();
-  const examStr = Object.entries(p.exam).filter(([k,v])=>v.done).map(([k,v])=>{
-    const name=(EXAM_ITEMS.find(x=>x.id===k)||{}).name||k;
-    return name+(v.deg?`(${v.deg})`:'');
-  });
-  const plan={ vas:p.vas, examStr, custom, acute:[], sub:[], chronic:[] };
-  plan.acute=PLAN_TEMPLATE.acute.items.slice();
-  plan.sub=PLAN_TEMPLATE.sub.items.slice();
-  plan.chronic=PLAN_TEMPLATE.chronic.items.slice();
-  if(p.vas>=7){ plan.acute.unshift('止痛与制动为主，避免负重'); }
-  else if(p.vas>=4){ plan.acute.unshift('适度活动，避免久坐久站'); }
-  else { plan.acute.push('轻量活动与日常功能维持'); }
-  ['acute','sub','chronic'].forEach(k=>{ custom.forEach(t=>plan[k].push('自定义：'+t)); });
+  const plan={
+    stage, vas:p.vas, exams:collectAssessStr(p), goals:p.goals,
+    treat:(TREAT[stage]||[]).slice(),
+    short:(STROKE_PLAN[stage]&&STROKE_PLAN[stage].short||[]).slice(),
+    long:(STROKE_PLAN[stage]&&STROKE_PLAN[stage].long||[]).slice(),
+    home:(HOME_EX[stage]||[]).slice()
+  };
+  if(p.vas>=7) plan.treat.unshift('止痛与制动为主，避免诱发动作');
+  else if(p.vas>=4) plan.treat.unshift('适度活动，避免久坐久站');
+  custom.forEach(t=>plan.treat.push('自定义：'+t));
   return plan;
+}
+function renderGoals(){
+  const box=$('#goalList');
+  box.innerHTML = GOALS.map(g=>{
+    const on=!!cur().goals[g.id];
+    return `<div class="exam-item"><div class="chk ${on?'on':''}" data-id="${g.id}">✓</div><div class="en">${g.name}<small>${g.desc}</small></div></div>`;
+  }).join('');
+  box.querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
+    const p=cur(); const id=c.dataset.id;
+    p.goals[id]=!p.goals[id];
+    c.classList.toggle('on',!!p.goals[id]);
+    savePatients();
+  }));
+}
+function buildPrognosis(p){
+  const lines=[];
+  const stage=p.diagnosis.stage||'';
+  if(stage.includes('急性')) lines.push('急性期：康复介入越早预后越好，当前以预防并发症、控制危险因素为主。');
+  else if(stage.includes('恢复')) lines.push('恢复期：神经功能恢复关键阶段，大脑可塑性较强，康复频率是独立预后影响因素。');
+  else if(stage.includes('后遗症')) lines.push('后遗症期：功能恢复进入平台期，以维持功能、提高生活质量为目标。');
+  const mrs=p.scores['mrs']&&p.scores['mrs'][0];
+  if(typeof mrs==='string'){ const n=mrs.charAt(0); if(['0','1','2'].includes(n)) lines.push('mRS '+n+' 分：良好功能结局。'); else if(n==='3') lines.push('mRS 3 分：中度残疾，需部分帮助。'); else lines.push('mRS '+n+' 分：预后较差，需加强护理。'); }
+  const nih=p.scores['nihss']?p.scores['nihss'].filter(v=>typeof v==='number').reduce((a,b)=>a+b,0):null;
+  if(nih!=null){ if(nih<=4) lines.push('NIHSS '+nih+' 分：轻症，预后较好。'); else if(nih<=15) lines.push('NIHSS '+nih+' 分：中度缺损，需早期积极康复。'); else lines.push('NIHSS '+nih+' 分：重度缺损，并发症风险高。'); }
+  if(lines.length===1) lines.push('填写 mRS / NIHSS 量表后自动生成量化预后。');
+  return lines;
+}
+function renderProg(){
+  const p=cur();
+  const out=$('#progOutput');
+  if(!p.plan){ out.innerHTML='<div class="empty">生成方案后自动评估预后</div>'; return; }
+  out.innerHTML = `<div class="prog-box">${buildPrognosis(p).map(l=>`<p>${esc(l)}</p>`).join('')}</div>`;
 }
 function renderPlanPreview(){
   const p=cur();
   const out=$('#planOutput');
   if(!p.plan){ out.innerHTML='<div class="empty">尚未生成方案 — 点击上方按钮生成</div>'; return; }
   const pl=p.plan;
-  const ph=o=>`<div class="phase ${o.key}"><div class="ph-head"><span class="ph-t">${o.title}</span><span class="ph-d">${o.range}</span></div><ul>${o.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;
+  const card=(t,items,icon)=>{ if(!items||!items.length) return ''; return `
+    <div class="pcard2"><div class="pc-head">${icon} ${t}</div><ul>${items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`; };
   out.innerHTML=`
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">患者：${esc(p.name)} · VAS ${pl.vas} · ${pl.examStr.join('、')||'无异常项'}</div>
-    ${ph({key:'acute',...PLAN_TEMPLATE.acute,items:pl.acute})}
-    ${ph({key:'sub',...PLAN_TEMPLATE.sub,items:pl.sub})}
-    ${ph({key:'chronic',...PLAN_TEMPLATE.chronic,items:pl.chronic})}
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">患者：${esc(p.name)} · 分期：${esc(pl.stage)} · VAS ${pl.vas}${pl.exams.length?' · '+esc(pl.exams.join('、')):''}</div>
+    ${card('治疗计划', pl.treat, '🧩')}
+    ${card('短期目标', pl.short, '🎯')}
+    ${card('长期目标', pl.long, '🏁')}
+    ${card('回家锻炼方法', pl.home, '🏠')}
   `;
 }
 $('#btnGenPlan').addEventListener('click',()=>{
   cur().plan=buildPlan(); savePatients();
-  renderPlanPreview();
+  renderPlanPreview(); renderProg();
   toast('方案已生成，可切到报告页导出');
 });
 function renderTher(){
@@ -921,43 +1249,64 @@ $('#therInput').addEventListener('keydown',e=>{ if(e.key==='Enter')$('#btnAddThe
    ============================================================ */
 function buildReportHTML(){
   const p=cur();
-  const examItems = EXAM_ITEMS.filter(it=>p.exam[it.id]&&p.exam[it.id].done)
-    .map(it=>`${it.name}（${p.exam[it.id].deg||'异常'}）`);
+  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const histStr = p.history.items.map(id=>{ const it=HISTORY_ITEMS.find(x=>x.id===id); return it?it.name:id; }).join('、');
+  const checkStr=(set,names)=>{ const arr=[]; Object.entries(set||{}).forEach(([id,v])=>{ if(v&&v.done) arr.push((names[id]||id)+(v.deg?'('+v.deg+')':'')); }); return arr; };
+  const neuroNames={}; NEURO_ITEMS.forEach(x=>neuroNames[x.id]=x.name);
+  const assessNames={}; Object.entries(ASSESS_GROUPS).forEach(([k,g])=>g.items.forEach(x=>assessNames[x.id]=x.name));
+  const neuroStr=checkStr(p.neuro,neuroNames);
+  const assessStr=[];
+  Object.entries(ASSESS_GROUPS).forEach(([k,g])=>{ const s=checkStr(p.assess[k],assessNames); if(s.length) assessStr.push(g.title+'：'+s.join('、')); });
   const scaleRows = p.scales.map(sid=>{
     const sc=SCALES.find(x=>x.id===sid);
+    if(!sc) return '';
     const vals=(p.scores[sid]||[]);
     const g=scaleGrade(sc, vals);
-    return `<div class="kv"><span class="k">${sc.name}</span><span class="v">${g.total}/${g.full} · ${g.label}</span></div>`;
+    const hasSelect = sc.items.some(it=>it.options);
+    const show = hasSelect ? g.label : `${g.total}/${g.full} · ${g.label}`;
+    return kv(sc.name, show);
   }).join('');
-  const imagingRow = p.imaging.types.length ? `<div class="kv"><span class="k">影像检查</span><span class="v">${esc(p.imaging.types.join('、'))}</span></div>
-    ${p.imaging.findings?`<div class="kv"><span class="k">检查所见</span><span class="v">${esc(p.imaging.findings)}</span></div>`:''}` : '<div class="kv"><span class="k">影像检查</span><span class="v">未记录</span></div>';
+  const imagingRow = p.imaging.types.length ? kv('影像检查', esc(p.imaging.types.join('、'))) + (p.imaging.findings?kv('检查所见', esc(p.imaging.findings)):'') : kv('影像检查','未记录');
   const plan=p.plan;
+  const goalsStr = GOALS.filter(g=>p.goals[g.id]).map(g=>g.name).join('、')||'未勾选';
   const planHTML = plan ? `
-    <h4>康复方案</h4>
-    <div class="kv"><span class="k">VAS</span><span class="v">${plan.vas} 分</span></div>
-    ${Object.keys(PLAN_TEMPLATE).map(k=>`
-      <div class="kv"><span class="k">${PLAN_TEMPLATE[k].title}</span><span class="v">${plan[k].join('；')}</span></div>
-    `).join('')}
-  ` : `<h4>康复方案</h4><div class="kv"><span class="k">状态</span><span class="v">未生成</span></div>`;
+    <h4>康复方案（${esc(plan.stage)}）</h4>
+    ${kv('治疗目的', esc(goalsStr))}
+    ${kv('治疗计划', esc(plan.treat.join('；'))||'—')}
+    ${kv('短期目标', esc(plan.short.join('；'))||'—')}
+    ${kv('长期目标', esc(plan.long.join('；'))||'—')}
+    ${kv('回家锻炼', esc(plan.home.join('；'))||'—')}
+    ${kv('预后分析', esc(buildPrognosis(p).join(' ')))}
+  ` : `<h4>康复方案</h4>${kv('状态','未生成')}`;
   const now=new Date();
   const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   return `
     <div class="report">
-      <h2>康复评估报告</h2>
+      <h2>脑卒中康复评估报告</h2>
       <div class="r-sub">康复临床工作台 · 生成日期 ${dateStr}</div>
-      <h4>基础信息</h4>
-      <div class="kv"><span class="k">姓名</span><span class="v">${esc(p.name)||'—'}</span></div>
-      <div class="kv"><span class="k">年龄 / 性别</span><span class="v">${p.age||'—'} 岁 · ${p.gender||'—'}</span></div>
-      <div class="kv"><span class="k">主诉</span><span class="v">${esc(p.complaint)||'—'}</span></div>
-      <div class="kv"><span class="k">VAS 疼痛</span><span class="v">${p.vas} / 10</span></div>
+      <h4>基本信息</h4>
+      ${kv('姓名', esc(p.name)||'—')}
+      ${kv('年龄 / 性别', `${p.age||'—'} 岁 · ${p.gender||'—'}`)}
+      <h4>诊断</h4>
+      ${kv('病类', p.diagnosis.type||'未选')}
+      ${kv('分期', p.diagnosis.stage||'未选')}
+      ${p.diagnosis.note?kv('诊断备注', esc(p.diagnosis.note)):''}
+      <h4>主诉</h4>
+      ${kv('主诉', esc(p.complaint)||'—')}
+      ${kv('VAS 疼痛', p.vas+' / 10')}
+      <h4>既往史</h4>
+      ${histStr?kv('危险因素', esc(histStr)):kv('危险因素','无')}
+      ${p.history.meds?kv('用药史', esc(p.history.meds)):''}
       <h4>影像学检查</h4>
       ${imagingRow}
-      <h4>客观评估</h4>
-      ${examItems.length?examItems.map(x=>`<div class="kv"><span class="k">异常项</span><span class="v">${esc(x)}</span></div>`).join(''):'<div class="kv"><span class="k">结果</span><span class="v">未记录异常</span></div>'}
+      <h4>查体</h4>
+      ${neuroStr.length?neuroStr.map(x=>kv('异常项', esc(x))).join(''):kv('结果','未记录异常')}
+      <h4>专项评定</h4>
+      ${assessStr.length?assessStr.map(x=>kv('异常项', esc(x))).join(''):kv('结果','未记录异常')}
       <h4>量表评估</h4>
-      ${scaleRows||'<div class="kv"><span class="k">结果</span><span class="v">未选择量表</span></div>'}
+      ${scaleRows||kv('结果','未选择量表')}
       ${planHTML}
-      <div class="note">本报告由康复临床工作台小样自动生成，仅供演示与学习，不构成医疗诊断或治疗建议。</div>
+      <div class="note">本报告由康复临床工作台自动生成，仅供演示与学习，不构成医疗诊断或治疗建议。具体操作需结合患者个体情况，在专业康复团队指导下实施。</div>
     </div>`;
 }
 function renderReport(){
@@ -981,11 +1330,14 @@ function refreshAll(){
   ensureCurrent();
   updatePatientChip();
   refreshInfo();
-  renderExam();
+  renderNeuro();
+  renderAssess();
+  renderGoals();
   renderScaleList('');
   renderScaleScores();
   renderTher();
   renderPlanPreview();
+  renderProg();
   renderReport();
 }
 
@@ -1244,7 +1596,9 @@ $('#searchInput').addEventListener('input', ()=>{
 
 /* ================= init ================= */
 bindInfo();
-renderExam();
+renderNeuro();
+renderAssess();
+renderGoals();
 renderScaleFilter();
 renderScaleList();
 renderTher();
