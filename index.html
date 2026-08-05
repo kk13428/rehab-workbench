@@ -264,6 +264,43 @@ input[type=range]::-webkit-slider-thumb{
   .card{box-shadow:none}
 }
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 0}
+/* ---- 资料搜索 ---- */
+.search-btn{
+  background:rgba(255,255,255,.18);border:none;color:#fff;flex:none;
+  width:36px;height:36px;border-radius:10px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.search-btn:active{background:rgba(255,255,255,.32)}
+#searchInput{
+  width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+  font-size:15px;background:#fbfcfe;color:var(--text);outline:none;margin-bottom:12px;
+}
+#searchInput:focus{border-color:var(--primary)}
+.smeta{font-size:12px;color:var(--muted);margin:0 2px 10px}
+.sres{
+  display:block;width:100%;text-align:left;font-family:inherit;border:1.5px solid var(--line);
+  border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;cursor:pointer;transition:all .15s;
+}
+.sres:active{border-color:var(--primary);background:#f0f7ff}
+.sres .st{font-size:14px;font-weight:700;color:var(--primary)}
+.sres .sp{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.6}
+.sres mark,.snote mark{background:#fff3bf;color:inherit;border-radius:3px;padding:0 1px}
+.snote{font-size:14px;line-height:1.75}
+.snote h1,.snote h2,.snote h3,.snote h4{color:var(--primary);margin:16px 0 8px;line-height:1.4}
+.snote h1{font-size:18px}.snote h2{font-size:16px}.snote h3{font-size:15px}.snote h4{font-size:14px}
+.snote p{margin:8px 0}
+.snote ul,.snote ol{margin:8px 0;padding-left:22px}
+.snote li{margin:4px 0}
+.snote table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px}
+.snote th,.snote td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.snote th{background:#eef4ff;color:var(--primary)}
+.snote blockquote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--primary);background:#f4f8ff;color:#33424f;font-size:13.5px}
+.snote code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:Consolas,Menlo,monospace}
+.snote pre{background:#1c2733;color:#e6edf3;border-radius:10px;padding:12px;overflow-x:auto;margin:10px 0;font-size:12.5px;line-height:1.6}
+.snote pre code{background:none;color:inherit;padding:0}
+.snote hr{border:none;border-top:1.5px solid var(--line);margin:16px 0}
+.snote .sback{margin-bottom:12px}
+.btnback{background:#fff;color:var(--primary);border:1.5px solid var(--primary);border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600;font-family:inherit}
 </style>
 </head>
 <body>
@@ -275,6 +312,7 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sub">S·O·A·P 一体化评估工具</div>
   </div>
   <button class="pt" id="appPatient" title="切换患者">未选择患者</button>
+  <button class="search-btn" id="btnSearch" title="搜索康复笔记">🔍</button>
 </div>
 
 <main>
@@ -415,6 +453,18 @@ input[type=range]::-webkit-slider-thumb{
       <div class="vb-note" id="videoNote">演示视频占位</div>
     </div>
     <div class="hint">注：把视频文件放进本地 videos 目录并重新部署即可显示（见代码顶部说明）。</div>
+  </div>
+</div>
+
+<!-- search modal（康复笔记搜索，不占主界面） -->
+<div class="modal-mask" id="searchMask">
+  <div class="modal">
+    <span class="close" id="searchClose">✕</span>
+    <h3>🔍 康复资料搜索</h3>
+    <input type="search" id="searchInput" placeholder="搜索康复笔记…" autocomplete="off">
+    <div id="searchMeta" class="smeta"></div>
+    <div id="searchResults"></div>
+    <div id="searchDetail" class="snote" style="display:none"></div>
   </div>
 </div>
 
@@ -938,6 +988,173 @@ function refreshAll(){
   renderPlanPreview();
   renderReport();
 }
+
+/* ============================================================
+   资料搜索（康复笔记 notes/notes.json，不占主界面）
+   ============================================================ */
+let REHAB_NOTES = null;
+let searchTimer = null;
+
+function hl(text, q){
+  if(!q) return esc(text);
+  const lq = q.toLowerCase();
+  let out = '', i = 0, lower = text.toLowerCase();
+  while(true){
+    const idx = lower.indexOf(lq, i);
+    if(idx < 0){ out += esc(text.slice(i)); break; }
+    out += esc(text.slice(i, idx)) + '<mark>' + esc(text.slice(idx, idx+q.length)) + '</mark>';
+    i = idx + q.length;
+  }
+  return out;
+}
+function snippet(text, q){
+  if(!q) return esc(text.slice(0,60)) + (text.length>60?'…':'');
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  const s = Math.max(0, idx-40), e = Math.min(text.length, idx+q.length+60);
+  return (s>0?'…':'') + hl(text.slice(s,e), q) + (e<text.length?'…':'');
+}
+async function loadNotes(){
+  if(REHAB_NOTES) return REHAB_NOTES;
+  try{
+    const res = await fetch('notes/notes.json', {cache:'no-cache'});
+    if(!res.ok) throw new Error(res.status);
+    REHAB_NOTES = await res.json();
+  }catch(e){
+    REHAB_NOTES = [];
+  }
+  return REHAB_NOTES;
+}
+function doSearch(){
+  const q = $('#searchInput').value.trim();
+  $('#searchDetail').style.display='none';
+  $('#searchDetail').innerHTML='';
+  $('#searchResults').style.display='';
+  const box = $('#searchResults');
+  if(!q){
+    $('#searchMeta').textContent='输入关键词，检索康复笔记';
+    box.innerHTML='';
+    return;
+  }
+  const notes = REHAB_NOTES||[];
+  const lq = q.toLowerCase();
+  const hits = notes.map(n=>({
+    n,
+    inTitle: n.title.toLowerCase().includes(lq),
+    inBody: n.md.toLowerCase().includes(lq)
+  })).filter(h=>h.inTitle||h.inBody);
+  $('#searchMeta').textContent = `共 ${notes.length} 篇笔记，命中 ${hits.length} 条`;
+  if(!hits.length){ box.innerHTML='<div class="empty">未找到相关内容</div>'; return; }
+  box.innerHTML = hits.map((h,idx)=>`
+    <button class="sres" data-i="${idx}">
+      <div class="st">${hl(h.n.title, q)}</div>
+      <div class="sp">${snippet(h.n.md, q)}</div>
+    </button>`).join('');
+  box.querySelectorAll('.sres').forEach(b=>b.addEventListener('click',()=>{
+    const n = hits[+b.dataset.i].n;
+    $('#searchResults').style.display='none';
+    const d = $('#searchDetail');
+    d.innerHTML = `<button class="btnback" id="sBack">← 返回结果</button>
+      <h1>${hl(n.title, '')}</h1>${md2html(n.md)}`;
+    d.style.display='block';
+    d.scrollTop=0;
+    $('#sBack').addEventListener('click',()=>{
+      $('#searchDetail').style.display='none';
+      $('#searchResults').style.display='';
+      doSearch();
+    });
+  }));
+}
+/* ---- 内置 markdown → html（渲染笔记全文，不用 marked）---- */
+function inlineMd(s){
+  return s
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+function isTableSep(r){
+  const c = r.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(x=>x.trim());
+  return c.length>0 && c.every(x=>/^:?-+:?$/.test(x));
+}
+function md2html(md){
+  const lines = String(md||'').split(/\r?\n/);
+  const html = [];
+  let para = [];
+  const flush = ()=>{ if(para.length){ html.push('<p>'+inlineMd(esc(para.join(' ')))+'</p>'); para.length=0; } };
+  let i = 0;
+  while(i < lines.length){
+    let line = lines[i];
+    if(line.trim().startsWith('```')){
+      flush();
+      const code=[]; i++;
+      while(i<lines.length && !lines[i].trim().startsWith('```')){ code.push(lines[i]); i++; }
+      i++;
+      html.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');
+      continue;
+    }
+    if(line.trim().startsWith('|')){
+      flush();
+      const rows=[];
+      while(i<lines.length && lines[i].trim().startsWith('|')){ rows.push(lines[i]); i++; }
+      const cells = r => r.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
+      const header = cells(rows[0]);
+      const body = rows.slice(1).filter(r=>!isTableSep(r));
+      let t='<table><thead><tr>'+header.map(c=>'<th>'+inlineMd(esc(c))+'</th>').join('')+'</tr></thead><tbody>';
+      t += body.map(r=>'<tr>'+cells(r).map(c=>'<td>'+inlineMd(esc(c))+'</td>').join('')+'</tr>').join('');
+      t += '</tbody></table>';
+      html.push(t);
+      continue;
+    }
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if(h){ flush(); const lv=h[1].length; html.push(`<h${lv}>`+inlineMd(esc(h[2]))+`</h${lv}>`); i++; continue; }
+    if(/^\s*-{3,}\s*$/.test(line)){ flush(); html.push('<hr>'); i++; continue; }
+    if(line.trim().startsWith('>')){
+      flush();
+      const q=[];
+      while(i<lines.length && lines[i].trim().startsWith('>')){ q.push(lines[i].trim().replace(/^>\s?/,'')); i++; }
+      html.push('<blockquote>'+q.map(l=>inlineMd(esc(l))).join('<br>')+'</blockquote>');
+      continue;
+    }
+    if(/^\s*[-*]\s+/.test(line)){
+      flush();
+      const items=[];
+      while(i<lines.length && /^\s*[-*]\s+/.test(lines[i])){ items.push(lines[i].replace(/^\s*[-*]\s+/,'')); i++; }
+      html.push('<ul>'+items.map(l=>'<li>'+inlineMd(esc(l))+'</li>').join('')+'</ul>');
+      continue;
+    }
+    if(/^\s*\d+\.\s+/.test(line)){
+      flush();
+      const items=[];
+      while(i<lines.length && /^\s*\d+\.\s+/.test(lines[i])){ items.push(lines[i].replace(/^\s*\d+\.\s+/,'')); i++; }
+      html.push('<ol>'+items.map(l=>'<li>'+inlineMd(esc(l))+'</li>').join('')+'</ol>');
+      continue;
+    }
+    if(!line.trim()){ flush(); i++; continue; }
+    para.push(line.trim());
+    i++;
+  }
+  flush();
+  return html.join('\n');
+}
+
+/* 搜索弹层事件 */
+$('#btnSearch').addEventListener('click', async ()=>{
+  $('#searchMask').classList.add('show');
+  $('#searchDetail').style.display='none';
+  $('#searchDetail').innerHTML='';
+  $('#searchResults').style.display='';
+  if(REHAB_NOTES===null){
+    $('#searchMeta').textContent='正在加载笔记…';
+    await loadNotes();
+  }
+  doSearch();
+  setTimeout(()=>$('#searchInput').focus(), 100);
+});
+$('#searchClose').addEventListener('click', ()=>$('#searchMask').classList.remove('show'));
+$('#searchMask').addEventListener('click', e=>{ if(e.target.id==='searchMask') $('#searchMask').classList.remove('show'); });
+$('#searchInput').addEventListener('input', ()=>{
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 220);
+});
 
 /* ================= init ================= */
 bindInfo();
