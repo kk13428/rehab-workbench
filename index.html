@@ -161,6 +161,8 @@ input[type=range]::-webkit-slider-thumb{
 .scale-card .sn small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
 .scale-card .add-tag{flex:none;font-size:11px;color:var(--primary);background:#eef4ff;padding:3px 8px;border-radius:12px}
 .scale-card.on .add-tag{background:#fff;color:var(--primary)}
+.scale-search{flex:none;width:30px;height:30px;border:none;background:#eef4ff;color:var(--primary);border-radius:9px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.scale-search:active{background:#dcebff}
 .scale-items{display:none;margin:-4px 0 14px;padding:14px;background:#f8fbfe;border:1px dashed var(--line);border-radius:12px}
 .scale-items.show{display:block}
 /* score items */
@@ -1786,6 +1788,34 @@ const SCALES = [
 SCALES.forEach(s=>{ SCALE_CAT[s.id]=s.cat||'其他'; });
 /* 越低越差的量表：报告逐项状态判断用（higher-better 量表默认） */
 ['vas','oddi','borg','ssa','phq9','gad7','nihss'].forEach(id=>{ const sc=SCALES.find(x=>x.id===id); if(sc) sc.low=true; });
+/* 量表 → 笔记小节标题的检索关键词（用于 🔍 打开完整量表） */
+const NOTE_HINTS = {
+  vas:'VAS', mpq:'McGill', oddii:'ODI', hhd:'HHD', rom:'ROM', borg:'Borg',
+  fmbal:'Fugl-Meyer 平衡量表', mas:'Ashworth', bbs:'Berg', barthel:'Barthel', mmse:'MMSE', moca:'MoCA',
+  watian:'洼田', brunnstrom:'Brunnstrom', asia:'ASIA', neurop:'脊髓损伤神经平面', arat:'ARAT', wab:'WAB',
+  ssa:'SSA', phq9:'PHQ-9', gad7:'GAD-7', holden:'Holden', wisci:'WISCI', frenchay:'Frenchay',
+  ssqol:'SS-QOL', mrs:'mRS', fim:'FIM', nihss:'NIHSS', tenmwt:'10米步行', sixmwt:'6分钟步行',
+  penn:'Penn', clonus:'Clonus', carr:'Carr-Shepherd', scim:'SCIM', minibest:'mini-BESTest'
+};
+async function openScaleNote(sc){
+  const notes = await loadNotes();
+  const sections = [];
+  for(const n of notes) sections.push(...parseSections(n));
+  const hints = [NOTE_HINTS[sc.id]||sc.name, sc.name];
+  const hit = sections.find(sec=>sec.heading && hints.some(h=>h && sec.heading.toLowerCase().includes(String(h).toLowerCase())));
+  $('#searchMask').classList.add('show');
+  if(hit){
+    $('#searchInput').value='';
+    $('#searchResults').style.display='none';
+    $('#searchDetail').style.display='block';
+    renderDetail({sec:hit});
+  }else{
+    $('#searchDetail').style.display='none';
+    $('#searchResults').style.display='';
+    $('#searchInput').value=sc.name;
+    doSearch();
+  }
+}
 
 /* ============================================================
    多患者档案管理（localStorage 持久化）
@@ -2380,6 +2410,7 @@ function renderScaleList(filter=''){
     return `<div class="scale-card ${on?'on':''}" data-id="${s.id}">
       <div class="sb">✓</div>
       <div class="sn">${s.name}<small>${s.disease} · ${s.desc}</small></div>
+      <button class="scale-search" data-sid="${s.id}" title="查看完整量表">🔍</button>
       <span class="add-tag">${on?'已添加':'+添加到评估'}</span>
     </div>`;
   }).join('') + (list.length?'':`<div class="empty">该分类暂无量表</div>`);
@@ -2391,6 +2422,11 @@ function renderScaleList(filter=''){
     else p.scales.push(id);
     savePatients();
     renderScaleList(filter); renderScaleScores();
+  }));
+  box.querySelectorAll('.scale-search').forEach(b=>b.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const sc=SCALES.find(x=>x.id===b.dataset.sid);
+    if(sc) openScaleNote(sc);
   }));
 }
 function scaleGrade(sc, vals){
