@@ -339,6 +339,40 @@ input[type=range]::-webkit-slider-thumb{
 .pcard2 .pc-head{background:#eef4ff;color:var(--primary);font-weight:700;font-size:14px;padding:10px 14px;display:flex;align-items:center;gap:6px}
 .pcard2 ul{padding:10px 14px 12px 32px;font-size:13.5px}
 .pcard2 li{margin-bottom:5px}
+/* ---- 折叠卡片（客观评估/量表） ---- */
+.oc{border:1.5px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+.oc .oc-head{display:flex;align-items:center;gap:8px;padding:14px 14px;cursor:pointer;user-select:none}
+.oc .oc-head .oc-title{flex:1;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.oc .oc-head .oc-n{width:20px;height:20px;border-radius:7px;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.oc .oc-head .oc-sum{font-size:11px;color:var(--muted);font-weight:400}
+.oc .oc-head .oc-arrow{flex:none;color:var(--muted);transition:transform .2s;font-size:13px}
+.oc.open .oc-head .oc-arrow{transform:rotate(180deg)}
+.oc .oc-body{display:none;padding:2px 14px 14px;border-top:1px dashed var(--line)}
+.oc.open .oc-body{display:block}
+/* ---- 结构化多选行 ---- */
+.srow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;flex-wrap:wrap}
+.srow.on{border-color:var(--primary);background:#f0f7ff}
+.srow .srow-chk{display:flex;align-items:center;flex:none}
+.srow .srow-chk input{display:none}
+.srow .srow-chk span{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;cursor:pointer;flex:none}
+.srow.on .srow-chk span{background:var(--primary);border-color:var(--primary);color:#fff}
+.srow .srow-name{font-size:13px;font-weight:600;min-width:90px;flex:1}
+.srow select,.srow input[type=text]{padding:7px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;background:#fff;outline:none;color:var(--text);flex:none;min-width:0}
+.srow select:focus,.srow input[type=text]:focus{border-color:var(--primary)}
+.srow .srow-in{width:64px;text-align:center}
+.add-row{display:flex;gap:8px;margin-top:10px}
+.add-row input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fbfcfe}
+.add-row input:focus{border-color:var(--primary)}
+.add-row .mini{padding:0 14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+/* 量表折叠 */
+.oscale{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px;background:#fff}
+.oscale .oscale-head{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;background:#f8fbfe;user-select:none}
+.oscale .oscale-head .ost{flex:1;font-size:13.5px;font-weight:700;color:var(--primary)}
+.oscale .oscale-head .osg{padding:3px 10px;border-radius:14px;font-size:11.5px;color:#fff;flex:none}
+.oscale .oscale-head .osarrow{flex:none;color:var(--muted);font-size:12px;transition:transform .2s}
+.oscale.open .oscale-head .osarrow{transform:rotate(180deg)}
+.oscale .oscale-body{display:none;padding:4px 14px 14px;border-top:1px dashed var(--line)}
+.oscale.open .oscale-body{display:block}
 </style>
 </head>
 <body>
@@ -474,28 +508,33 @@ input[type=range]::-webkit-slider-thumb{
 
   <!-- 2 客观评估 -->
   <section class="section" id="sec-objective">
-    <div class="card">
-      <h3><span class="n">1</span>触诊</h3>
-      <div class="step-desc">压痛点 / 温度 / 肌张力 / 肿胀，可多选</div>
-      <div class="img-pills" id="tendList"></div>
-    </div>
-    <div class="card">
-      <h3><span class="n">2</span>关节活动度（ROM）</h3>
-      <div class="step-desc">主动/被动 ROM，左右对比</div>
-      <div class="field">
-        <textarea id="fRom" placeholder="如：腰椎前屈 40° 受限，后伸 20°；膝 0-120°"></textarea>
+    <div class="card oc open" data-oc="tend">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">1</span>触诊<span class="oc-sum" id="tendSum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">压痛点 / 温度 / 肌张力 / 肿胀，可多选</div>
+        <div class="img-pills" id="tendList"></div>
       </div>
     </div>
-    <div class="card">
-      <h3><span class="n">3</span>肌力（MMT）</h3>
-      <div class="step-desc">0-5 级，记录具体肌群</div>
-      <div class="field">
-        <textarea id="fMmt" placeholder="如：右踝背屈肌 4/5，右膝伸肌 3/5"></textarea>
+    <div class="card oc" data-oc="rom">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">2</span>关节活动度（ROM）<span class="oc-sum" id="romSum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">勾选要评估的关节 → 选左右 / 主动被动 / 填角度，可多选；也可自定义关节</div>
+        <div id="romRows"></div>
+        <div class="add-row"><input type="text" id="romCName" placeholder="自定义关节，如：拇指腕掌关节" list="romDL"><datalist id="romDL"></datalist><button class="mini" data-addcat="rom">＋</button></div>
       </div>
     </div>
-    <div class="card">
-      <h3><span class="n">4</span>肌张力（Ashworth）</h3>
-      <div class="field">
+    <div class="card oc" data-oc="mmt">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">3</span>肌力（MMT）<span class="oc-sum" id="mmtSum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">勾选要评估的肢体/肌群 → 选 0-5 级，可多选；也可自定义肌群</div>
+        <div id="mmtRows"></div>
+        <div class="add-row"><input type="text" id="mmtCName" placeholder="自定义肌群，如：右踝背屈肌" list="mmtDL"><datalist id="mmtDL"></datalist><button class="mini" data-addcat="mmt">＋</button></div>
+      </div>
+    </div>
+    <div class="card oc" data-oc="ashworth">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">4</span>肌张力（Ashworth）</div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">痉挛分级，0-4 级</div>
         <select id="fAshworth">
           <option value="">请选择…</option>
           <option>0 级 · 无肌张力增高</option>
@@ -507,18 +546,18 @@ input[type=range]::-webkit-slider-thumb{
         </select>
       </div>
     </div>
-    <div class="card">
-      <h3><span class="n">5</span>感觉检查</h3>
-      <div class="step-desc">浅感觉 / 深感觉 / 皮节</div>
-      <div class="field">
-        <textarea id="fSensory" placeholder="如：L5 支配区浅感觉减退"></textarea>
+    <div class="card oc" data-oc="sensory">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">5</span>感觉检查<span class="oc-sum" id="sensorySum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">勾选要评估的感觉类型 → 选结果、填部位，可多选</div>
+        <div id="sensoryRows"></div>
       </div>
     </div>
-    <div class="card">
-      <h3><span class="n">6</span>反射</h3>
-      <div class="step-desc">腱反射 / 病理征</div>
-      <div class="field">
-        <textarea id="fReflex" placeholder="如：膝腱反射亢进（+++），Babinski 征阳性"></textarea>
+    <div class="card oc" data-oc="reflex">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">6</span>反射<span class="oc-sum" id="reflexSum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">勾选要评估的反射 / 病理征 → 选结果，可多选</div>
+        <div id="reflexRows"></div>
       </div>
     </div>
     <div class="row">
@@ -789,120 +828,591 @@ const PHYSIO_LIB = [
 const DISEASE_PLANS = {
   '腰痛': {
     '急性期(0-2周)': {
-      target:'镇痛、减轻神经根刺激、保护腰椎',
-      physio:['干扰电疗法','TENS 经皮神经电刺激','湿热敷/石蜡疗法','腰椎牵引','冷疗法'],
-      exercise:['等长收缩训练','Williams 屈曲体操','腘绳肌牵伸','核心激活'],
-      manual:['肌筋膜松解','Maitland Ⅰ-Ⅱ级','瑞典式按摩'],
+      target:'镇痛、减轻神经根刺激、保护腰椎、避免诱发动作',
+      physio:[
+        {n:'冷疗法', d:'急性剧痛期冰袋隔毛巾敷腰痛区 15-20 分钟，每日 2-3 次，减轻炎症与水肿'},
+        {n:'TENS 经皮神经电刺激', d:'电极片贴腰痛区两侧，低频 2-10Hz，强度以舒适可耐受为度，每次 20 分钟，每日 1-2 次镇痛'},
+        {n:'湿热敷/石蜡疗法', d:'急性期 48 小时后热敷袋或蜡疗敷腰骶部 15-20 分钟，温热放松腰肌'},
+        {n:'腰椎牵引', d:'仰卧牵引床，牵引力为体重 1/4-1/3，每次 20 分钟、间歇 2 分钟，隔日一次，疼痛加重立即停止'},
+        {n:'干扰电疗法', d:'四极电极交叉置于腰背部，差频 90-100Hz，电流至肌肉明显颤动感，每次 15 分钟消炎镇痛'}
+      ],
+      exercise:[
+        {n:'腹式呼吸放松', d:'仰卧屈膝，双手放腹部，吸气鼓腹 3 秒、呼气收腹 5 秒，每次 5-10 分钟，每日 2-3 次，缓解腰肌紧张'},
+        {n:'踝泵训练', d:'仰卧，勾脚尖→绷脚尖为 1 次，10 次 1 组，每日 3 组，促下肢循环防血栓'},
+        {n:'核心激活（腹横肌）', d:'仰卧屈膝，腹部轻收向肚脐方向保持 5 秒放松 5 秒，10 次 1 组，每日 3 组，不诱发腿痛'},
+        {n:'等长收缩训练', d:'仰卧双膝夹枕向内互挤 5 秒放松 5 秒，10 次 1 组，每日 3 组，激活腰腹深层肌'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'俯卧，用拇指或肘尖沿竖脊肌由下往上缓慢按压，每点 30-60 秒，酸胀可耐受，缓解痉挛'},
+        {n:'Maitland Ⅰ-Ⅱ级', d:'侧卧固定骨盆，沿腰骶轴向小幅度快速摆动（Ⅰ级）或大幅度慢速摆动（Ⅱ级）3-5 分钟，镇痛'},
+        {n:'瑞典式按摩', d:'俯卧，手掌推抚腰背肌 5 分钟，再揉捏臀肌与大腿后侧，放松促循环'}
+      ],
       home:[], short:[], long:[], video:'腰痛急性期处理要点'
     },
     '亚急性期(2-6周)': {
-      target:'逐步恢复活动、稳定腰椎、增强核心',
-      physio:['超声波疗法','干扰电疗法','湿热敷/石蜡疗法'],
-      exercise:['核心稳定性训练','等张收缩训练','下肢牵伸训练','平衡训练'],
-      manual:['肌筋膜松解','Maitland Ⅲ级','PNF 本体促进技术'],
+      target:'逐步恢复活动、稳定腰椎、增强核心肌力',
+      physio:[
+        {n:'超声波疗法', d:'探头沿腰背肌缓慢移动，1.0-1.5W/cm²，每次 8-10 分钟，促进组织修复'},
+        {n:'干扰电疗法', d:'差频 50Hz 增强血液循环、0-100Hz 扫描放松，四极电极腰背部放置，每次 15 分钟'},
+        {n:'湿热敷/石蜡疗法', d:'训练前蜡疗或热敷腰骶部 15-20 分钟热身，促进活动'},
+        {n:'腰椎牵引', d:'牵引力增至体重 1/3-1/2，每次 20 分钟，隔日一次，改善椎间孔空间'}
+      ],
+      exercise:[
+        {n:'臀桥训练', d:'仰卧屈膝 90°、双足踩床，抬臀至肩-髋-膝成一直线，保持 3 秒回落，10 次 1 组，每日 3 组'},
+        {n:'核心稳定性训练', d:'双膝 90° 抬腿保持 10 秒×10；平板支撑 15-30 秒×3，收紧腹肌不塌腰'},
+        {n:'下肢牵伸训练', d:'仰卧抱膝向胸 30 秒×3；坐位前倾牵伸腘绳肌 30 秒×3，缓慢不弹震'},
+        {n:'平衡训练', d:'单腿站立 30 秒×3 次/腿，可扶墙，逐步减少支撑，改善本体感觉'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'重点放松多裂肌、髂腰肌与臀肌，拇指/肘尖每点 30-60 秒'},
+        {n:'Maitland Ⅲ级', d:'大幅度摆动至阻力点并维持，改善腰椎屈伸活动度，3-5 分钟'},
+        {n:'PNF 本体促进技术', d:'骨盆前后倾斜节律性稳定，治疗师徒手引导 5 分钟，重建核心控制'}
+      ],
       home:[], short:[], long:[]
     },
     '慢性期(6周以上)': {
-      target:'增强核心、预防复发、回归工作',
-      physio:['超声波疗法','湿热敷/石蜡疗法','水中运动疗法'],
-      exercise:['等张收缩训练','核心稳定性训练','敏捷/功能训练','普拉提','牵伸训练','跑台训练','功率自行车'],
-      manual:['Maitland Ⅲ-Ⅳ级','PNF 本体促进技术','肌筋膜松解','高速低幅手法（HVLA）','筋膜释放技术（FRT）'],
+      target:'增强核心、预防复发、回归工作与运动',
+      physio:[
+        {n:'超声波疗法', d:'聚焦竖脊肌/臀肌，1.0-1.5W/cm²，每次 8-10 分钟，促修复防粘连'},
+        {n:'湿热敷/石蜡疗法', d:'训练前热敷 15 分钟热身，训练后冷敷 10 分钟缓解疲劳'},
+        {n:'水中运动疗法', d:'水中步行/慢跑 20-30 分钟，每周 2-3 次，利用浮力减重训练腰背'}
+      ],
+      exercise:[
+        {n:'等张收缩训练', d:'臀桥加哑铃负重 10-15 次×3；俯卧挺身（Superman）保持 5 秒×10，逐步进阶'},
+        {n:'核心稳定性训练', d:'平板支撑 30-60 秒×3、侧桥 20-30 秒×3、死虫式 10 次×3，全程收紧核心'},
+        {n:'敏捷/功能训练', d:'弓步行走、跨步转身、模拟弯腰提物的正确发力姿势训练，每组 10 次'},
+        {n:'普拉提训练', d:'骨盆卷动、百次呼吸等垫上核心动作 20 分钟，强调呼气时收紧核心'},
+        {n:'牵伸训练', d:'腘绳肌、髂腰肌、腰方肌各牵伸 30 秒×3，缓慢充分'},
+        {n:'跑台训练', d:'快走→慢跑渐进 20 分钟，维持心肺与耐力'},
+        {n:'功率自行车', d:'低阻力有氧 20 分钟，训练前热身、训练后放松'}
+      ],
+      manual:[
+        {n:'Maitland Ⅲ-Ⅳ级', d:'摆动至阻力点并施加过压，改善腰椎屈伸/旋转活动度'},
+        {n:'PNF 本体促进技术', d:'抗阻引导核心稳定与运动模式重建，节律性稳定 5 分钟'},
+        {n:'肌筋膜松解', d:'放松臀肌、阔筋膜张肌、腰方肌，配合呼吸每点 30-60 秒'},
+        {n:'高速低幅手法（HVLA）', d:'评估明确时快速低幅扳动缓解僵硬，需专业评估后实施'},
+        {n:'筋膜释放技术（FRT）', d:'长时低压牵伸筋膜 90-120 秒，促进筋膜滑动'}
+      ],
       home:[], short:[], long:[], video:'腰痛核心稳定性训练'
+    }
+  },
+  '颈椎病': {
+    '急性期(0-2周)': {
+      target:'镇痛、制动、减轻神经根刺激、避免长时间低头',
+      physio:[
+        {n:'冷疗法', d:'颈部剧痛期冰袋隔毛巾敷颈后/肩部 15 分钟，每日 2-3 次，减轻炎症'},
+        {n:'TENS 经皮神经电刺激', d:'电极贴颈肩痛点或沿神经走行，低频 2-10Hz，每次 20 分钟，镇痛'},
+        {n:'颈椎牵引', d:'坐位或仰卧牵引，力量 3-5kg 起步，每次 15-20 分钟，隔日一次，加重即停'},
+        {n:'超声波疗法', d:'探头沿颈肩部肌肉缓慢移动，0.8-1.2W/cm²，每次 8 分钟'}
+      ],
+      exercise:[
+        {n:'颈部等长抗阻', d:'坐位，手分别放前额/后脑/左右，头用力对抗手保持不动 5 秒，各方向 10 次，不产生疼痛'},
+        {n:'耸肩放松', d:'双肩耸起靠近耳部保持 3 秒后放松，10 次 1 组，每日 3 组，放松上斜方肌'},
+        {n:'缩下巴（收下颌）', d:'坐位，下巴水平向后收（做双下巴），保持 5 秒放松，10 次 1 组，每日 3 组'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'拇指沿颈后上斜方肌、提肩胛肌按压放松，每点 30 秒，配合呼吸'},
+        {n:'轻柔按摩', d:'手掌推抚颈肩部 5 分钟放松，力度轻柔，避免强力旋转'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '亚急性期(2-6周)': {
+      target:'恢复颈部活动度、增强颈深屈肌与肩胛稳定',
+      physio:[
+        {n:'超声波疗法', d:'颈肩部 1.0W/cm²，每次 8-10 分钟，促修复'},
+        {n:'湿热敷/石蜡疗法', d:'训练前颈肩部热敷 15 分钟热身'},
+        {n:'干扰电疗法', d:'颈肩部差频 50Hz，每次 15 分钟，改善循环'}
+      ],
+      exercise:[
+        {n:'颈部活动度训练', d:'缓慢做低头-仰头-左右旋转-侧屈各到最大无痛范围，每个方向 5 次，动作缓慢'},
+        {n:'肩胛回缩', d:'坐位，肩胛骨向中间夹拢保持 5 秒，10 次 1 组，每日 3 组'},
+        {n:'弹力带抗阻', d:'弹力带置于前额/后脑做抗阻后伸/前屈，慢起慢放 10 次×3'}
+      ],
+      manual:[
+        {n:'Maitland 松动', d:'颈椎牵引位小幅摆动松动，改善关节活动度'},
+        {n:'PNF 本体促进技术', d:'节律性稳定训练颈肩控制'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '慢性期(6周以上)': {
+      target:'维持颈椎功能、预防复发、改善姿势与工作习惯',
+      physio:[
+        {n:'湿热敷/石蜡疗法', d:'颈肩部热敷 15 分钟放松'},
+        {n:'水中运动疗法', d:'水中慢泳或水中行走 20 分钟，放松并训练肩颈'}
+      ],
+      exercise:[
+        {n:'颈深屈肌训练', d:'仰卧缩下巴、头部微抬离床面 3-5 厘米保持 10 秒，10 次 1 组，每日 2 组'},
+        {n:'肩胛稳定训练', d:'弹力带划船、俯卧 Y-T-W 字训练各 10 次×3'},
+        {n:'有氧训练', d:'快走/跑步/骑车 20-30 分钟，每周 3 次'},
+        {n:'姿势与工位调整', d:'屏幕调至视线平齐、肘部有支撑，每 45 分钟起身活动颈部'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松上斜方肌、胸锁乳突肌、枕下肌群，每点 30 秒'},
+        {n:'PNF 本体促进技术', d:'抗阻引导颈肩运动模式重建'}
+      ],
+      home:[], short:[], long:[]
+    }
+  },
+  '肩周炎': {
+    '急性期(0-2周)': {
+      target:'镇痛、保护肩关节、减缓粘连形成',
+      physio:[
+        {n:'冷疗法', d:'肩部剧痛时冰敷 15 分钟，每日 2-3 次，减轻炎症'},
+        {n:'TENS 经皮神经电刺激', d:'电极贴肩周痛点，低频镇痛，每次 20 分钟'},
+        {n:'超声波疗法', d:'肩周 1.0W/cm²，每次 8 分钟'},
+        {n:'半导体激光疗法', d:'痛点/关节腔照射，每次 5-8 分钟，消炎镇痛'}
+      ],
+      exercise:[
+        {n:'钟摆运动（Codman）', d:'弯腰健手扶桌，患臂放松下垂，身体带动手臂做前后/左右画圈，各 10 圈，每日 2-3 次'},
+        {n:'爬墙（轻）', d:'面对墙，患手手指沿墙缓慢上爬至轻度牵拉感即停并标记，10 次 1 组'},
+        {n:'被动活动度训练', d:'健手协助患侧肩做前屈/外展至轻度牵拉，每个方向 10 次，不引起剧痛'}
+      ],
+      manual:[
+        {n:'轻柔按摩', d:'手掌推抚肩周三角肌、冈上肌 5 分钟放松'},
+        {n:'关节松动Ⅰ-Ⅱ级', d:'肩关节牵引位小幅摆动，改善疼痛'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '亚急性期(2-6周)': {
+      target:'改善关节活动度、牵伸粘连、逐步扩大活动范围',
+      physio:[
+        {n:'超声波疗法', d:'肩周痛点 1.2W/cm²，每次 10 分钟'},
+        {n:'湿热敷/蜡疗', d:'训练前热敷/蜡疗肩部 20 分钟，软化组织便于牵伸'},
+        {n:'干扰电疗法', d:'肩周差频 100Hz 镇痛放松，每次 15 分钟'}
+      ],
+      exercise:[
+        {n:'爬墙（加大）', d:'面对墙/侧对墙，手指上爬并保持 5 秒，记录每天高度对比，10 次×3'},
+        {n:'滑轮/毛巾牵伸', d:'用滑轮或毛巾在背后上下拉，牵伸肩前屈/内旋，保持 15-30 秒×5'},
+        {n:'钟摆运动（加大幅度）', d:'弯腰画大圈，顺逆各 20 圈，每日 2 次'},
+        {n:'内旋外旋训练', d:'健手协助患手做肩内外旋至轻度牵拉，10 次×3'}
+      ],
+      manual:[
+        {n:'Maitland Ⅲ-Ⅳ级', d:'肩关节松动至阻力点并施加过压，改善各方向活动度'},
+        {n:'关节松动+牵伸', d:'松动后立即在受限方向牵伸 30 秒，增强效果'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '慢性期(6周以上)': {
+      target:'强化肩周肌力、恢复正常功能、回归活动',
+      physio:[
+        {n:'冲击波疗法', d:'针对钙化/粘连痛点冲击，每周 1-2 次'},
+        {n:'超声波疗法', d:'肩周 1.2-1.5W/cm²，每次 10 分钟'}
+      ],
+      exercise:[
+        {n:'肩袖等张强化', d:'弹力带做肩外旋、内旋、前屈抗阻各 10-15 次×3'},
+        {n:'肩胛稳定训练', d:'俯卧 Y-T-W 字、弹力带划船各 10 次×3'},
+        {n:'功能训练', d:'够物、提举、梳头等日常生活动作训练，逐步增加幅度'},
+        {n:'全范围爬墙', d:'爬墙达到健侧高度，保持 5 秒×10，维持活动度'}
+      ],
+      manual:[
+        {n:'PNF 本体促进技术', d:'节律性稳定与反复收缩，重建肩部运动控制'},
+        {n:'肌筋膜松解', d:'放松胸小肌、背阔肌、肩胛提肌，配合呼吸'}
+      ],
+      home:[], short:[], long:[]
     }
   },
   '半月板损伤': {
     '急性期(0-2周)': {
       target:'消肿镇痛、保护膝关节、防关节僵硬',
-      physio:['冷疗法','TENS 经皮神经电刺激','CPM 关节持续被动活动','超声波疗法'],
-      exercise:['股四头肌等长收缩','直腿抬高','踝泵训练','保护性 ROM 活动度训练'],
-      manual:['肌筋膜松解','淋巴引流手法'],
+      physio:[
+        {n:'冷疗法', d:'冰袋敷膝周 15-20 分钟，每日 3-4 次，减轻肿胀（RICE 原则）'},
+        {n:'CPM 关节持续被动活动', d:'术后/急性期 CPM 机 0-30° 逐渐增加，每次 30 分钟，每日 2 次，防粘连'},
+        {n:'TENS 经皮神经电刺激', d:'电极贴膝周，低频镇痛，每次 20 分钟'},
+        {n:'超声波疗法', d:'膝周 1.0W/cm²，每次 8 分钟，消肿促修复'}
+      ],
+      exercise:[
+        {n:'踝泵训练', d:'仰卧或坐位，踝关节勾-绷交替，10 次 1 组，每日 5 组，促循环消肿'},
+        {n:'股四头肌等长收缩', d:'仰卧膝伸直，绷紧大腿前侧保持 5-10 秒放松，10 次 1 组，每日 3 组'},
+        {n:'直腿抬高', d:'仰卧健膝屈曲，患腿伸直抬高 30° 保持 5 秒，10 次 1 组，每日 3 组'},
+        {n:'保护性 ROM 训练', d:'坐位垂膝，被动/辅助屈伸膝至无痛范围，每日多次，防关节僵硬'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松股四头肌、腘绳肌、小腿肌群，减轻关节周围紧张'},
+        {n:'淋巴引流手法', d:'轻柔向心方向推抚膝周，促进肿胀消退'}
+      ],
       home:[], short:[], long:[]
     },
     '亚急性期(2-6周)': {
-      target:'恢复关节活动度、强化肌力、改善本体感觉',
-      physio:['超声波疗法','干扰电疗法','湿热敷/石蜡疗法'],
-      exercise:['闭链训练','股四头肌/腘绳肌力量训练','平衡与本体感觉训练','步态训练'],
-      manual:['肌筋膜松解','关节松动'],
+      target:'恢复活动度、强化肌力、改善本体感觉',
+      physio:[
+        {n:'超声波疗法', d:'膝周 1.0-1.2W/cm²，每次 10 分钟'},
+        {n:'干扰电疗法', d:'膝周差频 50Hz，每次 15 分钟，促进循环消肿'},
+        {n:'湿热敷/石蜡疗法', d:'训练前热敷膝部 15 分钟热身'}
+      ],
+      exercise:[
+        {n:'闭链训练', d:'靠墙静蹲（浅）30 秒×5，双足与肩同宽，屈髋屈膝不塌膝'},
+        {n:'肌力强化', d:'坐位伸膝抗阻 10-15 次×3；俯卧屈膝抗阻（腘绳肌）10 次×3'},
+        {n:'平衡与本体感觉', d:'单腿站立 30 秒×3，闭眼站立进阶'},
+        {n:'步态训练', d:'镜子前步行，纠正伸膝不足与异常步态，10 分钟'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松膝周肌群，重点髂胫束、股四头肌外侧头'},
+        {n:'关节松动', d:'膝关节牵引/滑动松动，改善活动度'}
+      ],
       home:[], short:[], long:[]
     },
     '慢性期(6周以上)': {
       target:'回归运动、预防再损伤',
-      physio:['冲击波疗法','水中运动疗法'],
-      exercise:['下肢力量强化','单腿平衡','敏捷梯训练','跳跃落地训练','跑步渐进训练'],
-      manual:['肌筋膜松解','PNF 本体促进技术'],
+      physio:[
+        {n:'冲击波疗法', d:'针对陈旧损伤/钙化痛点，每周 1-2 次'},
+        {n:'水中运动疗法', d:'水中深蹲、步行、慢跑 20 分钟，减重训练'}
+      ],
+      exercise:[
+        {n:'下肢力量强化', d:'深蹲、弓步蹲、提踵各 10-15 次×3，逐步增加负荷'},
+        {n:'单腿平衡进阶', d:'单腿站立→闭眼→软垫→抛接球，各 30 秒×3'},
+        {n:'敏捷梯训练', d:'敏捷梯高抬腿、侧向进出，2-3 组，恢复敏捷'},
+        {n:'跳跃落地训练', d:'双脚→单脚跳跃落地，屈髋屈膝缓冲，10 次×3'},
+        {n:'跑步渐进', d:'从快走→慢跑→变速跑，每周递增，以无痛为度'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松臀肌、髂胫束、小腿三头肌'},
+        {n:'PNF 本体促进技术', d:'抗阻引导膝关节动态稳定'}
+      ],
       home:[], short:[], long:[]
     }
   },
   '交叉韧带(ACL)损伤': {
     '急性期(0-2周)': {
       target:'控制肿胀、恢复完全伸膝、逐步屈膝、肌力激活',
-      physio:['冷疗法','CPM 关节持续被动活动','TENS 经皮神经电刺激'],
-      exercise:['股四头肌等长收缩','踝泵训练','被动/辅助伸膝','直腿抬高'],
-      manual:['肌筋膜松解','髌骨松动'],
+      physio:[
+        {n:'冷疗法', d:'冰袋敷膝 15-20 分钟，每日 4-5 次，急性肿胀期最重要'},
+        {n:'CPM 关节持续被动活动', d:'0-30° 起逐渐增加，每次 30 分钟，每日 2 次，防关节粘连'},
+        {n:'TENS 经皮神经电刺激', d:'膝周低频镇痛，每次 20 分钟'},
+        {n:'加压与抬高', d:'弹力绷带加压包扎+患肢抬高过心脏，减轻肿胀'}
+      ],
+      exercise:[
+        {n:'踝泵训练', d:'勾-绷脚尖 10 次 1 组，每日 5 组，促回流消肿'},
+        {n:'股四头肌等长收缩', d:'伸膝绷紧大腿前侧保持 5-10 秒，10 次 1 组，每日 3 组'},
+        {n:'被动/辅助伸膝', d:'坐位足跟垫高让膝自然伸直或轻压，保持 10 秒×10，恢复完全伸膝'},
+        {n:'直腿抬高', d:'伸膝抬腿 30° 保持 5 秒，10 次 1 组，每日 3 组'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松股四头肌、腘绳肌，减轻关节紧张'},
+        {n:'髌骨松动', d:'拇指推髌骨上下左右活动，恢复髌股滑动，10 次×2'}
+      ],
       home:[], short:[], long:[]
     },
     '亚急性期(2-6周)': {
       target:'恢复全范围活动度、强化肌力、重建步态',
-      physio:['超声波疗法','干扰电疗法','湿热敷/石蜡疗法'],
-      exercise:['闭链负重训练','股四头肌/腘绳肌强化','平衡训练','步态训练','小范围深蹲'],
-      manual:['肌筋膜松解','关节松动'],
+      physio:[
+        {n:'超声波疗法', d:'膝周 1.0W/cm²，每次 10 分钟'},
+        {n:'干扰电疗法', d:'膝周差频 50Hz，每次 15 分钟'},
+        {n:'湿热敷/石蜡疗法', d:'训练前热敷 15 分钟'}
+      ],
+      exercise:[
+        {n:'闭链负重训练', d:'靠墙静蹲 30-60 秒×5，微蹲→半蹲渐进，屈髋屈膝不塌膝'},
+        {n:'股四头肌/腘绳肌强化', d:'坐位伸膝抗阻、俯卧屈膝抗阻各 10-15 次×3'},
+        {n:'平衡训练', d:'单腿站立 30-60 秒×3，闭眼/软垫进阶'},
+        {n:'步态训练', d:'镜子前慢走，强调足跟着地、伸膝充分，10 分钟'},
+        {n:'小范围深蹲', d:'0-60° 深蹲 10 次×3，动作缓慢控制'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松股四头肌、髂胫束、小腿三头肌'},
+        {n:'关节松动', d:'胫股关节前后滑动，改善屈曲'}
+      ],
       home:[], short:[], long:[]
     },
     '慢性期(6周以上)': {
       target:'本体感觉重建、跳跃落地、回归运动',
-      physio:['冲击波疗法','水中运动疗法'],
-      exercise:['单腿跳跃','落地控制训练','敏捷训练','急停变向训练','运动专项训练'],
-      manual:['PNF 本体促进技术','肌筋膜松解'],
+      physio:[
+        {n:'冲击波疗法', d:'针对痛点冲击，每周 1-2 次'},
+        {n:'水中运动疗法', d:'水中跑跳训练 20 分钟，减重下重建动态稳定'}
+      ],
+      exercise:[
+        {n:'单腿跳跃', d:'单脚向前/侧向跳跃 10 次×3，落地位保持稳定'},
+        {n:'落地控制训练', d:'从台阶/跳箱落地，屈髋屈膝缓冲保持稳定 3 秒，10 次×3'},
+        {n:'敏捷训练', d:'变向跑、Z 字跑、反应起跑，2-3 组'},
+        {n:'急停变向训练', d:'跑动中急停转向，逐步增加速度，10 次×3'},
+        {n:'运动专项训练', d:'结合患者运动项目（球类/跑跳）回归性训练，循序渐进'}
+      ],
+      manual:[
+        {n:'PNF 本体促进技术', d:'节律性稳定与反复收缩，重建膝关节动态控制'},
+        {n:'肌筋膜松解', d:'放松下肢后侧链与髂胫束'}
+      ],
       home:[], short:[], long:[]
     }
   },
   '网球肘': {
     '急性期(0-2周)': {
       target:'镇痛、减轻炎症、保护患肢',
-      physio:['冷疗法','TENS 经皮神经电刺激','超声波疗法','半导体激光疗法'],
-      exercise:['腕伸肌等长收缩','前臂放松训练','轻柔牵伸'],
-      manual:['肌筋膜松解','扳机点按摩'],
+      physio:[
+        {n:'冷疗法', d:'冰袋敷肘外侧痛点 15 分钟，每日 3 次，减轻炎症'},
+        {n:'TENS 经皮神经电刺激', d:'电极贴肘外侧，低频镇痛，每次 20 分钟'},
+        {n:'超声波疗法', d:'肘外侧 0.8-1.0W/cm²，每次 8 分钟'},
+        {n:'半导体激光疗法', d:'痛点照射，每次 5-8 分钟，消炎'}
+      ],
+      exercise:[
+        {n:'腕伸肌等长收缩', d:'前臂放桌面、手背向下，压腕做对抗保持 5 秒，10 次 1 组，每日 3 组'},
+        {n:'前臂放松训练', d:'轻柔揉捏前臂伸肌群 3-5 分钟，放松肌肉'},
+        {n:'轻柔牵伸', d:'患侧手伸直、健手将手腕向下弯牵伸前臂伸肌 30 秒×3'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'沿前臂伸肌群由近及远按压，每点 30 秒'},
+        {n:'扳机点按摩', d:'在肱骨外上髁及前臂伸肌痛点做定点按压 60 秒'}
+      ],
       home:[], short:[], long:[], video:'网球肘急性期处理'
     },
     '亚急性期(2-6周)': {
       target:'促进组织修复、增强肌腱抗阻能力',
-      physio:['超声波疗法','冲击波疗法','半导体激光疗法'],
-      exercise:['腕伸肌离心训练','握力训练','前臂旋转训练'],
-      manual:['肌筋膜松解','深部摩擦按摩（Cyriax）'],
+      physio:[
+        {n:'超声波疗法', d:'肘外侧 1.0W/cm²，每次 8-10 分钟'},
+        {n:'冲击波疗法', d:'针对肌腱附着点，每周 1-2 次'},
+        {n:'半导体激光疗法', d:'痛点照射，每次 8 分钟'}
+      ],
+      exercise:[
+        {n:'腕伸肌离心训练', d:'前臂放桌边、手腕垂出，哑铃（0.5-1kg）缓慢放下（离心）2 秒、健手辅助抬起，10 次×3'},
+        {n:'握力训练', d:'握力球/弹力球用力握紧 5 秒放松，10 次 1 组，每日 3 组'},
+        {n:'前臂旋转训练', d:'持轻哑铃做前臂旋前旋后，各 10 次×3'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松前臂伸肌与旋后肌群'},
+        {n:'深部摩擦按摩（Cyriax）', d:'垂直于肌腱纤维方向横磨痛点 2-3 分钟，促进组织修复'}
+      ],
       home:[], short:[], long:[]
     },
     '慢性期(6周以上)': {
       target:'恢复正常功能、预防复发、回归运动',
-      physio:['冲击波疗法','湿热敷/石蜡疗法'],
-      exercise:['腕伸肌离心强化','功能性抓握训练','肘腕复合训练'],
-      manual:['深部摩擦按摩（Cyriax）','PNF 本体促进技术'],
+      physio:[
+        {n:'冲击波疗法', d:'顽固痛点每周 1-2 次，共 3-5 次'},
+        {n:'湿热敷/石蜡疗法', d:'训练前热敷前臂 15 分钟'}
+      ],
+      exercise:[
+        {n:'腕伸肌离心强化', d:'离心重量逐步增加，动作缓慢控制，10-15 次×3'},
+        {n:'功能性抓握训练', d:'拧毛巾、提壶、握拍等生活/运动动作训练'},
+        {n:'肘腕复合训练', d:'肘屈伸+腕屈伸+旋转组合训练，10 次×3，模拟真实使用'}
+      ],
+      manual:[
+        {n:'深部摩擦按摩（Cyriax）', d:'横磨痛点后被动牵伸前臂伸肌'},
+        {n:'PNF 本体促进技术', d:'抗阻引导前臂-腕部运动控制'}
+      ],
+      home:[], short:[], long:[]
+    }
+  },
+  '骨折术后': {
+    '急性期(0-2周)': {
+      target:'消肿镇痛、保护骨折端、防关节僵硬与肌肉萎缩',
+      physio:[
+        {n:'冷疗法', d:'伤口外冰敷患肢 15-20 分钟，每日 3-4 次，减轻肿胀'},
+        {n:'TENS 经皮神经电刺激', d:'患肢低频镇痛，每次 20 分钟'},
+        {n:'加压与抬高', d:'弹力绷带包扎+患肢抬高过心脏，控制肿胀'},
+        {n:'CPM 关节持续被动活动', d:'允许范围内 CPM 0-30° 起逐渐增加，每次 30 分钟，每日 2 次'}
+      ],
+      exercise:[
+        {n:'踝泵训练（下肢）', d:'勾-绷脚尖 10 次 1 组，每日 5 组，防深静脉血栓'},
+        {n:'健侧与未制动关节训练', d:'保持健肢及患肢未固定关节正常活动，防肌萎缩'},
+        {n:'等长收缩训练', d:'制动区肌肉绷紧 5 秒放松，10 次 1 组，每日 3 组，防肌肉萎缩'},
+        {n:'相邻关节活动', d:'固定外的相邻关节全范围主动活动，每日多次'}
+      ],
+      manual:[
+        {n:'轻柔按摩', d:'远离骨折处推抚按摩，促进回流消肿'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '亚急性期(2-6周)': {
+      target:'促进骨痂形成、恢复关节活动度、逐步负重',
+      physio:[
+        {n:'超声波疗法', d:'骨折区 0.5-1.0W/cm²，每次 8 分钟，促进骨愈合'},
+        {n:'湿热敷/蜡疗', d:'训练前热敷患肢 15 分钟，软化组织'},
+        {n:'干扰电疗法', d:'患肢差频 50Hz，每次 15 分钟，促进循环'}
+      ],
+      exercise:[
+        {n:'关节活动度训练', d:'允许范围内主动/辅助屈伸关节，逐步增加幅度，每个方向 10 次×3'},
+        {n:'渐进负重训练', d:'医师指导下从部分负重→完全负重，体重秤辅助，每日增加'},
+        {n:'肌力强化', d:'弹力带抗阻训练制动邻近肌群，10-15 次×3'},
+        {n:'步态训练', d:'助行器/拐杖下正确步态训练，10 分钟'}
+      ],
+      manual:[
+        {n:'关节松动', d:'骨折稳定后轻中度松动邻近关节，改善活动度'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '慢性期(6周以上)': {
+      target:'强化肌力、恢复正常功能、回归运动',
+      physio:[
+        {n:'冲击波疗法', d:'针对骨不连/软组织粘连痛点，每周 1-2 次'},
+        {n:'水中运动疗法', d:'水中行走、训练 20-30 分钟，减重下功能训练'}
+      ],
+      exercise:[
+        {n:'力量强化训练', d:'患肢抗阻训练逐步加重（负重/弹力带），10-15 次×3'},
+        {n:'平衡与本体感觉', d:'单腿站立、闭眼、软垫进阶，各 30 秒×3'},
+        {n:'功能性训练', d:'上下楼、蹲起、提物等日常生活功能训练'},
+        {n:'运动回归训练', d:'结合原运动项目渐进训练，如慢跑→变速跑'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松患肢肌群与瘢痕周围软组织'},
+        {n:'瘢痕松解', d:'伤口愈合后按摩瘢痕，改善活动与美观'}
+      ],
+      home:[], short:[], long:[]
+    }
+  },
+  '脊髓损伤': {
+    '急性期(0-2周)': {
+      target:'维持生命体征、防治并发症、体位与被动活动',
+      physio:[
+        {n:'体位管理', d:'每 2 小时翻身一次，防压疮；保持脊柱中立位'},
+        {n:'被动关节活动度训练', d:'每日被动活动各关节全范围 2 次，防关节挛缩'},
+        {n:'呼吸训练', d:'高位损伤重点做腹式呼吸、辅助咳嗽排痰，每日 2-3 次'}
+      ],
+      exercise:[
+        {n:'呼吸功能训练', d:'膈肌呼吸+缩唇呼吸 10 次 1 组，每日 3 组，预防肺部感染'},
+        {n:'踝泵训练', d:'勾-绷脚尖 10 次 1 组，每日 5 组，防深静脉血栓'},
+        {n:'保留肌力训练', d:'对残留功能肌群做等长/主动训练，防继发失用'}
+      ],
+      manual:[
+        {n:'被动活动', d:'治疗师按序被动活动各关节，动作轻柔'},
+        {n:'体位转换', d:'轴向翻身，避免脊柱扭转'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '亚急性期(2-6周)': {
+      target:'功能重建、转移训练、轮椅使用、肌力强化',
+      physio:[
+        {n:'物理因子治疗', d:'神经肌肉电刺激刺激失神经肌肉，防萎缩，每次 20-30 分钟'},
+        {n:'功能性电刺激（FES）', d:'刺激下肢肌肉辅助站立/踏步，专业人员实施'}
+      ],
+      exercise:[
+        {n:'上肢肌力强化', d:'俯卧撑、弹力带划船、举重等训练，10-15 次×3，为转移打基础'},
+        {n:'坐位平衡训练', d:'床边端坐、重心转移、抛接球，逐步脱手'},
+        {n:'转移训练', d:'床-椅、椅-马桶转移技巧训练，教会安全方法'},
+        {n:'轮椅技巧训练', d:'轮椅推进、转向、过坎、上下坡训练'},
+        {n:'呼吸与排痰训练', d:'腹肌肌力训练、辅助咳嗽，每日 2 次'}
+      ],
+      manual:[
+        {n:'被动+主动助力训练', d:'按残留功能分级训练，激活残余肌群'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '慢性期(6周以上)': {
+      target:'维持功能、社区回归、并发症管理',
+      physio:[
+        {n:'物理因子治疗', d:'维持肌力与缓解疼痛，酌情使用'},
+        {n:'水中运动疗法', d:'水中训练 20-30 分钟，减重下活动，防挛缩'}
+      ],
+      exercise:[
+        {n:'维持性肌力训练', d:'上肢力量、核心稳定持续训练，每周 3-4 次'},
+        {n:'ADL 训练', d:'穿衣、转移、如厕、烹饪等独立生活能力训练'},
+        {n:'社区行动训练', d:'轮椅户外出行、无障碍环境适应训练'},
+        {n:'并发症管理', d:'压疮预防（减压坐垫）、体位性低血压处理、肠道膀胱管理指导'}
+      ],
+      manual:[
+        {n:'维持性被动活动', d:'定期被动活动防关节挛缩'}
+      ],
+      home:[], short:[], long:[]
+    }
+  },
+  '骨质疏松': {
+    '急性期(0-2周)': {
+      target:'缓解疼痛、防跌倒、避免弯腰负重',
+      physio:[
+        {n:'湿热敷/热疗', d:'疼痛部位热敷 15 分钟，每日 2 次，缓解酸痛'},
+        {n:'TENS 经皮神经电刺激', d:'背部/痛区低频镇痛，每次 20 分钟'}
+      ],
+      exercise:[
+        {n:'呼吸与放松训练', d:'腹式呼吸放松 5-10 分钟，缓解躯干紧张'},
+        {n:'踝泵训练', d:'勾-绷脚尖 10 次 1 组，每日 3 组，促循环'},
+        {n:'温和活动', d:'床上温和活动四肢，避免弯腰与躯干旋转，量力而行'}
+      ],
+      manual:[
+        {n:'轻柔按摩', d:'背部肌肉轻柔推抚 5 分钟，避免直接压椎体'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '亚急性期(2-6周)': {
+      target:'增强躯干肌力、改善平衡、提高骨密度',
+      physio:[
+        {n:'超声波疗法', d:'背部 0.8W/cm²，每次 8 分钟'},
+        {n:'温热疗法', d:'训练前热敷 15 分钟'}
+      ],
+      exercise:[
+        {n:'躯干伸肌训练', d:'俯卧抬头/抬胸（避免过度后伸），保持 5 秒，10 次 1 组，每日 2 组'},
+        {n:'核心肌群训练', d:'腹横肌激活、臀桥 10 次×3，保护腰椎'},
+        {n:'平衡训练', d:'单腿站立 30 秒×3、脚跟对脚尖行走，防跌倒'},
+        {n:'有氧训练', d:'快走 20 分钟，每周 3-4 次，负重刺激骨形成'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松竖脊肌、髋屈肌，轻柔为主'}
+      ],
+      home:[], short:[], long:[]
+    },
+    '慢性期(6周以上)': {
+      target:'维持骨量、防跌倒、回归正常生活',
+      physio:[
+        {n:'水中运动疗法', d:'水中行走/体操 20-30 分钟，每周 3 次，低冲击'},
+        {n:'冲击波疗法', d:'针对慢性骨痛点，每周 1 次'}
+      ],
+      exercise:[
+        {n:'力量训练', d:'弹力带抗阻（臀腿/背）10-15 次×3，每周 3 次，刺激骨密度'},
+        {n:'平衡防跌训练', d:'太极、单腿站立、闭眼平衡，每日 10 分钟'},
+        {n:'负重有氧', d:'快走/爬楼/舞蹈 30 分钟，每周 3-5 次'},
+        {n:'姿势教育', d:'学习正确弯腰/提物姿势，避免椎体压缩性骨折'}
+      ],
+      manual:[
+        {n:'肌筋膜松解', d:'放松背部与下肢肌群，缓解慢性酸痛'}
+      ],
       home:[], short:[], long:[]
     }
   },
   '脑卒中': {
     '急性期(0-2周)': {
       target:'稳定生命体征、防治并发症、早期康复介入',
-      physio:['神经肌肉电刺激','物理因子治疗'],
-      exercise:['体位管理与良肢位摆放','被动关节活动度训练','病情稳定 48h 后床边康复'],
-      manual:['良肢位摆放与体位转换','被动关节活动'],
+      physio:[
+        {n:'神经肌肉电刺激', d:'电极贴患侧关键肌（三角肌/股四头肌/胫前肌），低频 20-50Hz 刺激引起肌肉收缩，每次 20-30 分钟，促神经再支配'},
+        {n:'物理因子治疗', d:'根据并发症选用超声波/蜡疗等，在专业人员指导下进行'}
+      ],
+      exercise:[
+        {n:'体位管理与良肢位摆放', d:'仰卧/健侧/患侧卧位交替，每 1-2 小时变换；患侧肩下垫枕、掌心向上、髋膝轻度屈曲防痉挛'},
+        {n:'被动关节活动度训练', d:'活动患侧肩肘腕髋膝踝各关节，每个关节每方向 10 次，每日 2-3 次，动作轻柔防脱位'},
+        {n:'Bobath 握手', d:'双手十指交叉、患侧拇指在上，健手带动患手向前上方伸举，每日 2-3 组，每组 15-20 次'},
+        {n:'桥式运动', d:'仰卧屈膝、双足踩床，抬臀保持 5 秒回落，10 次 1 组，每日 2-3 组'}
+      ],
+      manual:[
+        {n:'良肢位摆放与体位转换', d:'定时翻向健侧/患侧，患侧卧位时患肩前伸、患肢垫高'},
+        {n:'被动关节活动', d:'配合呼吸缓慢活动各关节，防止关节挛缩'}
+      ],
       short:['稳定生命体征，防治并发症','良肢位摆放、被动关节活动(每日3-4次)、定时体位转换','24小时内完成洼田饮水试验吞咽筛查','1周内完成初次康复评定','2周内完成床上翻身、坐位维持5分钟以上'],
       long:['预防并发症，最大限度减轻障碍','为恢复期功能重建打基础'],
       home:['被动关节活动：家属活动患侧肩肘腕髋膝踝，每日2-3次每次10分钟','良肢位摆放：每1-2小时变换','Bobath握手：双手交叉患侧拇指在上，每日2-3组每组15-20次','桥式运动：仰卧屈膝抬臀，每日2-3次每组10个']
     },
     '亚急性期(2-6周)': {
       target:'最大限度改善功能障碍、重建生活能力',
-      physio:['物理因子治疗','痉挛处理（药物/肉毒毒素）','针灸推拿等中医治疗'],
-      exercise:['PT 物理治疗：坐位/站立/步行训练','OT 作业治疗：日常生活活动训练','言语治疗：失语症/构音障碍训练','吞咽治疗：吞咽功能训练','认知功能训练','手精细功能训练'],
-      manual:['被动-助力-主动分级运动','神经促通技术（Bobath/PNF）'],
+      physio:[
+        {n:'物理因子治疗', d:'根据情况选用中频电、蜡疗等辅助治疗，20 分钟/次'},
+        {n:'痉挛处理（药物/肉毒毒素）', d:'肌张力明显增高时由医师评估后注射肉毒毒素并配合牵伸'},
+        {n:'针灸推拿等中医治疗', d:'辨证取穴，配合现代康复训练，每日或隔日一次'}
+      ],
+      exercise:[
+        {n:'坐位平衡训练', d:'靠坐→有支撑端坐→无支撑端坐，逐步减少支撑，每次 10-20 分钟'},
+        {n:'站立训练', d:'辅助下从坐位站起、重心转移练习，逐步减少帮助，每日多次'},
+        {n:'步行训练', d:'助行器/扶持下迈步，先平行杠内→室外，纠正足下垂与画圈步态'},
+        {n:'日常生活活动训练', d:'穿衣、进食、洗漱等 ADL 分解训练，鼓励健手带动患手'},
+        {n:'言语训练', d:'口肌训练、命名、复述、朗读，失语/构音障碍每日 20-30 分钟'},
+        {n:'吞咽训练', d:'口面部肌群训练、低头吞咽、冷刺激，由吞咽专科指导'},
+        {n:'认知训练', d:'注意力、记忆力、计算、视空间训练，每次 15-20 分钟'},
+        {n:'手精细功能训练', d:'捡豆子、插板、拧螺丝等作业训练，每日 20 分钟'}
+      ],
+      manual:[
+        {n:'被动-助力-主动分级运动', d:'按患者能力选择助力或主动训练，循序渐进'},
+        {n:'神经促通技术（Bobath/PNF）', d:'抑制异常模式、促发正常运动模式，专业人员实施'}
+      ],
       short:['坐位平衡训练(有支撑→无支撑)','站立训练(辅助→独立)','床-椅转移训练','系统言语治疗和吞咽训练','认知功能评估与训练','步行训练(辅助→独立)','手精细功能训练','基本日常生活活动训练'],
       long:['最大限度改善功能障碍','约80%患者恢复步行(含辅助)，约50%上肢恢复实用功能','基本ADL独立完成，重返家庭'],
       home:['坐位训练：靠坐→床边无支撑端坐','翻身训练：仰卧到侧卧，每日多次','坐位平衡：重心转移、躯干旋转','患侧下肢抬举：每组10次每日3组','站立训练：助行器或家属扶持，重心转移','坐站转移：每日多次','步行训练：助行器或扶持，少量多次','手部锻炼：用力握拳2-3秒再张开，每遍10次一天3遍']
     },
     '慢性期(6周以上)': {
       target:'维持功能、提高生活质量、回归社会',
-      physio:['物理因子治疗'],
-      exercise:['维持性训练防止功能退化','ADL 与社区生活能力训练','矫形器具使用与训练','心理行为支持','家庭康复计划与随访'],
-      manual:['维持性被动活动'],
+      physio:[
+        {n:'物理因子治疗', d:'维持期酌情使用，防肌萎缩与疼痛'}
+      ],
+      exercise:[
+        {n:'维持性训练', d:'继续站坐转移、步行、上肢功能训练，防功能退化，每日 30-60 分钟'},
+        {n:'ADL 与社区生活训练', d:'独立穿衣进食洗漱、购物、烹饪、使用电话等，逐步回归生活'},
+        {n:'矫形器具使用与训练', d:'佩戴足踝矫形器等，训练正确使用与行走'},
+        {n:'心理行为支持', d:'情绪疏导、放松训练、家庭与社会支持'},
+        {n:'家庭康复计划', d:'制定并执行家庭训练清单，定期随访调整'}
+      ],
+      manual:[
+        {n:'维持性被动活动', d:'痉挛明显时辅助被动活动防挛缩'}
+      ],
       short:['维持已有功能，防止退化','IADL训练：购物/烹饪/使用电话','社区步行逐步增加距离','家庭康复计划坚持执行'],
       long:['维持功能，提高生活质量','回归家庭和社会，从事力所能及的活动'],
       home:['社区步行：安全环境下逐步增加距离，每日1-2次','ADL训练：独立穿衣、进食、洗漱','手精细功能：捡豆子、写字、使用工具']
@@ -910,7 +1420,7 @@ const DISEASE_PLANS = {
   }
 };
 
-const PLAN_DISEASES = ['腰痛','半月板损伤','交叉韧带(ACL)损伤','网球肘','脑卒中'];
+const PLAN_DISEASES = ['腰痛','颈椎病','肩周炎','半月板损伤','交叉韧带(ACL)损伤','网球肘','骨折术后','脊髓损伤','骨质疏松','脑卒中'];
 const PLAN_STAGES = ['急性期(0-2周)','亚急性期(2-6周)','慢性期(6周以上)'];
 
 /* 演示视频（方案页）：素材待补充，点击提示 */
@@ -921,21 +1431,35 @@ const DEMO_VIDEOS = [
   { name:'网球肘急性期处理',     disease:'网球肘' }
 ];
 
-/* 主诊断下拉 */
+/* 主诊断下拉：d=方案疾病；s=自动分期（脑卒中类按病期带出） */
 const DIAGNOSES = [
-  { v:'', t:'请选择主诊断…', d:'' },
-  { v:'腰椎间盘突出症', t:'腰椎间盘突出症（腰痛）', d:'腰痛' },
-  { v:'腰肌劳损',       t:'腰肌劳损（腰痛）',       d:'腰痛' },
-  { v:'半月板损伤',     t:'半月板损伤',             d:'半月板损伤' },
-  { v:'前交叉韧带损伤', t:'前交叉韧带(ACL)损伤',    d:'交叉韧带(ACL)损伤' },
-  { v:'网球肘',         t:'网球肘（肱骨外上髁炎）', d:'网球肘' },
-  { v:'脑卒中',         t:'脑卒中',                 d:'脑卒中' },
-  { v:'脊髓损伤',       t:'脊髓损伤',               d:'脑卒中' },
-  { v:'其他',           t:'其他',                   d:'腰痛' }
+  { v:'', t:'请选择主诊断…', d:'', s:'' },
+  { v:'脑出血急性期',     t:'脑出血 · 急性期',     d:'脑卒中', s:'急性期(0-2周)' },
+  { v:'脑出血恢复期',     t:'脑出血 · 恢复期',     d:'脑卒中', s:'亚急性期(2-6周)' },
+  { v:'脑出血后遗症期',   t:'脑出血 · 后遗症期',   d:'脑卒中', s:'慢性期(6周以上)' },
+  { v:'脑梗死急性期',     t:'脑梗死 · 急性期',     d:'脑卒中', s:'急性期(0-2周)' },
+  { v:'脑梗死恢复期',     t:'脑梗死 · 恢复期',     d:'脑卒中', s:'亚急性期(2-6周)' },
+  { v:'脑梗死后遗症期',   t:'脑梗死 · 后遗症期',   d:'脑卒中', s:'慢性期(6周以上)' },
+  { v:'腰椎间盘突出症',   t:'腰椎间盘突出症（腰痛）', d:'腰痛' },
+  { v:'腰肌劳损',         t:'腰肌劳损（腰痛）',     d:'腰痛' },
+  { v:'颈椎病',           t:'颈椎病（颈痛）',       d:'颈椎病' },
+  { v:'肩周炎',           t:'肩周炎（冻结肩）',     d:'肩周炎' },
+  { v:'肩袖损伤',         t:'肩袖损伤',             d:'肩周炎' },
+  { v:'半月板损伤',       t:'半月板损伤',           d:'半月板损伤' },
+  { v:'前交叉韧带损伤',   t:'前交叉韧带(ACL)损伤',  d:'交叉韧带(ACL)损伤' },
+  { v:'网球肘',           t:'网球肘（肱骨外上髁炎）', d:'网球肘' },
+  { v:'骨折术后',         t:'骨折术后',             d:'骨折术后' },
+  { v:'脊髓损伤',         t:'脊髓损伤',             d:'脊髓损伤' },
+  { v:'骨质疏松',         t:'骨质疏松',             d:'骨质疏松' },
+  { v:'其他',             t:'其他',                 d:'腰痛' }
 ];
 function mapDiagnosis(type){
   const hit = DIAGNOSES.find(x=>x.v===type);
   return (hit&&hit.d)||'腰痛';
+}
+function mapDiagnosisStage(type){
+  const hit = DIAGNOSES.find(x=>x.v===type);
+  return (hit&&hit.s)||'';
 }
 
 /* ============================================================
@@ -1153,7 +1677,12 @@ function normalize(p){
   p.imaging = p.imaging || { types:[], findings:'' };
   p.pain = p.pain || { nature:'', location:'', radiation:'', aggravate:'', relieve:'', night:false };
   p.vas = (typeof p.vas==='number')?p.vas:0;
-  p.objective = p.objective || { tend:[], rom:'', mmt:'', ashworth:'', sensory:'', reflex:'', swelling:'', temp:'', adl:'' };
+  p.objective = p.objective || { tend:[], rom:[], mmt:[], ashworth:'', sensory:[], reflex:[], swelling:'', temp:'', adl:'' };
+  if(!Array.isArray(p.objective.tend)) p.objective.tend=[];
+  if(!Array.isArray(p.objective.rom)) p.objective.rom=[];
+  if(!Array.isArray(p.objective.mmt)) p.objective.mmt=[];
+  if(!Array.isArray(p.objective.sensory)) p.objective.sensory=[];
+  if(!Array.isArray(p.objective.reflex)) p.objective.reflex=[];
   p.exams = p.exams || { positive:{} };
   p.neuro = p.neuro || {};
   p.assess = p.assess || {};
@@ -1175,7 +1704,7 @@ function makePatient(name,age,gender,complaint,vas){
     pain: { nature:'', location:'', radiation:'', aggravate:'', relieve:'', night:false },
     history: { items:[], meds:'' },
     imaging: { types: [], findings: '' },
-    objective: { tend:[], rom:'', mmt:'', ashworth:'', sensory:'', reflex:'', swelling:'', temp:'', adl:'' },
+    objective: { tend:[], rom:[], mmt:[], ashworth:'', sensory:[], reflex:[], swelling:'', temp:'', adl:'' },
     exams: { positive:{} },
     neuro: {}, assess: { speech:{}, swallow:{}, motor:{}, ot:{} },
     scales: [], scores: {}, goals: {},
@@ -1199,7 +1728,14 @@ function cur(){ return patients.find(p=>p.id===currentId) || patients[0]; }
 /* ---- 治疗方案默认勾选 ---- */
 function defaultPlanSel(p){
   const st=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛'])[p.planStage]||{};
-  return { physio:(st.physio||[]).slice(), exercise:(st.exercise||[]).slice(), manual:(st.manual||[]).slice() };
+  return { physio:(st.physio||[]).map(x=>x.n), exercise:(st.exercise||[]).map(x=>x.n), manual:(st.manual||[]).map(x=>x.n) };
+}
+function planDesc(cat, name){
+  const st=(DISEASE_PLANS[cur().planDisease]||DISEASE_PLANS['腰痛'])[cur().planStage]||{};
+  const def=(st[cat]||[]).find(x=>x.n===name);
+  if(def&&def.d) return def.d;
+  const pl=PHYSIO_LIB.find(x=>x.name===name);
+  return pl?pl.mech:'';
 }
 function getPlanSel(p){
   if(!p.planSel || !p.planSel.physio || !p.planSel.exercise || !p.planSel.manual) p.planSel = defaultPlanSel(p);
@@ -1293,11 +1829,7 @@ function refreshComplaint(){
   $('#fAge').value=p.age;
   document.querySelectorAll('input[name=gender]').forEach(r=>{ if(r.value===p.gender) r.checked=true; });
   const dsel=$('#fDiag');
-  if(!dsel.options.length){
-    DIAGNOSES.forEach(x=>{
-      const o=document.createElement('option'); o.value=x.v; o.textContent=x.t; dsel.appendChild(o);
-    });
-  }
+  dsel.innerHTML = DIAGNOSES.map(x=>`<option value="${esc(x.v)}">${esc(x.t)}</option>`).join('');
   dsel.value=p.diagnosis.type;
   $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
@@ -1349,7 +1881,10 @@ function bindComplaint(){
     const p=cur();
     p.diagnosis.type=e.target.value;
     const d=mapDiagnosis(e.target.value);
-    if(d && PLAN_DISEASES.includes(d)){ p.planDisease=d; p.planSel=defaultPlanSel(p); }
+    const s=mapDiagnosisStage(e.target.value);
+    if(d && PLAN_DISEASES.includes(d)) p.planDisease=d;
+    if(s && PLAN_STAGES.includes(s)) p.planStage=s;
+    p.planSel=defaultPlanSel(p);
     savePatients();
   });
   $('#fDiagNote').addEventListener('input',e=>{ cur().diagnosis.note=e.target.value; savePatients(); });
@@ -1373,6 +1908,16 @@ function updatePatientChip(){
    2 客观评估
    ============================================================ */
 const TEND_ITEMS = ['压痛点','局部温度异常','肌张力增高','肿胀'];
+const ROM_DEFS = [{name:'颈椎'},{name:'肩关节'},{name:'肘关节'},{name:'腕关节'},{name:'腰椎'},{name:'髋关节'},{name:'膝关节'},{name:'踝关节'}];
+const ROM_SIDES = ['左','右','双侧'];
+const ROM_TYPES = ['主动','被动'];
+const MMT_DEFS = [{name:'左上肢'},{name:'右上肢'},{name:'左下肢'},{name:'右下肢'},{name:'躯干核心'}];
+const MMT_GRADES = ['0','1','2','3','4','5'];
+const REFLEX_DEFS = [{name:'肱二头肌反射'},{name:'肱三头肌反射'},{name:'桡骨膜反射'},{name:'膝腱反射'},{name:'跟腱反射'},{name:'腹壁反射'},{name:'Babinski 征'},{name:'Hoffmann 征'},{name:'踝阵挛'}];
+const REFLEX_FINDS = ['正常','减弱','亢进','消失','阳性','阴性'];
+const SENSORY_DEFS = [{name:'浅感觉（触/痛/温）'},{name:'深感觉（位置/振动）'},{name:'复合感觉（两点辨别）'},{name:'皮节感觉（按节段）'}];
+const SENSORY_FINDS = ['正常','减退','消失','过敏'];
+const objOpen = new Set(['tend']);
 let currentExamPart='';
 function renderCheckList(box, items, getSet){
   const p=cur();
@@ -1406,7 +1951,110 @@ function renderCheckList(box, items, getSet){
     savePatients();
   }));
 }
-function renderObjective(){
+function objKey(cat, e){
+  if(!e) return '';
+  if(cat==='rom') return e.joint||'';
+  if(cat==='mmt'||cat==='reflex') return e.name||'';
+  return e.type||'';
+}
+function objRowEntry(cat, key, row){
+  const e={};
+  if(cat==='rom'){ e.joint=key; e.side=row.querySelector('[data-f=side]').value; e.type=row.querySelector('[data-f=type]').value; e.deg=row.querySelector('[data-f=deg]').value; }
+  else if(cat==='mmt'){ e.name=key; e.grade=row.querySelector('[data-f=grade]').value; }
+  else if(cat==='reflex'){ e.name=key; e.find=row.querySelector('[data-f=find]').value; }
+  else if(cat==='sensory'){ e.type=key; e.find=row.querySelector('[data-f=find]').value; e.site=row.querySelector('[data-f=site]').value; }
+  return e;
+}
+function bindObjRows(box, cat){
+  box.querySelectorAll('.srow').forEach(row=>{
+    const key=row.dataset.key;
+    const chk=row.querySelector('.srow-chk input');
+    chk.addEventListener('change',()=>{
+      const p=cur(); const arr=p.objective[cat];
+      if(chk.checked){
+        if(!arr.find(e=>objKey(cat,e)===key)) arr.push(objRowEntry(cat,key,row));
+      }else{
+        const i=arr.findIndex(e=>objKey(cat,e)===key);
+        if(i>=0) arr.splice(i,1);
+      }
+      savePatients(); renderObjective();
+    });
+    row.querySelectorAll('.srow-sel,.srow-in').forEach(c=>c.addEventListener('change',()=>{
+      const p=cur(); const arr=p.objective[cat];
+      const existing=arr.find(e=>objKey(cat,e)===key);
+      const entry=objRowEntry(cat,key,row);
+      if(existing) Object.assign(existing, entry);
+      else arr.push(entry);
+      savePatients(); renderObjective();
+    }));
+  });
+}
+function objRows(cat, defs, mkRow){
+  const arr=cur().objective[cat];
+  const presets=defs.map(d=>d.name);
+  const customs=arr.map(e=>objKey(cat,e)).filter(k=>presets.indexOf(k)<0);
+  return presets.concat(customs).map(k=>{
+    const entry=arr.find(e=>objKey(cat,e)===k);
+    return mkRow(k, !!entry, entry||null);
+  }).join('');
+}
+function updateSum(sel, n){ const el=$(sel); if(el) el.textContent = n?`已选 ${n} 项`:''; }
+function renderRom(){
+  const box=$('#romRows');
+  box.innerHTML = objRows('rom', ROM_DEFS, (k,on,e)=>{
+    e=e||{joint:k,side:'左',type:'主动',deg:''};
+    return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
+      <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
+      <span class="srow-name">${esc(k)}</span>
+      <select class="srow-sel" data-f="side">${ROM_SIDES.map(o=>`<option ${o===e.side?'selected':''}>${o}</option>`).join('')}</select>
+      <select class="srow-sel" data-f="type">${ROM_TYPES.map(o=>`<option ${o===e.type?'selected':''}>${o}</option>`).join('')}</select>
+      <input type="text" class="srow-in" data-f="deg" placeholder="°" value="${esc(e.deg)}">
+    </div>`;
+  });
+  bindObjRows(box,'rom');
+  updateSum('#romSum', cur().objective.rom.length);
+}
+function renderMmt(){
+  const box=$('#mmtRows');
+  box.innerHTML = objRows('mmt', MMT_DEFS, (k,on,e)=>{
+    e=e||{name:k,grade:'3'};
+    return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
+      <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
+      <span class="srow-name">${esc(k)}</span>
+      <select class="srow-sel" data-f="grade">${MMT_GRADES.map(o=>`<option value="${o}" ${o===e.grade?'selected':''}>${o} 级</option>`).join('')}</select>
+    </div>`;
+  });
+  bindObjRows(box,'mmt');
+  updateSum('#mmtSum', cur().objective.mmt.length);
+}
+function renderReflex(){
+  const box=$('#reflexRows');
+  box.innerHTML = objRows('reflex', REFLEX_DEFS, (k,on,e)=>{
+    e=e||{name:k,find:'正常'};
+    return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
+      <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
+      <span class="srow-name">${esc(k)}</span>
+      <select class="srow-sel" data-f="find">${REFLEX_FINDS.map(o=>`<option ${o===e.find?'selected':''}>${o}</option>`).join('')}</select>
+    </div>`;
+  });
+  bindObjRows(box,'reflex');
+  updateSum('#reflexSum', cur().objective.reflex.length);
+}
+function renderSensory(){
+  const box=$('#sensoryRows');
+  box.innerHTML = objRows('sensory', SENSORY_DEFS, (k,on,e)=>{
+    e=e||{type:k,find:'正常',site:''};
+    return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
+      <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
+      <span class="srow-name">${esc(k)}</span>
+      <select class="srow-sel" data-f="find">${SENSORY_FINDS.map(o=>`<option ${o===e.find?'selected':''}>${o}</option>`).join('')}</select>
+      <input type="text" class="srow-in" data-f="site" placeholder="部位" value="${esc(e.site)}" style="width:96px">
+    </div>`;
+  });
+  bindObjRows(box,'sensory');
+  updateSum('#sensorySum', cur().objective.sensory.length);
+}
+function renderTend(){
   const p=cur();
   $('#tendList').innerHTML = TEND_ITEMS.map(t=>{
     const on=p.objective.tend.includes(t);
@@ -1418,11 +2066,36 @@ function renderObjective(){
     if(i>=0) p.objective.tend.splice(i,1); else p.objective.tend.push(t);
     savePatients();
   }));
-  $('#fRom').value=p.objective.rom;
-  $('#fMmt').value=p.objective.mmt;
+  updateSum('#tendSum', p.objective.tend.length);
+}
+function addCustomRow(cat, inputSel){
+  const v=$(inputSel).value.trim();
+  if(!v){ toast('请输入名称'); return; }
+  const p=cur(); const arr=p.objective[cat];
+  if(arr.some(e=>objKey(cat,e)===v)){ toast('该项目已存在'); return; }
+  if(cat==='rom') arr.push({joint:v, side:'左', type:'主动', deg:''});
+  else if(cat==='mmt') arr.push({name:v, grade:'3'});
+  $(inputSel).value='';
+  savePatients(); renderObjective();
+}
+document.querySelectorAll('.add-row .mini[data-addcat]').forEach(b=>b.addEventListener('click',()=>{
+  const cat=b.dataset.addcat;
+  addCustomRow(cat, cat==='rom'?'#romCName':'#mmtCName');
+}));
+document.querySelectorAll('.add-row input').forEach(i=>i.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ const cat=i.id==='romCName'?'rom':'mmt'; addCustomRow(cat, '#'+i.id); }
+}));
+$('#romDL').innerHTML = ROM_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
+$('#mmtDL').innerHTML = MMT_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
+document.querySelectorAll('#sec-objective .oc-head').forEach(h=>h.addEventListener('click',()=>{
+  const oc=h.closest('.oc'); const key=oc.dataset.oc;
+  if(objOpen.has(key)) objOpen.delete(key); else objOpen.add(key);
+  oc.classList.toggle('open');
+}));
+function renderObjective(){
+  const p=cur();
+  renderTend(); renderRom(); renderMmt(); renderReflex(); renderSensory();
   $('#fAshworth').value=p.objective.ashworth;
-  $('#fSensory').value=p.objective.sensory;
-  $('#fReflex').value=p.objective.reflex;
   $('#fSwelling').value=p.objective.swelling;
   $('#fTemp').value=p.objective.temp;
   $('#fAdl').value=p.objective.adl;
@@ -1438,6 +2111,7 @@ function renderObjective(){
   }
   renderExamParts();
   renderExamList(currentExamPart, $('#examSearch').value);
+  document.querySelectorAll('#sec-objective .oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
 }
 function renderExamParts(){
   const parts=['全部',...new Set(SPECIAL_EXAMS.map(x=>x.part))];
@@ -1479,11 +2153,7 @@ function renderExamList(part='', kw=''){
 $('#examSearch').addEventListener('input',()=>renderExamList(currentExamPart, $('#examSearch').value));
 
 function bindObjective(){
-  $('#fRom').addEventListener('input',e=>{ cur().objective.rom=e.target.value; savePatients(); });
-  $('#fMmt').addEventListener('input',e=>{ cur().objective.mmt=e.target.value; savePatients(); });
   $('#fAshworth').addEventListener('change',e=>{ cur().objective.ashworth=e.target.value; savePatients(); });
-  $('#fSensory').addEventListener('input',e=>{ cur().objective.sensory=e.target.value; savePatients(); });
-  $('#fReflex').addEventListener('input',e=>{ cur().objective.reflex=e.target.value; savePatients(); });
   $('#fSwelling').addEventListener('input',e=>{ cur().objective.swelling=e.target.value; savePatients(); });
   $('#fTemp').addEventListener('change',e=>{ cur().objective.temp=e.target.value; savePatients(); });
   $('#fAdl').addEventListener('input',e=>{ cur().objective.adl=e.target.value; savePatients(); });
@@ -1514,6 +2184,7 @@ $('#videoMask').addEventListener('click',e=>{ if(e.target.id==='videoMask')$('#v
    3 康复评定（量表）
    ============================================================ */
 let currentScaleFilter='';
+const expandedScales = new Set();
 function renderScaleFilter(){
   const box=$('#scaleFilter');
   box.innerHTML = SCALE_CATS.map((d,i)=>`<div class="fchip ${i===0?'on':''}" data-f="${d}">${d}</div>`).join('');
@@ -1540,7 +2211,7 @@ function renderScaleList(filter=''){
     const p=cur();
     const id=c.dataset.id;
     const i=p.scales.indexOf(id);
-    if(i>=0){ p.scales.splice(i,1); delete p.scores[id]; }
+    if(i>=0){ p.scales.splice(i,1); delete p.scores[id]; expandedScales.delete(id); }
     else p.scales.push(id);
     savePatients();
     renderScaleList(filter); renderScaleScores();
@@ -1592,10 +2263,22 @@ function renderScaleScores(){
       </div>`;
     }).join('');
     const hasSelect=sc.items.some(it=>it.options)||sc.items.some(it=>it.words);
-    const totalStr = hasSelect ? '' : `总分 ${g.total} / ${g.full}`;
-    return `<h4 style="font-size:13.5px;color:var(--primary);margin:6px 0 4px">${esc(sc.name)} · ${esc(sc.desc)}</h4>${itemsHtml}
-      <div class="scale-total">${totalStr}<span class="grade g${g.c}">${esc(g.label)}</span></div>`;
+    const totalRow = hasSelect ? '' : `<div class="scale-total">总分 ${g.total} / ${g.full}<span class="grade g${g.c}">${esc(g.label)}</span></div>`;
+    const open=expandedScales.has(sid);
+    return `<div class="oscale ${open?'open':''}">
+      <div class="oscale-head" data-toggle="${sid}">
+        <div class="ost">${esc(sc.name)}<span style="display:block;font-size:11px;color:var(--muted);font-weight:400">${esc(sc.desc)}</span></div>
+        <div class="osg g${g.c}">${esc(g.label)}</div>
+        <div class="osarrow">▾</div>
+      </div>
+      <div class="oscale-body">${itemsHtml}${totalRow}</div>
+    </div>`;
   }).join('');
+  box.querySelectorAll('.oscale-head').forEach(h=>h.addEventListener('click',()=>{
+    const sid=h.dataset.toggle;
+    if(expandedScales.has(sid)) expandedScales.delete(sid); else expandedScales.add(sid);
+    renderScaleScores();
+  }));
   box.querySelectorAll('.srange').forEach(r=>{
     r.style.setProperty('--fill',(r.value/r.max*100)+'%');
     r.addEventListener('input',()=>{
@@ -1669,13 +2352,13 @@ function renderPlan(){
 }
 function renderPlanCheck(selId, cat, arr){
   const box=$(selId);
-  const all=(DISEASE_PLANS[cur().planDisease]||DISEASE_PLANS['腰痛'])[cur().planStage]||{};
-  const defs=(all[cat]||[]);
-  box.innerHTML = arr.map(name=>`
-    <div class="plan-check on" data-cat="${cat}" data-name="${esc(name)}">
+  box.innerHTML = arr.map(name=>{
+    const d=planDesc(cat,name);
+    return `<div class="plan-check on" data-cat="${cat}" data-name="${esc(name)}">
       <div class="cb">✓</div>
-      <div class="cn">${esc(name)}</div>
-    </div>`).join('') || '';
+      <div class="cn">${esc(name)}${d?`<span class="cm">${esc(d)}</span>`:''}</div>
+    </div>`;
+  }).join('') || '';
   box.querySelectorAll('.plan-check').forEach(c=>c.addEventListener('click',()=>{
     const p=cur(); const sel=getPlanSel(p);
     const cat=c.dataset.cat, name=c.dataset.name;
@@ -1684,9 +2367,11 @@ function renderPlanCheck(selId, cat, arr){
     else { sel[cat].push(name); c.classList.add('on'); c.querySelector('.cb').textContent='✓'; }
     savePatients();
   }));
-  const missing=defs.filter(d=>!arr.includes(d));
+  const all=(DISEASE_PLANS[cur().planDisease]||DISEASE_PLANS['腰痛'])[cur().planStage]||{};
+  const defs=(all[cat]||[]).map(x=>x.n);
+  const missing=defs.filter(n=>!arr.includes(n));
   if(missing.length){
-    box.innerHTML += `<div class="empty" style="padding:8px 0;font-size:12px">未勾选：${missing.map(esc).join('、')}</div>`;
+    box.innerHTML += `<div class="empty" style="padding:8px 0;font-size:12px">未勾选：${missing.join('、')}</div>`;
   }
 }
 $('#btnPhysioLib').addEventListener('click',()=>{ renderPhysioLib(); $('#physioMask').classList.add('show'); });
@@ -1758,12 +2443,13 @@ function buildReportHTML(){
   const posExams = Object.keys(p.exams.positive||{}).filter(id=>p.exams.positive[id]);
   const plan=buildPlanLive(p);
   const pain=p.pain||{};
+  const itemTxt=(cat,names)=>names.map(n=>{ const d=planDesc(cat,n); return d?`${n}：${d}`:n; }).join('；');
   const planHTML = `
     <h4>康复方案（${esc(plan.disease)} · ${esc(plan.stage)}）</h4>
     ${kv('治疗目标', esc(plan.target)||'—')}
-    ${plan.physio.length?kv('物理因子治疗', esc(plan.physio.join('、'))):''}
-    ${plan.exercise.length?kv('运动疗法', esc(plan.exercise.join('、'))):''}
-    ${plan.manual.length?kv('手法治疗', esc(plan.manual.join('、'))):''}
+    ${plan.physio.length?kv('物理因子治疗', esc(itemTxt('physio', plan.physio))):''}
+    ${plan.exercise.length?kv('运动疗法', esc(itemTxt('exercise', plan.exercise))):''}
+    ${plan.manual.length?kv('手法治疗', esc(itemTxt('manual', plan.manual))):''}
     ${plan.custom.length?kv('自定义疗法', esc(plan.custom.join('、'))):''}
     ${plan.short.length?kv('短期目标', esc(plan.short.join('；'))):''}
     ${plan.long.length?kv('长期目标', esc(plan.long.join('；'))):''}
@@ -1798,11 +2484,11 @@ function buildReportHTML(){
       ${imagingRow}
       <h4>客观评估</h4>
       ${obj.tend.length?kv('触诊', esc(obj.tend.join('、'))):''}
-      ${obj.rom?kv('关节活动度 ROM', esc(obj.rom)):''}
-      ${obj.mmt?kv('肌力 MMT', esc(obj.mmt)):''}
+      ${obj.rom.length?kv('关节活动度 ROM', esc(obj.rom.map(x=>`${x.joint} ${x.side}·${x.type} ${x.deg||''}°`).join('、'))):''}
+      ${obj.mmt.length?kv('肌力 MMT', esc(obj.mmt.map(x=>`${x.name} ${x.grade||''}级`).join('、'))):''}
       ${obj.ashworth?kv('肌张力 Ashworth', esc(obj.ashworth)):''}
-      ${obj.sensory?kv('感觉检查', esc(obj.sensory)):''}
-      ${obj.reflex?kv('反射', esc(obj.reflex)):''}
+      ${obj.sensory.length?kv('感觉检查', esc(obj.sensory.map(x=>`${x.type}${x.find?('：'+x.find):''}${x.site?('（'+x.site+'）'):''}`).join('、'))):''}
+      ${obj.reflex.length?kv('反射', esc(obj.reflex.map(x=>`${x.name}：${x.find||''}`).join('、'))):''}
       ${obj.swelling?kv('肿胀（周径差）', esc(obj.swelling)):''}
       ${obj.temp?kv('皮温', esc(obj.temp)):''}
       ${obj.adl?kv('ADL 状况', esc(obj.adl)):''}
