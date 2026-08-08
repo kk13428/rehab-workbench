@@ -186,6 +186,18 @@ input[type=range]::-webkit-slider-thumb{
 }
 .wordpills input{display:none}
 .wordpills label:has(input:checked){background:var(--primary);border-color:var(--primary);color:#fff}
+/* 选项卡片（量表下拉→可选卡片+释义） */
+.opt-cards{display:flex;flex-direction:column;gap:8px}
+.opt-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;transition:all .15s}
+.opt-card.on{border-color:var(--primary);background:#f0f7ff}
+.opt-card .oc-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+.opt-card.on .oc-check{background:var(--primary);border-color:var(--primary);color:#fff}
+.opt-card .oc-main{flex:1;font-size:13.5px;line-height:1.5}
+.opt-card .oc-main small{display:block;color:var(--muted);font-size:11.5px;font-weight:400;margin-top:2px;line-height:1.5}
+.opt-card .oc-del{flex:none;color:var(--danger);font-size:14px;cursor:pointer;padding:0 4px;font-weight:700}
+/* 自定义选项删除 chips */
+.cust-chips{margin-top:8px}
+.cust-chips .tchip{background:#fff1f1;color:var(--danger)}
 /* 特殊检查卡片 */
 .psearch{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:#fbfcfe;outline:none;margin-bottom:10px}
 .psearch:focus{border-color:var(--primary)}
@@ -466,6 +478,7 @@ input[type=range]::-webkit-slider-thumb{
           <button type="button" class="mini" id="painNaturePlus" title="自定义疼痛性质">＋</button>
         </div>
         <input type="text" id="painNatureCust" class="sel-cust" placeholder="自定义疼痛性质，回车添加" style="display:none">
+        <div id="painNatureChips" class="cust-chips"></div>
       </div>
       <div class="field">
         <label>疼痛部位</label>
@@ -555,20 +568,25 @@ input[type=range]::-webkit-slider-thumb{
           <button type="button" class="mini" id="ashworthPlus" title="自定义分级">＋</button>
         </div>
         <input type="text" id="ashworthCust" class="sel-cust" placeholder="自定义分级，回车添加" style="display:none">
+        <div id="ashworthChips" class="cust-chips"></div>
       </div>
     </div>
     <div class="card oc" data-oc="sensory">
       <div class="oc-head"><div class="oc-title"><span class="oc-n">5</span>感觉检查<span class="oc-sum" id="sensorySum"></span></div><div class="oc-arrow">▾</div></div>
       <div class="oc-body">
-        <div class="step-desc">勾选要评估的感觉类型 → 选结果、填部位，可多选</div>
+        <div class="step-desc">勾选要评估的感觉类型 → 选结果、填部位，可多选；结果可自定义</div>
         <div id="sensoryRows"></div>
+        <div class="add-row"><input type="text" id="sensoryFindCust" placeholder="自定义感觉结果（如：痛觉过敏）" ><button class="mini" data-findadd="sensory">＋</button></div>
+        <div id="sensoryFindChips" class="cust-chips"></div>
       </div>
     </div>
     <div class="card oc" data-oc="reflex">
       <div class="oc-head"><div class="oc-title"><span class="oc-n">6</span>反射<span class="oc-sum" id="reflexSum"></span></div><div class="oc-arrow">▾</div></div>
       <div class="oc-body">
-        <div class="step-desc">勾选要评估的反射 / 病理征 → 选结果，可多选</div>
+        <div class="step-desc">勾选要评估的反射 / 病理征 → 选结果，可多选；结果可自定义</div>
         <div id="reflexRows"></div>
+        <div class="add-row"><input type="text" id="reflexFindCust" placeholder="自定义反射结果（如：轻度亢进++）" ><button class="mini" data-findadd="reflex">＋</button></div>
+        <div id="reflexFindChips" class="cust-chips"></div>
       </div>
     </div>
     <div class="row">
@@ -586,6 +604,7 @@ input[type=range]::-webkit-slider-thumb{
             <button type="button" class="mini" id="tempPlus" title="自定义皮温">＋</button>
           </div>
           <input type="text" id="tempCust" class="sel-cust" placeholder="自定义皮温，回车添加" style="display:none">
+          <div id="tempChips" class="cust-chips"></div>
         </div>
       </div>
     </div>
@@ -763,6 +782,13 @@ const IMAGING_TYPES = ['X线','CT','MRI','超声','肌电图'];
 const PAIN_NATURES = ['胀痛','刺痛','跳痛','灼痛','酸痛','绞痛','坠痛','钻痛','触痛','割痛','锐痛'];
 const ASHWORTH_OPTS = ['0 级 · 无肌张力增高','1 级 · 轻度增高','1+ 级','2 级 · 明显增高','3 级 · 严重增高','4 级 · 僵硬'];
 const TEMP_OPTS = ['正常','升高','降低'];
+const FRENCHAY_LV = [
+  {v:'a', d:'正常'},
+  {v:'b', d:'轻度障碍'},
+  {v:'c', d:'中度障碍'},
+  {v:'d', d:'重度障碍'},
+  {v:'e', d:'极重度障碍/无法完成'}
+];
 
 /* 特殊检查库：part=部位 / steps=操作 / positive=阳性意义 / video=VIDEOS 键（可无） */
 const SPECIAL_EXAMS = [
@@ -1489,7 +1515,14 @@ const SCALES = [
     items:[
       {label:'感觉项（11 词）', words:['刺痛','跳痛','灼痛','酸痛','绞痛','胀痛','坠痛','钻痛','触痛','割痛','锐痛']},
       {label:'情感项（5 词）', words:['恶心','疲惫','害怕','惩罚','虚弱']},
-      {label:'现有疼痛强度（PPI）', options:['无痛 0','轻微 1','不适 2','痛苦 3','可怕 4','剧痛 5']}
+      {label:'现有疼痛强度（PPI）', options:[
+        {v:'无痛 0', d:'完全无痛'},
+        {v:'轻微 1', d:'轻微疼痛'},
+        {v:'不适 2', d:'不适感，可忍受'},
+        {v:'痛苦 3', d:'痛苦，干扰日常'},
+        {v:'可怕 4', d:'可怕，强烈疼痛'},
+        {v:'剧痛 5', d:'剧烈疼痛，无法忍受'}
+      ]}
     ],
     grade:(t, vals)=>{
       const n=v=>Array.isArray(v)?v.length:(typeof v==='number'?v:0);
@@ -1529,7 +1562,14 @@ const SCALES = [
     items:[{label:'无支撑坐位',max:2,step:1},{label:'健侧展翅反应',max:2,step:1},{label:'患侧展翅反应',max:2,step:1},{label:'支撑下站立',max:2,step:1},{label:'无支撑站立',max:2,step:1},{label:'健侧单腿站立',max:2,step:1},{label:'患侧单腿站立',max:2,step:1}],
     grade: t => t>=14 ? {label:'平衡正常',c:1} : t>=7 ? {label:'平衡障碍',c:2} : {label:'严重障碍',c:3} },
   { id:'mas', name:'改良 Ashworth 痉挛量表', disease:'脑卒中', cat:'运动功能', desc:'肌张力 · 0-1+ 分级',
-    items:[{label:'肌张力分级',options:['0级','1级','1+级','2级','3级','4级']}],
+    items:[{label:'肌张力分级',hint:'被动活动受累关节判断阻力',options:[
+      {v:'0级', d:'无肌张力增加'},
+      {v:'1级', d:'肌张力轻度增加，被动活动时出现轻微阻力或突然卡住后释放'},
+      {v:'1+级', d:'肌张力轻度增加，被动活动一半范围内出现轻度阻力'},
+      {v:'2级', d:'肌张力较明显增加，大部分活动范围均有阻力但较易活动'},
+      {v:'3级', d:'肌张力严重增加，被动活动困难'},
+      {v:'4级', d:'受累部分僵硬，被动屈伸困难'}
+    ]}],
     grade:(t,v)=> ({label: v[0]||'未评', c: v[0]==='0级'?1:((v[0]==='1级'||v[0]==='1+级')?2:3)}) },
   { id:'bbs', name:'Berg 平衡量表', disease:'脑卒中', cat:'平衡与步态', desc:'平衡功能 · 14 题 0-4 分，满分 56',
     items:[{label:'坐到站',max:4,step:1},{label:'无支撑站立',max:4,step:1},{label:'无靠背坐位',max:4,step:1},{label:'站到坐',max:4,step:1},{label:'转移',max:4,step:1},{label:'闭目站立',max:4,step:1},{label:'双脚并拢站立',max:4,step:1},{label:'上肢前伸',max:4,step:1},{label:'从地面拾物',max:4,step:1},{label:'转身向后看',max:4,step:1},{label:'360度转身',max:4,step:1},{label:'交替踩踏台阶',max:4,step:1},{label:'前后脚站立',max:4,step:1},{label:'单腿站立',max:4,step:1}],
@@ -1569,16 +1609,54 @@ const SCALES = [
     ],
     grade: t => t>=26 ? {label:'认知正常',c:1} : t>=18 ? {label:'轻度障碍',c:2} : {label:'重度障碍',c:3} },
   { id:'watian', name:'洼田饮水试验', disease:'脑卒中', cat:'言语吞咽', desc:'吞咽筛查 · 30ml 温水，观察呛咳',
-    items:[{label:'试验结果',options:['1级(优)','2级(良)','3级(中)','4级(可)','5级(差)']}],
+    items:[{label:'试验结果',hint:'端坐，饮 30ml 温水，观察是否呛咳',options:[
+      {v:'1级(优)', d:'5 秒内一次喝完，无呛咳'},
+      {v:'2级(良)', d:'5-10 秒分两次喝完，无呛咳'},
+      {v:'3级(中)', d:'能一次喝完，但有呛咳'},
+      {v:'4级(可)', d:'分两次以上喝完，且有呛咳'},
+      {v:'5级(差)', d:'频繁呛咳，难以全部喝完'}
+    ]}],
     grade:(t,v)=>{ const x=v[0]||''; return x.startsWith('1级')?{label:'正常/可疑',c:1}:x.startsWith('2级')?{label:'可疑',c:2}:{label:'吞咽异常',c:3}; } },
-  { id:'brunnstrom', name:'Brunnstrom 分期', disease:'脑卒中', cat:'运动功能', desc:'偏瘫恢复阶段 · 上肢/手/下肢',
-    items:[{label:'上肢',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']},{label:'手',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']},{label:'下肢',options:['Ⅰ期','Ⅱ期','Ⅲ期','Ⅳ期','Ⅴ期','Ⅵ期']}],
+  { id:'brunnstrom', name:'Brunnstrom 分期', disease:'脑卒中', cat:'运动功能', desc:'偏瘫恢复阶段 · 上肢/手/下肢，Ⅰ期最差→Ⅵ期接近正常',
+    items:[{label:'上肢',hint:'观察患侧上肢随意运动',options:[
+      {v:'Ⅰ期', d:'弛缓期：无随意运动，肌张力低下'},
+      {v:'Ⅱ期', d:'出现联合反应，仍无随意运动，肌张力开始增高'},
+      {v:'Ⅲ期', d:'痉挛加重，可随意引起共同运动（如肩胛内收、肘屈曲）'},
+      {v:'Ⅳ期', d:'痉挛减轻，出现脱离共同运动的分离运动（如肩前屈手可伸肘）'},
+      {v:'Ⅴ期', d:'痉挛明显减轻，出现较复杂的分离运动（如手可过头、肘伸直）'},
+      {v:'Ⅵ期', d:'痉挛基本消失，协调运动接近正常'}
+    ]},{label:'手',hint:'观察患侧手部随意运动',options:[
+      {v:'Ⅰ期', d:'弛缓期：无随意运动'},
+      {v:'Ⅱ期', d:'可做极轻微的屈指，无随意抓握'},
+      {v:'Ⅲ期', d:'可做勾状抓握，但不能伸指'},
+      {v:'Ⅳ期', d:'能做侧捏及拇指松开，手指有半随意小范围伸展'},
+      {v:'Ⅴ期', d:'可做球状/圆柱状抓握，手指同时伸展'},
+      {v:'Ⅵ期', d:'可做各种抓握，手指较精细协调接近正常'}
+    ]},{label:'下肢',hint:'观察患侧下肢随意运动',options:[
+      {v:'Ⅰ期', d:'弛缓期：无随意运动'},
+      {v:'Ⅱ期', d:'出现联合反应，无随意运动'},
+      {v:'Ⅲ期', d:'可随意引起共同运动（屈髋、屈膝、足背屈），痉挛加重'},
+      {v:'Ⅳ期', d:'坐位可屈膝 90° 以上，足可后踏，出现分离运动'},
+      {v:'Ⅴ期', d:'立位可伸膝，膝屈曲时足跟着地，分离运动较充分'},
+      {v:'Ⅵ期', d:'立位可髋外展、膝屈伸交替，接近正常步态'}
+    ]}],
     grade:(t,v)=>{ const mp={Ⅰ:1,Ⅱ:2,Ⅲ:3,Ⅳ:4,Ⅴ:5,Ⅵ:6}; const nums=v.map(x=>mp[String(x).charAt(0)]||0); const best=Math.max.apply(null,nums); return {label:'最高 '+['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ'][best], c:best>=6?1:best>=4?2:3}; } },
   { id:'asia', name:'ASIA 脊髓损伤分级', disease:'脊髓损伤', cat:'脊髓损伤专项', desc:'感觉 28 关键点 · 运动 10 关键肌 · A-E',
-    items:[{label:'针刺觉+轻触觉总分(0-224)',max:224,step:2},{label:'10 对关键肌运动总分(0-100)',max:100,step:1},{label:'残损分级',options:['A级-完全性','B级-感觉不完全','C级-运动不完全','D级-运动不完全','E级-正常']}],
+    items:[{label:'针刺觉+轻触觉总分(0-224)',max:224,step:2,hint:'28 个关键点，左右各针刺觉与轻触觉'},{label:'10 对关键肌运动总分(0-100)',max:100,step:1,hint:'上下肢各 5 对关键肌，0-5 级评分'},{label:'残损分级',options:[
+      {v:'A级-完全性', d:'骶段 S4-S5 无任何感觉与运动功能'},
+      {v:'B级-感觉不完全', d:'神经平面以下包括骶段保留感觉功能，无运动功能'},
+      {v:'C级-运动不完全', d:'保留运动功能，且一半以上关键肌肌力 <3 级'},
+      {v:'D级-运动不完全', d:'保留运动功能，且至少一半关键肌肌力 ≥3 级'},
+      {v:'E级-正常', d:'感觉与运动功能均正常'}
+    ]}],
     grade:(t,v)=>{ const g=v[2]||''; return {label:g?g.split('-')[0]:'未评', c:g.startsWith('A')?3:(g.startsWith('B')||g.startsWith('C')?2:1)}; } },
-  { id:'neurop', name:'脊髓损伤神经平面', disease:'脊髓损伤', cat:'脊髓损伤专项', desc:'身体两侧最高损伤节段',
-    items:[{label:'神经损伤平面',options:['C2','C3','C4','C5','C6','C7','C8','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','L1','L2','L3','L4','L5','S1','S2','S3','S4-S5']}],
+  { id:'neurop', name:'脊髓损伤神经平面', disease:'脊髓损伤', cat:'脊髓损伤专项', desc:'身体两侧感觉、运动保留的最高节段',
+    items:[{label:'神经损伤平面',hint:'标出身体两侧感觉与运动功能正常的最尾端节段',options:[
+      {v:'C2', d:''},{v:'C3', d:''},{v:'C4', d:''},{v:'C5', d:''},{v:'C6', d:''},{v:'C7', d:''},{v:'C8', d:''},
+      {v:'T1', d:''},{v:'T2', d:''},{v:'T3', d:''},{v:'T4', d:''},{v:'T5', d:''},{v:'T6', d:''},{v:'T7', d:''},{v:'T8', d:''},{v:'T9', d:''},{v:'T10', d:''},{v:'T11', d:''},{v:'T12', d:''},
+      {v:'L1', d:''},{v:'L2', d:''},{v:'L3', d:''},{v:'L4', d:''},{v:'L5', d:''},
+      {v:'S1', d:''},{v:'S2', d:''},{v:'S3', d:''},{v:'S4-S5', d:'骶段，提示是否完全性损伤'}
+    ]}],
     grade:(t,v)=> ({label: v[0]||'未评', c:1}) },
   { id:'arat', name:'上肢动作研究测试 ARAT', disease:'脑卒中', cat:'运动功能', desc:'19 项 · 0-3 分，满分 57',
     items:[{label:'抓握-10cm³积木(16cm)',max:3,step:1},{label:'抓握-10cm³积木(30cm)',max:3,step:1},{label:'抓握-10cm³积木(46cm)',max:3,step:1},{label:'抓握-2.5cm³积木',max:3,step:1},{label:'抓握-1.25cm³积木',max:3,step:1},{label:'抓握-钢管',max:3,step:1},{label:'握力-握力计',max:3,step:1},{label:'握力-玻璃球',max:3,step:1},{label:'握力-小石子',max:3,step:1},{label:'握力-大石子',max:3,step:1},{label:'捏力-拇食对捏钢珠',max:3,step:1},{label:'捏力-拇中对捏钢珠',max:3,step:1},{label:'捏力-拇食对捏小木块',max:3,step:1},{label:'捏力-拇中对捏小木块',max:3,step:1},{label:'捏力-拇食对捏大木块',max:3,step:1},{label:'捏力-拇中对捏大木块',max:3,step:1},{label:'粗大-手放后脑勺',max:3,step:1},{label:'粗大-手放头顶',max:3,step:1},{label:'粗大-手放嘴部',max:3,step:1}],
@@ -1595,14 +1673,28 @@ const SCALES = [
   { id:'gad7', name:'广泛性焦虑 GAD-7', disease:'脑卒中', cat:'认知与心理', desc:'焦虑筛查 · 7 题 0-3 分',
     items:[{label:'感觉紧张、焦虑或急切',max:3,step:1},{label:'不能停止或控制担忧',max:3,step:1},{label:'对各种事情过分担忧',max:3,step:1},{label:'很难放松下来',max:3,step:1},{label:'不安而无法静坐',max:3,step:1},{label:'容易烦恼或急躁',max:3,step:1},{label:'感到可怕事情要发生',max:3,step:1}],
     grade: t => t<=4 ? {label:'无焦虑',c:1} : t<=9 ? {label:'轻度',c:2} : t<=14 ? {label:'中度',c:3} : {label:'重度',c:3} },
-  { id:'holden', name:'Holden 步行功能分级', disease:'脑卒中', cat:'平衡与步态', desc:'0-5 级步行能力',
-    items:[{label:'步行分级',options:['0级-不能行走','1级-需大量帮助','2级-需少量帮助','3级-需监护/言语指导','4级-平地独立','5级-完全独立']}],
+  { id:'holden', name:'Holden 步行功能分级', disease:'脑卒中', cat:'平衡与步态', desc:'0-5 级步行能力，越高越独立',
+    items:[{label:'步行分级',options:[
+      {v:'0级-不能行走', d:'不能站立行走，需 2 人帮助或轮椅'},
+      {v:'1级-需大量帮助', d:'需 1 人持续扶持或 2 人帮助才能行走'},
+      {v:'2级-需少量帮助', d:'需 1 人间断扶持（如仅上下楼时）'},
+      {v:'3级-需监护/言语指导', d:'无需身体接触，但需监护或言语指导'},
+      {v:'4级-平地独立', d:'平地独立行走，上下楼梯等仍需帮助'},
+      {v:'5级-完全独立', d:'独立行走，包括上下楼梯'}
+    ]}],
     grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'级', c:n<='2'?3:n==='3'?2:1}; } },
   { id:'wisci', name:'脊髓损伤步行指数 WISCI II', disease:'脊髓损伤', cat:'平衡与步态', desc:'0-20 级，越高辅助越少',
-    items:[{label:'WISCI 分级',options:['0级-不能行走','1-4级-双拐+1人辅助','5-9级-双拐独立','10-14级-单拐独立','15-19级-无器具独立','20级-正常行走']}],
+    items:[{label:'WISCI 分级',options:[
+      {v:'0级-不能行走', d:'不能站立行走'},
+      {v:'1-4级-双拐+1人辅助', d:'需双拐及 1 人身体辅助'},
+      {v:'5-9级-双拐独立', d:'需双拐，无需他人辅助'},
+      {v:'10-14级-单拐独立', d:'需单拐，无需他人辅助'},
+      {v:'15-19级-无器具独立', d:'无需辅助器具，独立行走'},
+      {v:'20级-正常行走', d:'完全正常行走'}
+    ]}],
     grade:(t,v)=>({label: v[0]?v[0].split('-')[0]:'未评', c:(v[0]&&v[0].startsWith('20'))?1:((v[0]&&(v[0].startsWith('15')||v[0].startsWith('10')))?2:3)}) },
   { id:'frenchay', name:'Frenchay 构音障碍评定', disease:'脑卒中', cat:'言语吞咽', desc:'8 维度 · a 最佳 / e 最差',
-    items:[{label:'反射',options:['a','b','c','d','e']},{label:'呼吸',options:['a','b','c','d','e']},{label:'唇部',options:['a','b','c','d','e']},{label:'下颌',options:['a','b','c','d','e']},{label:'软腭',options:['a','b','c','d','e']},{label:'喉部',options:['a','b','c','d','e']},{label:'舌部',options:['a','b','c','d','e']},{label:'言语可懂度',options:['a','b','c','d','e']}],
+    items:[{label:'反射',options:FRENCHAY_LV},{label:'呼吸',options:FRENCHAY_LV},{label:'唇部',options:FRENCHAY_LV},{label:'下颌',options:FRENCHAY_LV},{label:'软腭',options:FRENCHAY_LV},{label:'喉部',options:FRENCHAY_LV},{label:'舌部',options:FRENCHAY_LV},{label:'言语可懂度',options:FRENCHAY_LV}],
     grade:(t,v)=>{ const ws=v.filter(x=>x).sort().pop()||'未评'; return {label:'最差 '+ws, c:ws<='b'?1:ws<='c'?2:3}; } },
   { id:'ssqol', name:'脑卒中生活质量 SS-QOL', disease:'脑卒中', cat:'日常生活能力', desc:'49 条 · 每项 1-5 分（5=完全正常）· 越高越好',
     items:[
@@ -1620,8 +1712,16 @@ const SCALES = [
       {label:'工作/生产力-做家务困难',max:5,step:1},{label:'工作/生产力-工作困难',max:5,step:1},{label:'工作/生产力-日常活动受影响',max:5,step:1}
     ],
     grade:(t,v)=>{ const n=v.filter(x=>typeof x==='number'&&x>=0).length; const avg=n?t/n:0; const pct=n?avg/5*100:0; return {label:'均分'+Math.round(avg)+'/5', c:pct>=70?1:pct>=40?2:3}; } },
-  { id:'mrs', name:'改良 Rankin 量表 mRS', disease:'脑卒中', cat:'运动功能', desc:'功能结局 · 0-6 分',
-    items:[{label:'mRS 评分',options:['0分-完全无症状','1分-无明显残疾','2分-轻度残疾','3分-中度残疾','4分-中重度残疾','5分-重度残疾','6分-死亡']}],
+  { id:'mrs', name:'改良 Rankin 量表 mRS', disease:'脑卒中', cat:'运动功能', desc:'功能结局 · 0-6 分，越高越差',
+    items:[{label:'mRS 评分',options:[
+      {v:'0分-完全无症状', d:'无任何症状'},
+      {v:'1分-无明显残疾', d:'有症状但无明显功能障碍，能完成所有日常活动'},
+      {v:'2分-轻度残疾', d:'不能完成病前所有活动，但生活自理不需帮助'},
+      {v:'3分-中度残疾', d:'行走不需帮助，但日常生活需部分帮助'},
+      {v:'4分-中重度残疾', d:'行走需帮助，日常生活需他人帮助'},
+      {v:'5分-重度残疾', d:'卧床/失禁，需持续护理'},
+      {v:'6分-死亡', d:'死亡'}
+    ]}],
     grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'分', c:(n==='0'||n==='1'||n==='2')?1:n==='3'?2:3}; } },
   { id:'fim', name:'功能独立性测量 FIM', disease:'脊髓损伤', cat:'日常生活能力', desc:'18 项 · 1-7 分 · 满分 126',
     items:[{label:'进食',max:7,step:1},{label:'梳洗',max:7,step:1},{label:'洗澡',max:7,step:1},{label:'穿上身衣',max:7,step:1},{label:'穿下身衣',max:7,step:1},{label:'如厕',max:7,step:1},{label:'膀胱管理',max:7,step:1},{label:'直肠管理',max:7,step:1},{label:'床椅转移',max:7,step:1},{label:'坐厕转移',max:7,step:1},{label:'浴池转移',max:7,step:1},{label:'行走/轮椅',max:7,step:1},{label:'上下楼梯',max:7,step:1},{label:'理解',max:7,step:1},{label:'表达',max:7,step:1},{label:'社会交往',max:7,step:1},{label:'解决问题',max:7,step:1},{label:'记忆',max:7,step:1}],
@@ -1636,10 +1736,22 @@ const SCALES = [
     items:[{label:'步行距离',max:600,step:10,hint:'单位：米'}],
     grade: t => t>=450 ? {label:'良好',c:1} : t>=300 ? {label:'中度减退',c:2} : {label:'重度减退',c:3} },
   { id:'penn', name:'Penn 痉挛频率量表', disease:'脑卒中', cat:'运动功能', desc:'痉挛发作频率',
-    items:[{label:'痉挛频率',options:['0分-无痉挛','1分-刺激可诱发','2分-偶有≤1次/小时','3分-时有>1次/小时','4分-频繁>10次/小时']}],
+    items:[{label:'痉挛频率',options:[
+      {v:'0分-无痉挛', d:'无痉挛发作'},
+      {v:'1分-刺激可诱发', d:'仅强刺激可诱发痉挛'},
+      {v:'2分-偶有≤1次/小时', d:'偶发自发性痉挛，≤1 次/小时'},
+      {v:'3分-时有>1次/小时', d:'频繁自发性痉挛，>1 次/小时'},
+      {v:'4分-频繁>10次/小时', d:'几乎持续痉挛，>10 次/小时'}
+    ]}],
     grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'分', c:n==='0'?1:(n==='1'||n==='2')?2:3}; } },
   { id:'clonus', name:'Clonus 踝阵挛分级', disease:'脑卒中', cat:'运动功能', desc:'踝阵挛次数',
-    items:[{label:'踝阵挛',options:['0级-无','1级-1~3次','2级-4~6次','3级-7~9次','4级-≥10次']}],
+    items:[{label:'踝阵挛',hint:'快速背屈踝关节引出阵挛，记录次数',options:[
+      {v:'0级-无', d:'无踝阵挛'},
+      {v:'1级-1~3次', d:'踝阵挛 1-3 次'},
+      {v:'2级-4~6次', d:'踝阵挛 4-6 次'},
+      {v:'3级-7~9次', d:'踝阵挛 7-9 次'},
+      {v:'4级-≥10次', d:'踝阵挛 ≥10 次或持续不缓解'}
+    ]}],
     grade:(t,v)=>{ const x=v[0]||''; const n=x.charAt(0); return {label:n+'级', c:n==='0'?1:(n==='1'||n==='2')?2:3}; } },
   { id:'carr', name:'Carr-Shepherd 运动功能评定', disease:'脑卒中', cat:'运动功能', desc:'8 项 · 0-6 分 · 满分 48',
     items:[{label:'仰卧位到健侧翻身',max:6,step:1},{label:'仰卧位到坐位',max:6,step:1},{label:'坐位平衡',max:6,step:1},{label:'坐位到站立位',max:6,step:1},{label:'步行',max:6,step:1},{label:'上肢功能',max:6,step:1},{label:'手部运动',max:6,step:1},{label:'手的精细活动',max:6,step:1}],
@@ -1852,6 +1964,7 @@ function refreshComplaint(){
   $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
   refreshCustomSelect('#fPainNature','painNature',p.pain.nature);
+  renderCustChips('painNature', refreshComplaint);
   $('#fPainLoc').value=p.pain.location;
   $('#fPainRad').value=p.pain.radiation;
   $('#fPainAggr').value=p.pain.aggravate;
@@ -1909,7 +2022,7 @@ function bindComplaint(){
   $('#fDiagNote').addEventListener('input',e=>{ cur().diagnosis.note=e.target.value; savePatients(); });
   $('#fComplaint').addEventListener('input',e=>{ cur().complaint=e.target.value; savePatients(); });
   $('#fPainNature').addEventListener('change',e=>{ cur().pain.nature=e.target.value; savePatients(); });
-  bindCustomSelect('#painNaturePlus','#painNatureCust','#fPainNature','painNature');
+  bindCustomSelect('#painNaturePlus','#painNatureCust','#fPainNature','painNature', refreshComplaint);
   $('#fPainLoc').addEventListener('input',e=>{ cur().pain.location=e.target.value; savePatients(); });
   $('#fPainRad').addEventListener('input',e=>{ cur().pain.radiation=e.target.value; savePatients(); });
   $('#fPainAggr').addEventListener('input',e=>{ cur().pain.aggravate=e.target.value; savePatients(); });
@@ -1949,7 +2062,7 @@ function refreshCustomSelect(selId, storeKey, val){
   const opts=presetFor(storeKey).concat((p.customOpts||{})[storeKey]||[]);
   popSel($(selId), opts, val);
 }
-function bindCustomSelect(plusId, custId, selId, storeKey){
+function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
   $(plusId).addEventListener('click',()=>{
     const inp=$(custId);
     inp.style.display = inp.style.display==='none'?'block':'none';
@@ -1968,10 +2081,30 @@ function bindCustomSelect(plusId, custId, selId, storeKey){
     refreshCustomSelect(selId, storeKey, v);
     sel.value=v;
     sel.dispatchEvent(new window.Event('change'));
+    if(refresh) refresh();
   });
 }
 function applyOc(){
   document.querySelectorAll('.oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
+}
+function clearCustomIfSelected(key, v, p){
+  if(key==='painNature' && p.pain.nature===v) p.pain.nature='';
+  else if(key==='ashworth' && p.objective.ashworth===v) p.objective.ashworth='';
+  else if(key==='temp' && p.objective.temp===v) p.objective.temp='';
+}
+function renderCustChips(key, refresh){
+  const p=cur();
+  const list=(p.customOpts||{})[key]||[];
+  const box=document.getElementById(key+'Chips');
+  if(!box) return;
+  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
+  box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
+    const p=cur();
+    p.customOpts[key]=(p.customOpts[key]||[]).filter(v=>v!==x.dataset.del);
+    clearCustomIfSelected(key, x.dataset.del, p);
+    savePatients();
+    if(refresh) refresh();
+  }));
 }
 function objKey(cat, e){
   if(!e) return '';
@@ -2049,32 +2182,61 @@ function renderMmt(){
   bindObjRows(box,'mmt');
   updateSum('#mmtSum', cur().objective.mmt.length);
 }
+function renderFindChips(key, cat){
+  const p=cur();
+  const list=(p.customOpts||{})[key]||[];
+  const box=document.getElementById(key+'Chips');
+  if(!box) return;
+  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
+  box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
+    const p=cur();
+    p.customOpts[key]=(p.customOpts[key]||[]).filter(v=>v!==x.dataset.del);
+    savePatients(); renderObjective();
+  }));
+}
+document.querySelectorAll('[data-findadd]').forEach(b=>b.addEventListener('click',()=>{
+  const cat=b.dataset.findadd;
+  const key = cat==='reflex'?'reflexFind':'sensoryFind';
+  const v=$('#'+cat+'FindCust').value.trim();
+  if(!v){ toast('请输入结果'); return; }
+  const p=cur();
+  p.customOpts=p.customOpts||{};
+  p.customOpts[key]=p.customOpts[key]||[];
+  if(p.customOpts[key].indexOf(v)<0) p.customOpts[key].push(v);
+  $('#'+cat+'FindCust').value='';
+  savePatients(); renderObjective();
+}));
+['reflex','sensory'].forEach(cat=>{ const el=$('#'+cat+'FindCust'); el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ document.querySelector('[data-findadd="'+cat+'"]').click(); } }); });
 function renderReflex(){
   const box=$('#reflexRows');
+  const finds=REFLEX_FINDS.concat(cur().customOpts.reflexFind||[]);
   box.innerHTML = objRows('reflex', REFLEX_DEFS, (k,on,e)=>{
     e=e||{name:k,find:'正常'};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
       <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
       <span class="srow-name">${esc(k)}</span>
-      <select class="srow-sel" data-f="find">${REFLEX_FINDS.map(o=>`<option ${o===e.find?'selected':''}>${o}</option>`).join('')}</select>
+      <select class="srow-sel" data-f="find">${finds.map(o=>`<option ${o===e.find?'selected':''}>${esc(o)}</option>`).join('')}</select>
     </div>`;
   });
   bindObjRows(box,'reflex');
   updateSum('#reflexSum', cur().objective.reflex.length);
+  renderFindChips('reflexFind','reflex');
 }
 function renderSensory(){
   const box=$('#sensoryRows');
+  const finds=SENSORY_FINDS.concat(cur().customOpts.sensoryFind||[]);
   box.innerHTML = objRows('sensory', SENSORY_DEFS, (k,on,e)=>{
     e=e||{type:k,find:'正常',site:''};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
       <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
       <span class="srow-name">${esc(k)}</span>
-      <select class="srow-sel" data-f="find">${SENSORY_FINDS.map(o=>`<option ${o===e.find?'selected':''}>${o}</option>`).join('')}</select>
+      <select class="srow-sel" data-f="find">${finds.map(o=>`<option ${o===e.find?'selected':''}>${esc(o)}</option>`).join('')}</select>
       <input type="text" class="srow-in" data-f="site" placeholder="部位" value="${esc(e.site)}" style="width:96px">
     </div>`;
   });
   bindObjRows(box,'sensory');
   updateSum('#sensorySum', cur().objective.sensory.length);
+  renderFindChips('sensoryFind','sensory');
 }
 function renderTend(){
   const p=cur();
@@ -2118,8 +2280,10 @@ function renderObjective(){
   const p=cur();
   renderTend(); renderRom(); renderMmt(); renderReflex(); renderSensory();
   refreshCustomSelect('#fAshworth','ashworth',p.objective.ashworth);
+  renderCustChips('ashworth', renderObjective);
   $('#fSwelling').value=p.objective.swelling;
   refreshCustomSelect('#fTemp','temp',p.objective.temp);
+  renderCustChips('temp', renderObjective);
   renderExamParts();
   renderExamList(currentExamPart, $('#examSearch').value);
   applyOc();
@@ -2167,8 +2331,8 @@ function bindObjective(){
   $('#fAshworth').addEventListener('change',e=>{ cur().objective.ashworth=e.target.value; savePatients(); });
   $('#fSwelling').addEventListener('input',e=>{ cur().objective.swelling=e.target.value; savePatients(); });
   $('#fTemp').addEventListener('change',e=>{ cur().objective.temp=e.target.value; savePatients(); });
-  bindCustomSelect('#ashworthPlus','#ashworthCust','#fAshworth','ashworth');
-  bindCustomSelect('#tempPlus','#tempCust','#fTemp','temp');
+  bindCustomSelect('#ashworthPlus','#ashworthCust','#fAshworth','ashworth', renderObjective);
+  bindCustomSelect('#tempPlus','#tempCust','#fTemp','temp', renderObjective);
 }
 
 function openVideo(id){
@@ -2267,6 +2431,7 @@ function renderScaleScores(){
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}</div>
           <div class="wordpills">${words.map(w=>`<label><input type="checkbox" class="wpill" data-sid="${sid}" data-idx="${idx}" value="${esc(w)}" ${arr.includes(w)?'checked':''}><span>${esc(w)}</span></label>`).join('')}</div>
+          ${cust.length?`<div class="cust-chips">${cust.map(w=>`<span class="tchip">自定义：${esc(w)}<span class="x w-del" data-sid="${sid}" data-idx="${idx}" data-del="${esc(w)}">✕</span></span>`).join('')}</div>`:''}
           <div class="selrow" style="margin-top:6px">
             <input type="text" class="w-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义描述词，回车添加" style="flex:1">
             <button type="button" class="mini w-plus" data-sid="${sid}" data-idx="${idx}" title="添加自定义词">＋</button>
@@ -2276,18 +2441,21 @@ function renderScaleScores(){
       if(it.options){
         const val=typeof vals[idx]==='string'?vals[idx]:'';
         const cust=(p.customOpts||{})[sid+'__'+idx]||[];
-        const opts=it.options.concat(cust);
-        if(val && opts.indexOf(val)<0) opts.push(val);
+        const opts=it.options.concat(cust.map(c=>({v:c, d:'', custom:true})));
+        if(val && !opts.some(o=>o.v===val)) opts.push({v:val, d:'', custom:true});
         return `<div class="score-item">
-          <div class="q">${idx+1}. ${it.label}</div>
-          <div class="selrow">
-            <select class="sselect" data-sid="${sid}" data-idx="${idx}">
-              <option value="">请选择…</option>
-              ${opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}
-            </select>
+          <div class="q">${idx+1}. ${it.label}${it.hint?`<small>${esc(it.hint)}</small>`:''}</div>
+          <div class="opt-cards">
+            ${opts.map(o=>`<div class="opt-card ${o.v===val?'on':''}" data-sid="${sid}" data-idx="${idx}" data-val="${esc(o.v)}">
+              <span class="oc-check">✓</span>
+              <span class="oc-main">${esc(o.v)}${o.d?`<small>${esc(o.d)}</small>`:''}</span>
+              ${o.custom?`<span class="oc-del" data-del="${esc(o.v)}">✕</span>`:''}
+            </div>`).join('')}
+          </div>
+          <div class="selrow" style="margin-top:6px">
+            <input type="text" class="sel-cust s-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义选项，回车添加" style="flex:1">
             <button type="button" class="mini s-plus" data-sid="${sid}" data-idx="${idx}" title="自定义选项">＋</button>
           </div>
-          <input type="text" class="sel-cust s-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义选项，回车添加" style="display:none">
         </div>`;
       }
       return `<div class="score-item">
@@ -2330,12 +2498,29 @@ function renderScaleScores(){
       renderScaleScores();
     });
   });
-  box.querySelectorAll('.sselect').forEach(s=>s.addEventListener('change',e=>{
-    const p=cur();
-    p.scores[s.dataset.sid]=p.scores[s.dataset.sid]||[];
-    p.scores[s.dataset.sid][+s.dataset.idx]=e.target.value;
-    savePatients();
-    renderScaleScores();
+  box.querySelectorAll('.opt-card').forEach(c=>{
+    const del=c.querySelector('.oc-del');
+    if(del) del.addEventListener('click',e=>{
+      e.stopPropagation();
+      const p=cur(), sid=c.dataset.sid, idx=+c.dataset.idx, v=c.dataset.val;
+      const k=sid+'__'+idx;
+      if(p.customOpts && p.customOpts[k]) p.customOpts[k]=p.customOpts[k].filter(x=>x!==v);
+      if(p.scores[sid] && p.scores[sid][idx]===v) p.scores[sid][idx]='';
+      savePatients(); renderScaleScores();
+    });
+    c.addEventListener('click',()=>{
+      const p=cur(), sid=c.dataset.sid, idx=+c.dataset.idx;
+      p.scores[sid]=p.scores[sid]||[];
+      p.scores[sid][idx]=c.dataset.val;
+      savePatients(); renderScaleScores();
+    });
+  });
+  box.querySelectorAll('.w-del').forEach(x=>x.addEventListener('click',()=>{
+    const p=cur(), sid=x.dataset.sid, idx=+x.dataset.idx, v=x.dataset.del;
+    const k=sid+'__'+idx;
+    if(p.customOpts && p.customOpts[k]) p.customOpts[k]=p.customOpts[k].filter(w=>w!==v);
+    if(p.scores[sid] && Array.isArray(p.scores[sid][idx])){ const i=p.scores[sid][idx].indexOf(v); if(i>=0) p.scores[sid][idx].splice(i,1); }
+    savePatients(); renderScaleScores();
   }));
   box.querySelectorAll('.wpill').forEach(c=>c.addEventListener('change',()=>{
     const p=cur(); const sid=c.dataset.sid, idx=+c.dataset.idx;
@@ -2348,9 +2533,7 @@ function renderScaleScores(){
     renderScaleScores();
   }));
   box.querySelectorAll('.s-plus').forEach(b=>b.addEventListener('click',()=>{
-    const inp=b.closest('.score-item').querySelector('.s-cust');
-    inp.style.display = inp.style.display==='none'?'block':'none';
-    if(inp.style.display==='block') inp.focus();
+    b.closest('.score-item').querySelector('.s-cust').focus();
   }));
   box.querySelectorAll('.s-cust').forEach(i=>i.addEventListener('keydown',e=>{
     if(e.key!=='Enter') return;
@@ -2513,7 +2696,9 @@ function buildReportHTML(){
       }
       if(it.options){
         const sval = typeof val==='string'&&val?val:'';
-        return `<div class="ritem"><span class="rk">${esc(it.label)}</span><span class="rv">${sval?esc(sval):'未选择'}</span></div>`;
+        const o = sval ? (it.options.find(x=>x.v===sval)||{d:''}) : null;
+        const desc = o&&o.d?` · ${o.d}`:'';
+        return `<div class="ritem"><span class="rk">${esc(it.label)}</span><span class="rv">${sval?esc(sval)+esc(desc):'未选择'}</span></div>`;
       }
       if(typeof val==='number' && it.max){
         const st=itemStatus(sc, it, val);
