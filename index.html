@@ -364,6 +364,12 @@ input[type=range]::-webkit-slider-thumb{
 .add-row input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fbfcfe}
 .add-row input:focus{border-color:var(--primary)}
 .add-row .mini{padding:0 14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+/* 自定义选项 */
+.selrow{display:flex;gap:8px;align-items:center}
+.selrow select{flex:1}
+.selrow .mini{flex:none;padding:0 14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;height:42px;min-width:44px}
+.sel-cust{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fbfcfe;margin-top:8px}
+.sel-cust:focus{border-color:var(--primary)}
 /* 量表折叠 */
 .oscale{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px;background:#fff}
 .oscale .oscale-head{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;background:#f8fbfe;user-select:none}
@@ -432,14 +438,10 @@ input[type=range]::-webkit-slider-thumb{
     </div>
     <div class="card">
       <h3><span class="n">1</span>主诉记录</h3>
-      <div class="step-desc">症状/体征 + 发生时间</div>
+      <div class="step-desc">症状 / 体征描述</div>
       <div class="field">
         <label>主诉内容</label>
         <textarea id="fComplaint" placeholder="例：腰痛伴右下肢放射痛 2 周，久坐加重"></textarea>
-      </div>
-      <div class="field">
-        <label>起病时间</label>
-        <input type="text" id="fOnset" placeholder="例：2 周前 / 3 月前">
       </div>
     </div>
     <div class="card">
@@ -447,12 +449,11 @@ input[type=range]::-webkit-slider-thumb{
       <div class="step-desc">主观疼痛特征（按疼痛评估填写）</div>
       <div class="field">
         <label>疼痛性质</label>
-        <select id="fPainNature">
-          <option value="">请选择…</option>
-          <option>胀痛</option><option>刺痛</option><option>跳痛</option><option>灼痛</option>
-          <option>酸痛</option><option>绞痛</option><option>坠痛</option><option>钻痛</option>
-          <option>触痛</option><option>割痛</option><option>锐痛</option>
-        </select>
+        <div class="selrow">
+          <select id="fPainNature"></select>
+          <button type="button" class="mini" id="painNaturePlus" title="自定义疼痛性质">＋</button>
+        </div>
+        <input type="text" id="painNatureCust" class="sel-cust" placeholder="自定义疼痛性质，回车添加" style="display:none">
       </div>
       <div class="field">
         <label>疼痛部位</label>
@@ -486,13 +487,15 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
-    <div class="card">
-      <h3><span class="n">3</span>既往史</h3>
-      <div class="step-desc">勾选存在的危险因素</div>
-      <div id="histList"></div>
-      <div class="field" style="margin-top:10px">
-        <label>用药史 / 其他</label>
-        <textarea id="fMeds" placeholder="如：抗凝药、降压药等"></textarea>
+    <div class="card oc" data-oc="hist">
+      <div class="oc-head"><div class="oc-title"><span class="oc-n">3</span>既往史<span class="oc-sum" id="histSum"></span></div><div class="oc-arrow">▾</div></div>
+      <div class="oc-body">
+        <div class="step-desc">勾选存在的危险因素</div>
+        <div id="histList"></div>
+        <div class="field" style="margin-top:10px">
+          <label>用药史 / 其他</label>
+          <textarea id="fMeds" placeholder="如：抗凝药、降压药等"></textarea>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -534,16 +537,12 @@ input[type=range]::-webkit-slider-thumb{
     <div class="card oc" data-oc="ashworth">
       <div class="oc-head"><div class="oc-title"><span class="oc-n">4</span>肌张力（Ashworth）</div><div class="oc-arrow">▾</div></div>
       <div class="oc-body">
-        <div class="step-desc">痉挛分级，0-4 级</div>
-        <select id="fAshworth">
-          <option value="">请选择…</option>
-          <option>0 级 · 无肌张力增高</option>
-          <option>1 级 · 轻度增高</option>
-          <option>1+ 级</option>
-          <option>2 级 · 明显增高</option>
-          <option>3 级 · 严重增高</option>
-          <option>4 级 · 僵硬</option>
-        </select>
+        <div class="step-desc">痉挛分级，0-4 级；可自定义</div>
+        <div class="selrow">
+          <select id="fAshworth"></select>
+          <button type="button" class="mini" id="ashworthPlus" title="自定义分级">＋</button>
+        </div>
+        <input type="text" id="ashworthCust" class="sel-cust" placeholder="自定义分级，回车添加" style="display:none">
       </div>
     </div>
     <div class="card oc" data-oc="sensory">
@@ -570,31 +569,16 @@ input[type=range]::-webkit-slider-thumb{
       <div class="card" style="flex:1">
         <h3><span class="n">8</span>皮温</h3>
         <div class="field" style="margin:0">
-          <select id="fTemp">
-            <option value="">请选择…</option>
-            <option>正常</option><option>升高</option><option>降低</option>
-          </select>
+          <div class="selrow">
+            <select id="fTemp"></select>
+            <button type="button" class="mini" id="tempPlus" title="自定义皮温">＋</button>
+          </div>
+          <input type="text" id="tempCust" class="sel-cust" placeholder="自定义皮温，回车添加" style="display:none">
         </div>
       </div>
     </div>
     <div class="card">
-      <h3><span class="n">9</span>ADL 状况</h3>
-      <div class="field" style="margin:0">
-        <textarea id="fAdl" placeholder="自理能力描述，如：日常生活基本自理，弯腰提物受限"></textarea>
-      </div>
-    </div>
-    <div class="card">
-      <h3><span class="n">◈</span>神经查体</h3>
-      <div class="step-desc">脑卒中/脊髓损伤相关神经检查</div>
-      <div id="neuroList"></div>
-    </div>
-    <div class="card">
-      <h3><span class="n">◈</span>专项功能评定</h3>
-      <div class="step-desc">言语 / 吞咽 / 运动 / 作业，勾选异常项</div>
-      <div id="assessGroups"></div>
-    </div>
-    <div class="card">
-      <h3><span class="n">▶</span>特殊检查·视频参考</h3>
+      <h3><span class="n">7</span>特殊检查·视频参考</h3>
       <div class="step-desc">按部位筛选，勾选阳性结果，可查看示范视频</div>
       <div class="filter" id="examPartFilter"></div>
       <input type="search" class="psearch" id="examSearch" placeholder="搜索检查名称…" autocomplete="off">
@@ -764,6 +748,9 @@ function toast(msg){
    内容资料库
    ============================================================ */
 const IMAGING_TYPES = ['X线','CT','MRI','超声','肌电图'];
+const PAIN_NATURES = ['胀痛','刺痛','跳痛','灼痛','酸痛','绞痛','坠痛','钻痛','触痛','割痛','锐痛'];
+const ASHWORTH_OPTS = ['0 级 · 无肌张力增高','1 级 · 轻度增高','1+ 级','2 级 · 明显增高','3 级 · 严重增高','4 级 · 僵硬'];
+const TEMP_OPTS = ['正常','升高','降低'];
 
 /* 特殊检查库：part=部位 / steps=操作 / positive=阳性意义 / video=VIDEOS 键（可无） */
 const SPECIAL_EXAMS = [
@@ -1463,7 +1450,7 @@ function mapDiagnosisStage(type){
 }
 
 /* ============================================================
-   既往史 / 神经查体 / 专项评定（保留脑卒中深度）
+   既往史
    ============================================================ */
 const HISTORY_ITEMS = [
   { id:'htn',    name:'高血压',         desc:'最主要危险因素' },
@@ -1476,48 +1463,6 @@ const HISTORY_ITEMS = [
   { id:'smoke',  name:'吸烟',           desc:'危险因素' },
   { id:'alcohol',name:'饮酒',           desc:'危险因素' }
 ];
-const NEURO_ITEMS = [
-  { id:'conscious', name:'意识状态',     desc:'清醒/嗜睡/昏睡/昏迷' },
-  { id:'cortex',    name:'高级皮层功能', desc:'记忆力/视空间/反应' },
-  { id:'cranial',   name:'颅神经',       desc:'十二对颅神经检查' },
-  { id:'motor',     name:'运动系统',     desc:'肌力/肌张力/ROM/步态' },
-  { id:'sensory',   name:'感觉系统',     desc:'浅/深/复合感觉' },
-  { id:'reflex',    name:'反射',         desc:'腱反射/浅反射' },
-  { id:'patho',     name:'病理征',       desc:'Babinski/Chaddock/Oppenheim/Gordon' },
-  { id:'meningeal', name:'脑膜刺激征',   desc:'颈强直/Kernig/Brudzinski' },
-  { id:'cardio',    name:'心脏与血管',   desc:'心律/血管杂音' }
-];
-const ASSESS_GROUPS = {
-  speech: { title:'言语评定', icon:'🗣', items:[
-    { id:'aphasia',    name:'失语症',     desc:'WAB 自发言语/听理解/复述/命名' },
-    { id:'dysarthria', name:'构音障碍',   desc:'Frenchay 8 维度' },
-    { id:'funccomm',   name:'功能性沟通', desc:'说/理解/读/写' }
-  ]},
-  swallow: { title:'吞咽评定', icon:'💧', items:[
-    { id:'watian', name:'洼田饮水试验',       desc:'30ml 温水，观察呛咳' },
-    { id:'oral',   name:'口腔功能',           desc:'唇闭合/舌运动/软腭上抬/咽反射' },
-    { id:'ssa',    name:'SSA 标准吞咽评估',   desc:'初步评估+5ml+60ml' },
-    { id:'vst',    name:'V-VST 容积粘度测试', desc:'不同容积/粘度' },
-    { id:'vfss',   name:'VFSS/FEES 仪器检查', desc:'造影或内镜' }
-  ]},
-  motor: { title:'运动评定', icon:'🏃', items:[
-    { id:'mmt',        name:'徒手肌力 MMT',    desc:'0-5 级关键肌群' },
-    { id:'tonus',      name:'肌张力(MAS)',     desc:'Ashworth 分级' },
-    { id:'rom',        name:'关节活动度 ROM',  desc:'被动/主动活动范围' },
-    { id:'brunnstrom', name:'Brunnstrom 分期', desc:'上肢/手/下肢' },
-    { id:'balance',    name:'平衡功能',        desc:'BBS / Fugl-Meyer' },
-    { id:'gait',       name:'步行功能',        desc:'Holden / 10MWT / 6MWT' },
-    { id:'coor',       name:'协调性',          desc:'指鼻/跟膝胫试验' }
-  ]},
-  ot: { title:'作业评定', icon:'✋', items:[
-    { id:'badl',   name:'BADL 基本日常活动',   desc:'Barthel 指数' },
-    { id:'iadl',   name:'IADL 工具性日常活动', desc:'购物/烹饪/电话/财务' },
-    { id:'cog',    name:'认知功能',           desc:'MMSE / MoCA' },
-    { id:'upper',  name:'上肢及手功能',       desc:'Brunnstrom / FMA-UE' },
-    { id:'psych',  name:'心理状态',           desc:'PHQ-9 / GAD-7' },
-    { id:'vision', name:'视觉功能',           desc:'视野/单侧忽略' }
-  ]}
-};
 
 /* ============================================================
    量表：真实题目 + 计分分级 + 类别（按截图分类）
@@ -1693,6 +1638,7 @@ function normalize(p){
   p.planStage = p.planStage || PLAN_STAGES[0];
   p.planSel = p.planSel || null;
   p.plan = p.plan || null; p.customTher = p.customTher || [];
+  p.customOpts = p.customOpts || {};
   return p;
 }
 function makePatient(name,age,gender,complaint,vas){
@@ -1709,7 +1655,7 @@ function makePatient(name,age,gender,complaint,vas){
     neuro: {}, assess: { speech:{}, swallow:{}, motor:{}, ot:{} },
     scales: [], scores: {}, goals: {},
     planDisease: '腰痛', planStage: PLAN_STAGES[0], planSel: null,
-    plan: null, customTher: [],
+    plan: null, customTher: [], customOpts: {},
     createdAt: Date.now()
   });
 }
@@ -1833,8 +1779,7 @@ function refreshComplaint(){
   dsel.value=p.diagnosis.type;
   $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
-  $('#fOnset').value=p.onset;
-  $('#fPainNature').value=p.pain.nature;
+  refreshCustomSelect('#fPainNature','painNature',p.pain.nature);
   $('#fPainLoc').value=p.pain.location;
   $('#fPainRad').value=p.pain.radiation;
   $('#fPainAggr').value=p.pain.aggravate;
@@ -1866,6 +1811,8 @@ function refreshComplaint(){
     savePatients();
   }));
   $('#fImg').value=p.imaging.findings;
+  const hs=document.getElementById('histSum'); if(hs) hs.textContent = p.history.items.length?`已选 ${p.history.items.length} 项`:'';
+  applyOc();
 }
 function bindComplaint(){
   const vas=$('#fVas');
@@ -1889,8 +1836,8 @@ function bindComplaint(){
   });
   $('#fDiagNote').addEventListener('input',e=>{ cur().diagnosis.note=e.target.value; savePatients(); });
   $('#fComplaint').addEventListener('input',e=>{ cur().complaint=e.target.value; savePatients(); });
-  $('#fOnset').addEventListener('input',e=>{ cur().onset=e.target.value; savePatients(); });
   $('#fPainNature').addEventListener('change',e=>{ cur().pain.nature=e.target.value; savePatients(); });
+  bindCustomSelect('#painNaturePlus','#painNatureCust','#fPainNature','painNature');
   $('#fPainLoc').addEventListener('input',e=>{ cur().pain.location=e.target.value; savePatients(); });
   $('#fPainRad').addEventListener('input',e=>{ cur().pain.radiation=e.target.value; savePatients(); });
   $('#fPainAggr').addEventListener('input',e=>{ cur().pain.aggravate=e.target.value; savePatients(); });
@@ -1919,37 +1866,40 @@ const SENSORY_DEFS = [{name:'浅感觉（触/痛/温）'},{name:'深感觉（位
 const SENSORY_FINDS = ['正常','减退','消失','过敏'];
 const objOpen = new Set(['tend']);
 let currentExamPart='';
-function renderCheckList(box, items, getSet){
+
+/* ---- 自定义选项 / 折叠公共工具 ---- */
+function presetFor(key){ return key==='painNature'?PAIN_NATURES : key==='ashworth'?ASHWORTH_OPTS : key==='temp'?TEMP_OPTS : []; }
+function popSel(sel, opts, val){
+  sel.innerHTML = '<option value="">请选择…</option>' + opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('');
+}
+function refreshCustomSelect(selId, storeKey, val){
   const p=cur();
-  box.innerHTML = items.map(it=>{
-    const s=getSet(p)[it.id]||{done:false,deg:''};
-    return `<div class="exam-item">
-      <div class="chk ${s.done?'on':''}" data-id="${it.id}">✓</div>
-      <div class="en">${it.name}<small>${it.desc}</small></div>
-      <select class="deg ${s.done?'show':''}" data-id="${it.id}">
-        <option value="">程度…</option>
-        <option ${s.deg==='轻度'?'selected':''}>轻度</option>
-        <option ${s.deg==='中度'?'selected':''}>中度</option>
-        <option ${s.deg==='重度'?'selected':''}>重度</option>
-      </select>
-    </div>`;
-  }).join('');
-  box.querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
-    const p=cur(); const set=getSet(p); const id=c.dataset.id;
-    set[id]=set[id]||{done:false,deg:''};
-    set[id].done=!set[id].done;
-    c.classList.toggle('on',set[id].done);
-    const sel=box.querySelector(`select.deg[data-id="${id}"]`);
-    sel.classList.toggle('show',set[id].done);
-    if(!set[id].done){ sel.value=''; set[id].deg=''; }
-    savePatients();
-  }));
-  box.querySelectorAll('select').forEach(s=>s.addEventListener('change',e=>{
-    const p=cur(); const set=getSet(p); const id=e.target.dataset.id;
-    set[id]=set[id]||{done:true};
-    set[id].deg=e.target.value;
-    savePatients();
-  }));
+  const opts=presetFor(storeKey).concat((p.customOpts||{})[storeKey]||[]);
+  popSel($(selId), opts, val);
+}
+function bindCustomSelect(plusId, custId, selId, storeKey){
+  $(plusId).addEventListener('click',()=>{
+    const inp=$(custId);
+    inp.style.display = inp.style.display==='none'?'block':'none';
+    if(inp.style.display==='block') inp.focus();
+  });
+  $(custId).addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    const v=$(custId).value.trim();
+    const sel=$(selId);
+    if(!v){ $(custId).style.display='none'; return; }
+    const p=cur();
+    p.customOpts=p.customOpts||{};
+    p.customOpts[storeKey]=p.customOpts[storeKey]||[];
+    if(p.customOpts[storeKey].indexOf(v)<0) p.customOpts[storeKey].push(v);
+    $(custId).value=''; $(custId).style.display='none';
+    refreshCustomSelect(selId, storeKey, v);
+    sel.value=v;
+    sel.dispatchEvent(new window.Event('change'));
+  });
+}
+function applyOc(){
+  document.querySelectorAll('.oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
 }
 function objKey(cat, e){
   if(!e) return '';
@@ -2087,7 +2037,7 @@ document.querySelectorAll('.add-row input').forEach(i=>i.addEventListener('keydo
 }));
 $('#romDL').innerHTML = ROM_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
 $('#mmtDL').innerHTML = MMT_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
-document.querySelectorAll('#sec-objective .oc-head').forEach(h=>h.addEventListener('click',()=>{
+document.querySelectorAll('.oc-head').forEach(h=>h.addEventListener('click',()=>{
   const oc=h.closest('.oc'); const key=oc.dataset.oc;
   if(objOpen.has(key)) objOpen.delete(key); else objOpen.add(key);
   oc.classList.toggle('open');
@@ -2095,23 +2045,12 @@ document.querySelectorAll('#sec-objective .oc-head').forEach(h=>h.addEventListen
 function renderObjective(){
   const p=cur();
   renderTend(); renderRom(); renderMmt(); renderReflex(); renderSensory();
-  $('#fAshworth').value=p.objective.ashworth;
+  refreshCustomSelect('#fAshworth','ashworth',p.objective.ashworth);
   $('#fSwelling').value=p.objective.swelling;
-  $('#fTemp').value=p.objective.temp;
-  $('#fAdl').value=p.objective.adl;
-  renderCheckList($('#neuroList'), NEURO_ITEMS, p=>p.neuro);
-  const ag=$('#assessGroups');
-  ag.innerHTML = Object.entries(ASSESS_GROUPS).map(([key,g])=>`
-    <div class="assess-card">
-      <h4><span class="aic">${g.icon}</span>${g.title}</h4>
-      <div data-group="${key}"></div>
-    </div>`).join('');
-  for(const key of Object.keys(ASSESS_GROUPS)){
-    renderCheckList(ag.querySelector(`[data-group="${key}"]`), ASSESS_GROUPS[key].items, p=>p.assess[key]);
-  }
+  refreshCustomSelect('#fTemp','temp',p.objective.temp);
   renderExamParts();
   renderExamList(currentExamPart, $('#examSearch').value);
-  document.querySelectorAll('#sec-objective .oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
+  applyOc();
 }
 function renderExamParts(){
   const parts=['全部',...new Set(SPECIAL_EXAMS.map(x=>x.part))];
@@ -2156,7 +2095,8 @@ function bindObjective(){
   $('#fAshworth').addEventListener('change',e=>{ cur().objective.ashworth=e.target.value; savePatients(); });
   $('#fSwelling').addEventListener('input',e=>{ cur().objective.swelling=e.target.value; savePatients(); });
   $('#fTemp').addEventListener('change',e=>{ cur().objective.temp=e.target.value; savePatients(); });
-  $('#fAdl').addEventListener('input',e=>{ cur().objective.adl=e.target.value; savePatients(); });
+  bindCustomSelect('#ashworthPlus','#ashworthCust','#fAshworth','ashworth');
+  bindCustomSelect('#tempPlus','#tempCust','#fTemp','temp');
 }
 
 function openVideo(id){
@@ -2237,19 +2177,32 @@ function renderScaleScores(){
     const itemsHtml=sc.items.map((it,idx)=>{
       if(it.words){
         const arr=Array.isArray(vals[idx])?vals[idx]:[];
+        const cust=(p.customOpts||{})[sid+'__'+idx]||[];
+        const words=it.words.concat(cust);
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}</div>
-          <div class="wordpills">${it.words.map(w=>`<label><input type="checkbox" class="wpill" data-sid="${sid}" data-idx="${idx}" value="${esc(w)}" ${arr.includes(w)?'checked':''}><span>${esc(w)}</span></label>`).join('')}</div>
+          <div class="wordpills">${words.map(w=>`<label><input type="checkbox" class="wpill" data-sid="${sid}" data-idx="${idx}" value="${esc(w)}" ${arr.includes(w)?'checked':''}><span>${esc(w)}</span></label>`).join('')}</div>
+          <div class="selrow" style="margin-top:6px">
+            <input type="text" class="w-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义描述词，回车添加" style="flex:1">
+            <button type="button" class="mini w-plus" data-sid="${sid}" data-idx="${idx}" title="添加自定义词">＋</button>
+          </div>
         </div>`;
       }
       if(it.options){
         const val=typeof vals[idx]==='string'?vals[idx]:'';
+        const cust=(p.customOpts||{})[sid+'__'+idx]||[];
+        const opts=it.options.concat(cust);
+        if(val && opts.indexOf(val)<0) opts.push(val);
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}</div>
-          <select class="sselect" data-sid="${sid}" data-idx="${idx}">
-            <option value="">请选择…</option>
-            ${it.options.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}
-          </select>
+          <div class="selrow">
+            <select class="sselect" data-sid="${sid}" data-idx="${idx}">
+              <option value="">请选择…</option>
+              ${opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}
+            </select>
+            <button type="button" class="mini s-plus" data-sid="${sid}" data-idx="${idx}" title="自定义选项">＋</button>
+          </div>
+          <input type="text" class="sel-cust s-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义选项，回车添加" style="display:none">
         </div>`;
       }
       return `<div class="score-item">
@@ -2307,6 +2260,43 @@ function renderScaleScores(){
     if(i>=0) arr.splice(i,1); else arr.push(c.value);
     p.scores[sid][idx]=arr;
     savePatients();
+    renderScaleScores();
+  }));
+  box.querySelectorAll('.s-plus').forEach(b=>b.addEventListener('click',()=>{
+    const inp=b.closest('.score-item').querySelector('.s-cust');
+    inp.style.display = inp.style.display==='none'?'block':'none';
+    if(inp.style.display==='block') inp.focus();
+  }));
+  box.querySelectorAll('.s-cust').forEach(i=>i.addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    const v=i.value.trim();
+    const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
+    if(v){
+      p.customOpts=p.customOpts||{};
+      const k=sid+'__'+idx;
+      p.customOpts[k]=p.customOpts[k]||[];
+      if(p.customOpts[k].indexOf(v)<0) p.customOpts[k].push(v);
+      p.scores[sid]=p.scores[sid]||[];
+      p.scores[sid][idx]=v;
+      savePatients();
+    }
+    renderScaleScores();
+  }));
+  box.querySelectorAll('.w-plus').forEach(b=>b.addEventListener('click',()=>{
+    b.closest('.score-item').querySelector('.w-cust').focus();
+  }));
+  box.querySelectorAll('.w-cust').forEach(i=>i.addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    const v=i.value.trim();
+    const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
+    if(v){
+      p.customOpts=p.customOpts||{};
+      const k=sid+'__'+idx;
+      p.customOpts[k]=p.customOpts[k]||[];
+      if(p.customOpts[k].indexOf(v)<0) p.customOpts[k].push(v);
+      savePatients();
+      i.value='';
+    }
     renderScaleScores();
   }));
 }
@@ -2423,12 +2413,6 @@ function buildReportHTML(){
   const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
   const diagTxt = (p.diagnosis&&p.diagnosis.type)||p.planDisease||'康复';
   const histStr = p.history.items.map(id=>{ const it=HISTORY_ITEMS.find(x=>x.id===id); return it?it.name:id; }).join('、');
-  const checkStr=(set,names)=>{ const arr=[]; Object.entries(set||{}).forEach(([id,v])=>{ if(v&&v.done) arr.push((names[id]||id)+(v.deg?'('+v.deg+')':'')); }); return arr; };
-  const neuroNames={}; NEURO_ITEMS.forEach(x=>neuroNames[x.id]=x.name);
-  const assessNames={}; Object.entries(ASSESS_GROUPS).forEach(([k,g])=>g.items.forEach(x=>assessNames[x.id]=x.name));
-  const neuroStr=checkStr(p.neuro,neuroNames);
-  const assessStr=[];
-  Object.entries(ASSESS_GROUPS).forEach(([k,g])=>{ const s=checkStr(p.assess[k],assessNames); if(s.length) assessStr.push(g.title+'：'+s.join('、')); });
   const scaleRows = p.scales.map(sid=>{
     const sc=SCALES.find(x=>x.id===sid);
     if(!sc) return '';
@@ -2468,7 +2452,6 @@ function buildReportHTML(){
       ${p.diagnosis&&p.diagnosis.note?kv('诊断备注', esc(p.diagnosis.note)):''}
       <h4>主诉</h4>
       ${kv('主诉', esc(p.complaint)||'—')}
-      ${p.onset?kv('起病时间', esc(p.onset)):''}
       <h4>疼痛问卷</h4>
       ${kv('疼痛性质', esc(pain.nature)||'—')}
       ${kv('疼痛部位', esc(pain.location)||'—')}
@@ -2491,9 +2474,6 @@ function buildReportHTML(){
       ${obj.reflex.length?kv('反射', esc(obj.reflex.map(x=>`${x.name}：${x.find||''}`).join('、'))):''}
       ${obj.swelling?kv('肿胀（周径差）', esc(obj.swelling)):''}
       ${obj.temp?kv('皮温', esc(obj.temp)):''}
-      ${obj.adl?kv('ADL 状况', esc(obj.adl)):''}
-      ${neuroStr.length?neuroStr.map(x=>kv('神经查体', esc(x))).join(''):''}
-      ${assessStr.length?assessStr.map(x=>kv('专项评定', esc(x))).join(''):''}
       ${posExams.length?kv('特殊检查阳性', esc(posExams.map(id=>{ const ex=SPECIAL_EXAMS.find(x=>x.id===id); return ex?ex.name:id; }).join('、'))):''}
       <h4>量表评估</h4>
       ${scaleRows||kv('结果','未选择量表')}
