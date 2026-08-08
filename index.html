@@ -221,6 +221,14 @@ input[type=range]::-webkit-slider-thumb{
 .plan-check.on{border-color:var(--primary);background:#f0f7ff}
 .plan-check .cn{font-size:13.5px;flex:1}
 .plan-check .cm{font-size:11px;color:var(--muted)}
+.plan-check .pc-del{flex:none;color:var(--danger);font-size:14px;cursor:pointer;padding:0 4px;font-weight:700}
+/* 动作提示下拉 */
+.sugg-box{display:none;margin-top:8px;background:#fff;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.sugg{display:block;width:100%;text-align:left;padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px dashed var(--line);font-family:inherit;color:var(--text);background:#fff}
+.sugg:last-child{border-bottom:none}
+.sugg small{display:block;color:var(--muted);font-size:11px;margin-top:2px;line-height:1.5}
+.sugg:hover,.sugg:active{background:#f0f7ff}
+.cust-goals{margin-top:8px}
 .addbtn{display:block;width:100%;padding:10px;border:1.5px dashed var(--primary);border-radius:10px;background:#f0f7ff;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;font-family:inherit}
 .phase{border:1.5px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden;background:#fff}
 .add-ther{display:flex;gap:8px;margin-top:6px}
@@ -647,22 +655,30 @@ input[type=range]::-webkit-slider-thumb{
     <div class="card">
       <h3><span class="n">2</span>治疗目标</h3>
       <div class="target-box" id="planTarget"></div>
+      <div id="planTargetCustom"></div>
+      <div class="add-row"><input type="text" id="targetCust" placeholder="输入目标，如：恢复独立行走"><button class="mini" data-addplan="target">＋</button></div>
     </div>
     <div class="card">
       <h3><span class="n">3</span>物理因子治疗</h3>
       <div class="step-desc">点击勾选/取消，可增删项目</div>
       <div id="planPhysio"></div>
       <button class="addbtn" id="btnPhysioLib">＋ 添加物理因子治疗项目</button>
+      <div class="add-row"><input type="text" id="physioCust" placeholder="输入动作/治疗项目，自动提示做法"><button class="mini" data-addplan="physio">＋</button></div>
+      <div class="sugg-box" id="physioSugg"></div>
     </div>
     <div class="card">
       <h3><span class="n">4</span>运动疗法</h3>
-      <div class="step-desc">点击勾选/取消</div>
+      <div class="step-desc">点击勾选/取消；可输入动作自动带做法</div>
       <div id="planExercise"></div>
+      <div class="add-row"><input type="text" id="exCust" placeholder="输入动作，如：臀桥，自动提示怎么做"><button class="mini" data-addplan="exercise">＋</button></div>
+      <div class="sugg-box" id="exSugg"></div>
     </div>
     <div class="card">
       <h3><span class="n">5</span>手法治疗</h3>
-      <div class="step-desc">点击勾选/取消</div>
+      <div class="step-desc">点击勾选/取消；可输入手法自动带做法</div>
       <div id="planManual"></div>
+      <div class="add-row"><input type="text" id="manualCust" placeholder="输入手法，如：肌筋膜松解，自动提示怎么做"><button class="mini" data-addplan="manual">＋</button></div>
+      <div class="sugg-box" id="manualSugg"></div>
     </div>
     <div class="card">
       <h3><span class="n">＋</span>自定义疗法</h3>
@@ -849,6 +865,60 @@ const PHYSIO_LIB = [
   { name:'颈椎牵引',             mech:'颈神经根减压' },
   { name:'CPM 关节持续被动活动', mech:'术后早期持续被动活动、防关节僵硬' },
   { name:'水中运动疗法',         mech:'浮力减重、温热促进放松与运动' }
+];
+
+/* 动作知识库：输入动作名自动带出"怎么做" */
+const ACTION_KB = [
+  {n:'臀桥', how:'仰卧屈膝90°、双足踩床，抬臀至肩-髋-膝成一直线，保持3秒缓慢回落，10-15次/组，每日3组'},
+  {n:'平板支撑', how:'俯卧肘撑地，身体从头到脚成直线，收紧腹臀，保持30-60秒/次，3组'},
+  {n:'侧桥', how:'侧卧肘撑地，身体成直线，保持20-30秒，左右各3组'},
+  {n:'死虫式', how:'仰卧四肢朝上，腹部收紧，对侧手脚缓慢交替下放再收回，10次/组'},
+  {n:'超人式（俯卧挺身）', how:'俯卧，同时抬起对侧手脚至背部收紧，保持5秒回落，10次/组'},
+  {n:'卷腹', how:'仰卧屈膝，双手扶头，腹部发力卷起肩胛离地，缓慢回落，15次/组'},
+  {n:'深蹲', how:'双脚与肩同宽，屈髋屈膝下蹲至大腿近水平，膝盖不过脚尖，站起，10-15次/组'},
+  {n:'弓步蹲', how:'一脚前跨，屈膝下蹲至后膝接近地面，前膝不过脚尖，左右交替10次/腿'},
+  {n:'提踵', how:'站立双脚与肩同宽，踮脚尖至最高点停顿2秒，缓慢放下，15次/组'},
+  {n:'靠墙静蹲', how:'背靠墙，双脚前移约一脚距，屈膝下蹲至大腿与地面平行，保持30-60秒'},
+  {n:'直腿抬高', how:'仰卧，健膝屈曲踩床，患腿伸直抬高30°并保持5秒，缓慢放下，10次/组'},
+  {n:'踝泵', how:'仰卧或坐位，勾脚尖→绷脚尖为1次，缓慢有力，10次/组，每日多次'},
+  {n:'坐位伸膝', how:'坐位膝下垫毛巾卷，用力伸直膝盖并绷紧大腿前侧，保持5-10秒，10次/组'},
+  {n:'俯卧屈膝', how:'俯卧，屈膝将脚跟尽量靠向臀部，抗阻可加弹力带，10-15次/组'},
+  {n:'爬墙', how:'面对墙，手指沿墙缓慢上爬至轻度牵拉感即停并标记高度，保持5秒，10次/组'},
+  {n:'钟摆运动（Codman）', how:'弯腰健手扶桌，患臂放松下垂，身体带动手臂前后/左右画圈，各10圈'},
+  {n:'弹力带划船', how:'弹力带固定于前方，双手后拉至肩胛夹紧，缓慢回放，12次/组'},
+  {n:'肩外旋训练', how:'弹力带，肘贴体侧屈90°，前臂向外旋转抗阻，12次/组'},
+  {n:'耸肩', how:'双肩耸起靠近耳部，保持3秒后放松，10次/组，放松上斜方肌'},
+  {n:'缩下巴', how:'坐位，下巴水平向后收（做双下巴），保持5秒放松，10次/组'},
+  {n:'颈部等长抗阻', how:'手分别放前额/后脑/左右，头用力对抗手保持不动5秒，各方向10次'},
+  {n:'抱膝向胸', how:'仰卧，双手抱膝拉向胸部，保持30秒，缓慢放松，左右各3次'},
+  {n:'腘绳肌牵伸', how:'坐位双腿伸直，身体缓慢前倾，感到大腿后侧牵拉，保持30秒×3'},
+  {n:'髂腰肌牵伸', how:'弓步跪姿，后腿膝盖触地，髋部向前下方推，保持30秒×3'},
+  {n:'腰方肌牵伸', how:'坐位一手撑地，身体侧向对侧牵伸侧腰，保持30秒×3'},
+  {n:'腹式呼吸', how:'仰卧屈膝，手放腹部，吸气鼓腹3秒、呼气收腹5秒，每次5-10分钟'},
+  {n:'Williams 屈曲体操', how:'仰卧屈膝，依次做抱膝、仰头、卷腹，强化腰腹屈曲肌，10次/组'},
+  {n:'单腿站立', how:'一脚站立、另一脚抬起，保持30秒，可闭眼/软垫进阶，左右各3次'},
+  {n:'闭眼站立', how:'双脚并拢站立，闭眼保持平衡30秒，必要时扶墙保护'},
+  {n:'脚跟对脚尖行走', how:'一脚跟贴另一脚脚尖沿直线行走，保持平衡，10步为1组'},
+  {n:'平衡板训练', how:'双脚站平衡板上，保持重心稳定，前后左右缓慢晃动，每次2-3分钟'},
+  {n:'敏捷梯训练', how:'敏捷梯上做高抬腿、侧向进出等，每组30秒，2-3组'},
+  {n:'跳跃落地训练', how:'从矮阶跳下，屈髋屈膝缓冲落地并保持稳定3秒，10次/组'},
+  {n:'跑步渐进', how:'从快走→慢跑→变速跑每周递增，以无痛为度，20-30分钟'},
+  {n:'功率自行车', how:'低阻力匀速蹬踏20分钟，心率保持在目标区间，训练前后各热身放松5分钟'},
+  {n:'水中行走', how:'水中步行/慢跑，水深齐胸，20-30分钟，利用浮力减重训练'},
+  {n:'肌筋膜松解', how:'拇指或肘尖沿肌纤维方向缓慢按压，每点30-60秒，以酸胀可耐受为度'},
+  {n:'扳机点按摩', how:'在痛点/扳机点定点按压60-90秒，配合呼吸，逐渐加重'},
+  {n:'深部摩擦按摩（Cyriax）', how:'垂直于肌腱纤维方向横磨痛点2-3分钟，促进组织修复'},
+  {n:'淋巴引流手法', how:'手掌轻柔向心方向推抚，力度极轻，沿淋巴走向，每区域3-5分钟'},
+  {n:'Maitland 关节松动', how:'沿关节面方向牵引/滑动摆动，Ⅰ-Ⅱ级镇痛、Ⅲ-Ⅳ级改善活动度'},
+  {n:'PNF 本体促进技术', how:'节律性稳定/反复收缩，治疗师徒手抗阻引导运动模式重建'},
+  {n:'HVLA 高速低幅手法', how:'评估明确后快速低幅扳动，缓解关节僵硬（需专业评估）'},
+  {n:'FRT 筋膜释放技术', how:'长时低压牵伸筋膜90-120秒，促进筋膜滑动与延展'},
+  {n:'Bobath 握手', how:'双手十指交叉、患侧拇指在上，健手带动患手向前上方伸举，15-20次/组'},
+  {n:'桥式运动', how:'仰卧屈膝、双足踩床，抬臀保持5秒回落，10次/组，每日2-3组'},
+  {n:'良肢位摆放', how:'仰卧/健侧/患侧卧位交替，每1-2小时变换，患肩垫枕、掌心向上'},
+  {n:'肩胛回缩', how:'坐位，肩胛骨向脊柱中线夹拢，保持5秒，10次/组'},
+  {n:'肘腕复合训练', how:'持轻哑铃做肘屈伸+腕屈伸+前臂旋转组合，10次/组，模拟真实使用'},
+  {n:'腕伸肌离心训练', how:'前臂放桌边手腕垂出，哑铃缓慢放下（离心2秒）、健手辅助抬起，10次/组'}
 ];
 
 /* 疾病专项方案库：每格 { target, physio[], exercise[], manual[], home[], short[], long[], video } */
@@ -1853,6 +1923,8 @@ function normalize(p){
   p.planSel = p.planSel || null;
   p.plan = p.plan || null; p.customTher = p.customTher || [];
   p.customOpts = p.customOpts || {};
+  p.planCustom = p.planCustom || { target:[], physio:[], exercise:[], manual:[] };
+  ['target','physio','exercise','manual'].forEach(k=>{ if(!Array.isArray(p.planCustom[k])) p.planCustom[k]=[]; });
   return p;
 }
 function makePatient(name,age,gender,complaint,vas){
@@ -1870,6 +1942,7 @@ function makePatient(name,age,gender,complaint,vas){
     scales: [], scores: {}, goals: {},
     planDisease: '腰痛', planStage: PLAN_STAGES[0], planSel: null,
     plan: null, customTher: [], customOpts: {},
+    planCustom: { target:[], physio:[], exercise:[], manual:[] },
     createdAt: Date.now()
   });
 }
@@ -1891,7 +1964,10 @@ function defaultPlanSel(p){
   return { physio:(st.physio||[]).map(x=>x.n), exercise:(st.exercise||[]).map(x=>x.n), manual:(st.manual||[]).map(x=>x.n) };
 }
 function planDesc(cat, name){
-  const st=(DISEASE_PLANS[cur().planDisease]||DISEASE_PLANS['腰痛'])[cur().planStage]||{};
+  const p=cur();
+  const ci=((p.planCustom||{})[cat]||[]).find(x=>x.n===name);
+  if(ci&&ci.d) return ci.d;
+  const st=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛'])[p.planStage]||{};
   const def=(st[cat]||[]).find(x=>x.n===name);
   if(def&&def.d) return def.d;
   const pl=PHYSIO_LIB.find(x=>x.name===name);
@@ -1905,9 +1981,13 @@ function buildPlanLive(p){
   const dp=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛']);
   const st=dp[p.planStage]||dp[PLAN_STAGES[0]];
   const sel=getPlanSel(p);
+  const cust=(cat)=>(p.planCustom||{})[cat]||[];
   return {
     disease:p.planDisease, stage:p.planStage, target:st.target||'',
-    physio:sel.physio.slice(), exercise:sel.exercise.slice(), manual:sel.manual.slice(),
+    goals:cust('target').map(x=>x.d?x.n+'：'+x.d:x.n),
+    physio:sel.physio.concat(cust('physio').map(x=>x.n)),
+    exercise:sel.exercise.concat(cust('exercise').map(x=>x.n)),
+    manual:sel.manual.concat(cust('manual').map(x=>x.n)),
     custom:(p.customTher||[]).slice(),
     short:st.short||[], long:st.long||[], home:st.home||[], video:st.video||''
   };
@@ -2628,6 +2708,7 @@ function renderPlan(){
   }));
   const st=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛'])[p.planStage]||{};
   $('#planTarget').textContent = st.target || '（暂未配置该期目标）';
+  renderTargetCustom();
   const sel=getPlanSel(p);
   renderPlanCheck('#planPhysio','physio',sel.physio);
   renderPlanCheck('#planExercise','exercise',sel.exercise);
@@ -2646,14 +2727,31 @@ function renderPlan(){
 }
 function renderPlanCheck(selId, cat, arr){
   const box=$(selId);
-  box.innerHTML = arr.map(name=>{
+  const cust=(cur().planCustom||{})[cat]||[];
+  const builtins = arr.map(name=>{
     const d=planDesc(cat,name);
     return `<div class="plan-check on" data-cat="${cat}" data-name="${esc(name)}">
       <div class="cb">✓</div>
       <div class="cn">${esc(name)}${d?`<span class="cm">${esc(d)}</span>`:''}</div>
     </div>`;
-  }).join('') || '';
-  box.querySelectorAll('.plan-check').forEach(c=>c.addEventListener('click',()=>{
+  }).join('');
+  const customs = cust.map(it=>`
+    <div class="plan-check on" data-cat="${cat}" data-custom="1" data-name="${esc(it.n)}">
+      <div class="cb">✓</div>
+      <div class="cn">${esc(it.n)}${it.d?`<span class="cm">${esc(it.d)}</span>`:''}</div>
+      <span class="pc-del" data-del="${esc(it.n)}">✕</span>
+    </div>`).join('');
+  box.innerHTML = builtins + customs;
+  box.querySelectorAll('.plan-check[data-custom]').forEach(c=>{
+    const del=c.querySelector('.pc-del');
+    if(del) del.addEventListener('click',e=>{
+      e.stopPropagation();
+      const p=cur();
+      p.planCustom[cat]=(p.planCustom[cat]||[]).filter(x=>x.n!==del.dataset.del);
+      savePatients(); renderPlan();
+    });
+  });
+  box.querySelectorAll('.plan-check:not([data-custom])').forEach(c=>c.addEventListener('click',()=>{
     const p=cur(); const sel=getPlanSel(p);
     const cat=c.dataset.cat, name=c.dataset.name;
     const i=sel[cat].indexOf(name);
@@ -2667,6 +2765,79 @@ function renderPlanCheck(selId, cat, arr){
   if(missing.length){
     box.innerHTML += `<div class="empty" style="padding:8px 0;font-size:12px">未勾选：${missing.join('、')}</div>`;
   }
+}
+function renderTargetCustom(){
+  const p=cur();
+  const list=(p.planCustom.target||[]);
+  const box=$('#planTargetCustom');
+  box.innerHTML = list.map((x,i)=>`<div class="plan-check on">
+    <div class="cb">✓</div>
+    <div class="cn">${esc(x.n)}${x.d?`<span class="cm">${esc(x.d)}</span>`:''}</div>
+    <span class="pc-del" data-i="${i}">✕</span>
+  </div>`).join('');
+  box.querySelectorAll('.pc-del').forEach(x=>x.addEventListener('click',()=>{
+    const p=cur();
+    p.planCustom.target.splice(+x.dataset.i,1);
+    savePatients(); renderPlan();
+  }));
+}
+function suggestFor(q){
+  const ql=String(q||'').toLowerCase();
+  const all=ACTION_KB.concat(PHYSIO_LIB.map(x=>({n:x.name, how:x.mech})));
+  return all.filter(a=>a.n.toLowerCase().includes(ql)||ql.includes(a.n.toLowerCase())).slice(0,6);
+}
+function bindSuggs(inputId, suggId, onPick){
+  const inp=$(inputId), sg=$(suggId);
+  inp.addEventListener('input',()=>{
+    const q=inp.value.trim();
+    if(!q){ sg.style.display='none'; return; }
+    const hits=suggestFor(q);
+    sg.style.display=hits.length?'block':'none';
+    sg.innerHTML=hits.map(a=>`<div class="sugg" data-n="${esc(a.n)}" data-how="${esc(a.how)}">${esc(a.n)}<small>${esc(a.how.slice(0,46))}${a.how.length>46?'…':''}</small></div>`).join('');
+    sg.querySelectorAll('.sugg').forEach(s=>s.addEventListener('click',()=>{
+      inp.value=s.dataset.n;
+      sg.style.display='none';
+      onPick(s.dataset.n, s.dataset.how);
+    }));
+  });
+  inp.addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    e.preventDefault();
+    const n=inp.value.trim();
+    if(!n){ sg.style.display='none'; return; }
+    const hit=ACTION_KB.find(a=>a.n===n)||ACTION_KB.find(a=>a.n.toLowerCase()===n.toLowerCase())||ACTION_KB.find(a=>a.n.toLowerCase().includes(n.toLowerCase()));
+    const pl=PHYSIO_LIB.find(x=>x.name===n);
+    onPick(n, (hit&&hit.how)||(pl&&pl.mech)||'');
+    inp.value='';
+    sg.style.display='none';
+  });
+}
+function addPlanCustom(cat, n, how){
+  const p=cur();
+  p.planCustom=p.planCustom||{target:[],physio:[],exercise:[],manual:[]};
+  p.planCustom[cat]=p.planCustom[cat]||[];
+  if(p.planCustom[cat].some(x=>x.n===n)){ toast('已添加'); return; }
+  p.planCustom[cat].push({n, d:how||''});
+  savePatients(); renderPlan();
+}
+function bindPlanCustom(){
+  bindSuggs('#physioCust','#physioSugg',(n,how)=>addPlanCustom('physio',n,how));
+  bindSuggs('#exCust','#exSugg',(n,how)=>addPlanCustom('exercise',n,how));
+  bindSuggs('#manualCust','#manualSugg',(n,how)=>addPlanCustom('manual',n,how));
+  document.querySelectorAll('[data-addplan]').forEach(b=>b.addEventListener('click',()=>{
+    const cat=b.dataset.addplan;
+    const inputId = cat==='target'?'#targetCust':cat==='physio'?'#physioCust':cat==='exercise'?'#exCust':'#manualCust';
+    const n=$(inputId).value.trim();
+    if(!n){ toast('请输入内容'); return; }
+    const hit=ACTION_KB.find(a=>a.n===n)||ACTION_KB.find(a=>a.n.toLowerCase()===n.toLowerCase())||ACTION_KB.find(a=>a.n.toLowerCase().includes(n.toLowerCase()));
+    const pl=PHYSIO_LIB.find(x=>x.name===n);
+    addPlanCustom(cat, n, (hit&&hit.how)||(pl&&pl.mech)||'');
+    $(inputId).value='';
+  }));
+  ['#targetCust','#physioCust','#exCust','#manualCust'].forEach(sel=>{
+    const inp=$(sel);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); const b=document.querySelector('[data-addplan="'+inp.id.replace('Cust','')+'"]'); if(b) b.click(); } });
+  });
 }
 $('#btnPhysioLib').addEventListener('click',()=>{ renderPhysioLib(); $('#physioMask').classList.add('show'); });
 function renderPhysioLib(){
@@ -2754,6 +2925,7 @@ function buildReportHTML(){
   const planHTML = `
     <h4>康复方案（${esc(plan.disease)} · ${esc(plan.stage)}）</h4>
     ${kv('治疗目标', esc(plan.target)||'—')}
+    ${plan.goals&&plan.goals.length?kv('自定义目标', esc(plan.goals.join('；'))):''}
     ${plan.physio.length?kv('物理因子治疗', esc(itemTxt('physio', plan.physio))):''}
     ${plan.exercise.length?kv('运动疗法', esc(itemTxt('exercise', plan.exercise))):''}
     ${plan.manual.length?kv('手法治疗', esc(itemTxt('manual', plan.manual))):''}
@@ -3085,6 +3257,7 @@ $('#searchInput').addEventListener('input', ()=>{
 /* ================= init ================= */
 bindComplaint();
 bindObjective();
+bindPlanCustom();
 renderScaleFilter();
 refreshAll();
 </script>
