@@ -305,6 +305,8 @@ input[type=range]::-webkit-slider-thumb{
 }
 .video-box .play{width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .video-box .vb-note{font-size:12px;opacity:.85;padding:0 20px;text-align:center}
+.video-box .bili-btn{display:inline-flex;align-items:center;gap:6px;background:#fb7299;color:#fff;padding:10px 20px;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none;box-shadow:0 4px 14px rgba(251,114,153,.35);margin-top:2px}
+.video-box .bili-btn:hover{opacity:.9}
 .modal .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6}
 /* patient list */
 .plist .pcard{
@@ -724,7 +726,7 @@ input[type=range]::-webkit-slider-thumb{
       <div class="play">▶</div>
       <div class="vb-note" id="videoNote">演示视频占位</div>
     </div>
-    <div class="hint">注：把视频文件放进本地 videos 目录并重新部署即可显示（见代码顶部说明）。</div>
+    <div class="hint">注：点击"在哔哩哔哩观看"将跳转到 B 站视频页，无需本地存放视频。</div>
   </div>
 </div>
 
@@ -764,24 +766,37 @@ input[type=range]::-webkit-slider-thumb{
 
 <script>
 /* ============================================================
-   演示视频：
-   - 本地路径 videos/ 下的 mp4 会在部署时自动上传到线上
-   - url 填相对路径（如 'videos/slr.mp4'）即可，无需改地址
-   - url 留空则显示占位
+   演示视频：直接跳转哔哩哔哩观看（link=B站视频链接）
+   - 有 link：弹窗显示"在哔哩哔哩观看"跳转按钮
+   - 无 link：显示"视频待补充"
    ============================================================ */
 const VIDEOS = {
-  slr:   { name: '直腿抬高试验',   desc: '腰椎间盘突出筛查',
-    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/slr.mp4',
-    fallback: 'videos/slr.mp4' },
-  slump: { name: 'Slump 试验',     desc: '神经张力测试',
-    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/slump.mp4',
-    fallback: 'videos/slump.mp4' },
-  fad:   { name: 'FADIR 试验',     desc: '髋关节撞击筛查',
-    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/fad.mp4',
-    fallback: 'videos/fad.mp4' },
+  slr:      { name: '直腿抬高试验', desc: '腰椎间盘突出筛查',
+    link: 'https://www.bilibili.com/video/BV1tPqRBfEf2' },
+  bragard:  { name: '直腿抬高加强试验（Bragard）', desc: '坐骨神经受压加强验证',
+    link: 'https://www.bilibili.com/video/BV14nvqBTE1n' },
+  slump:    { name: 'Slump 试验',   desc: '神经张力测试',
+    link: 'https://www.bilibili.com/video/BV1EY4y1Z7db' },
+  faber:    { name: '4 字试验（Faber/Patrick）', desc: '髋关节/骶髂关节病变筛查',
+    link: 'https://www.bilibili.com/video/BV1dP4y1Y7ef' },
+  fad:      { name: 'FADIR 试验',   desc: '髋关节撞击筛查',
+    link: 'https://www.bilibili.com/video/BV1T6mqBqEx1' },
+  sacrum:   { name: '骶髂关节挤压/分离试验', desc: '骶髂关节功能紊乱筛查',
+    link: 'https://www.bilibili.com/video/BV1znJtz3EwD' },
+  femoral:  { name: '股神经牵拉试验', desc: 'L2-L4 神经根受累筛查',
+    link: 'https://www.bilibili.com/video/BV1g8411s7VU' },
+  mcmurray: { name: 'McMurray 试验', desc: '半月板损伤筛查',
+    link: 'https://www.bilibili.com/video/BV1vv4y1o78g' },
+  lachman:  { name: 'Lachman 试验', desc: '前交叉韧带（ACL）损伤筛查',
+    link: 'https://www.bilibili.com/video/BV14JqbBXEdx' },
+  drawer:   { name: '前后抽屉试验', desc: 'ACL/PCL 损伤筛查',
+    link: 'https://www.bilibili.com/video/BV1bA4y1D7Wu' },
+  spurling: { name: '压顶/椎间孔挤压试验（Spurling）', desc: '颈神经根受压筛查',
+    link: 'https://www.bilibili.com/video/BV1ZfmqBWEEy' },
+  adson:    { name: 'Adson 试验（胸廓出口）', desc: '胸廓出口综合征筛查',
+    link: 'https://www.bilibili.com/video/BV1sN411B7iv' },
   thompson: { name: 'Thompson 试验', desc: '跟腱断裂筛查',
-    url: 'https://gitee.com/yang-guanjun/rehab-videos/raw/master/videos/thompson.mp4',
-    fallback: 'videos/thompson.mp4' }
+    link: 'https://www.bilibili.com/video/BV1weBAB3Ebx' }
 };
 
 /* ---- 通用 ---- */
@@ -813,37 +828,37 @@ const SPECIAL_EXAMS = [
   { id:'slr',      name:'直腿抬高试验（SLR）', part:'腰部', video:'slr',
     steps:'患者仰卧，检查者一手握踝、一手置膝上保持伸直，缓慢抬高患肢至 70°。',
     positive:'出现坐骨神经放射痛或加强试验阳性，提示腰椎间盘突出（L4-S1）或坐骨神经痛。' },
-  { id:'bragard',  name:'直腿抬高加强试验（Bragard）', part:'腰部',
+  { id:'bragard',  name:'直腿抬高加强试验（Bragard）', part:'腰部', video:'bragard',
     steps:'在 SLR 基础上，将足背屈使坐骨神经张力进一步增加。',
     positive:'放射痛加重为阳性，提示坐骨神经受压，加强诊断特异性。' },
   { id:'slump',    name:'Slump 试验（屈颈试验）', part:'腰部', video:'slump',
     steps:'患者坐位、颈部屈曲，膝关节伸直，踝背屈，观察症状诱发。',
     positive:'诱发出神经根性症状，提示神经张力增高（神经动力学障碍）。' },
-  { id:'faber',    name:'4 字试验（Faber/Patrick）', part:'髋部',
+  { id:'faber',    name:'4 字试验（Faber/Patrick）', part:'髋部', video:'faber',
     steps:'患者仰卧，一侧踝置于对侧膝上，检查者下压屈曲膝侧。',
     positive:'同侧髋部或骶髂关节疼痛，提示髋关节或骶髂关节病变。' },
   { id:'fadir',    name:'FADIR 试验（髋前撞击）', part:'髋部', video:'fad',
     steps:'屈髋屈膝并内收内旋，模拟撞击动作。',
     positive:'腹股沟区疼痛，提示髋关节撞击综合征或盂唇损伤。' },
-  { id:'sacrum',   name:'骶髂关节挤压/分离试验', part:'骶髂',
+  { id:'sacrum',   name:'骶髂关节挤压/分离试验', part:'骶髂', video:'sacrum',
     steps:'患者侧卧，加压骶骨；或仰卧下压双侧髂前上棘使其分离。',
     positive:'骶髂区疼痛，提示骶髂关节功能紊乱。' },
-  { id:'femoral',  name:'股神经牵拉试验', part:'腰部',
+  { id:'femoral',  name:'股神经牵拉试验', part:'腰部', video:'femoral',
     steps:'患者俯卧，屈膝并后伸髋，牵拉股神经。',
     positive:'大腿前侧放射痛，提示 L2-L4 神经根受累。' },
-  { id:'mcmurray', name:'McMurray 试验', part:'膝部',
+  { id:'mcmurray', name:'McMurray 试验', part:'膝部', video:'mcmurray',
     steps:'患者仰卧屈膝，内外旋小腿同时伸膝，触诊关节线。',
     positive:'关节线疼痛或弹响，提示半月板损伤。' },
-  { id:'lachman',  name:'Lachman 试验', part:'膝部',
+  { id:'lachman',  name:'Lachman 试验', part:'膝部', video:'lachman',
     steps:'屈膝 20-30°，固定股骨，向前牵拉胫骨。',
     positive:'胫骨前移增加伴软性终点，提示前交叉韧带（ACL）损伤。' },
-  { id:'drawer',   name:'前后抽屉试验', part:'膝部',
+  { id:'drawer',   name:'前后抽屉试验', part:'膝部', video:'drawer',
     steps:'屈膝 90° 坐位，双手握胫骨上端向前/向后推拉。',
     positive:'前移增加提示 ACL 损伤；后移增加提示 PCL 损伤。' },
-  { id:'spurling', name:'压顶/椎间孔挤压试验（Spurling）', part:'颈椎',
+  { id:'spurling', name:'压顶/椎间孔挤压试验（Spurling）', part:'颈椎', video:'spurling',
     steps:'患者头偏向患侧并后伸，检查者垂直向下压头顶。',
     positive:'患侧上肢放射痛或麻木，提示颈神经根受压。' },
-  { id:'adson',    name:'Adson 试验（胸廓出口）', part:'肩部',
+  { id:'adson',    name:'Adson 试验（胸廓出口）', part:'肩部', video:'adson',
     steps:'患者深吸气屏气，头转向患侧，检查者触桡动脉。',
     positive:'桡动脉搏动减弱/消失，提示胸廓出口综合征。' },
   { id:'thompson', name:'Thompson 试验（跟腱挤压）', part:'踝部', video:'thompson',
@@ -1522,10 +1537,10 @@ const PLAN_STAGES = ['急性期(0-2周)','亚急性期(2-6周)','慢性期(6周�
 
 /* 演示视频（方案页）：素材待补充，点击提示 */
 const DEMO_VIDEOS = [
-  { name:'腰痛急性期处理要点',   disease:'腰痛' },
-  { name:'McKenzie 伸展体操示范', disease:'腰痛' },
+  { name:'腰痛急性期处理要点',   disease:'腰痛', link:'https://www.bilibili.com/video/BV1gbGGzKEs1' },
+  { name:'McKenzie 伸展体操示范', disease:'腰痛', link:'https://www.bilibili.com/video/BV1PvKLeoEru' },
   { name:'腰痛核心稳定性训练',   disease:'腰痛' },
-  { name:'网球肘急性期处理',     disease:'网球肘' }
+  { name:'网球肘急性期处理',     disease:'网球肘', link:'https://www.bilibili.com/video/BV1nV411p7Bq' }
 ];
 
 /* 主诊断下拉：d=方案疾病；s=自动分期（脑卒中类按病期带出） */
@@ -2447,20 +2462,16 @@ function bindObjective(){
 
 function openVideo(id){
   const v=VIDEOS[id];
+  if(!v){ toast('该检查暂无演示视频'); return; }
   $('#videoTitle').textContent=v.name;
   const box=$('#videoBox');
-  const candidates=[v.url, v.fallback].filter(Boolean);
-  let ci=0;
-  const play=()=>{
-    if(ci>=candidates.length){
-      box.innerHTML=`<div class="play">▶</div><div class="vb-note">${v.name} · ${v.desc}<br><br>视频加载失败，请检查网络后重试</div>`;
-      return;
-    }
-    const src=candidates[ci++];
-    box.innerHTML=`<video src="${esc(src)}" controls autoplay style="width:100%;height:100%;border-radius:12px"></video>`;
-    box.querySelector('video').addEventListener('error', play);
-  };
-  play();
+  if(v.link){
+    box.innerHTML=`<div class="play">▶</div>
+      <div class="vb-note">${esc(v.name)} · ${esc(v.desc)}<br><br>前往哔哩哔哩观看完整演示</div>
+      <a class="btn bili-btn" href="${esc(v.link)}" target="_blank" rel="noopener">在哔哩哔哩观看 ▶</a>`;
+  }else{
+    box.innerHTML=`<div class="play">▶</div><div class="vb-note">${esc(v.name)} · 演示视频待补充</div>`;
+  }
   $('#videoMask').classList.add('show');
 }
 $('#videoClose').addEventListener('click',()=>$('#videoMask').classList.remove('show'));
@@ -2717,12 +2728,14 @@ function renderPlan(){
   const vg=$('#planVideos');
   $('#planVideoDesc').textContent = vids.length?`当前方案相关演示视频（${p.planDisease}）`:'该疾病暂未配置演示视频';
   vg.innerHTML = vids.map(v=>`
-    <div class="vcard" data-demo="${esc(v.name)}">
+    <div class="vcard" data-link="${esc(v.link||'')}">
       <div class="thumb">▶</div>
-      <div class="vt">${esc(v.name)}<small>素材待补充</small></div>
+      <div class="vt">${esc(v.name)}<small>${v.link?'点击跳转 B站观看':'素材待补充'}</small></div>
     </div>`).join('') || '';
   vg.querySelectorAll('.vcard').forEach(c=>c.addEventListener('click',()=>{
-    toast('演示视频素材待补充（见 design-trace 待补清单）');
+    const link=c.dataset.link;
+    if(link) window.open(link,'_blank');
+    else toast('演示视频素材待补充（见 design-trace 待补清单）');
   }));
 }
 function renderPlanCheck(selId, cat, arr){
