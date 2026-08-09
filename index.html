@@ -201,6 +201,14 @@ input[type=range]::-webkit-slider-thumb{
 /* 自定义选项删除 chips */
 .cust-chips{margin-top:8px}
 .cust-chips .tchip{background:#fff1f1;color:var(--danger)}
+/* 选项折叠管理面板 */
+.optpanel{border:1px dashed var(--line);border-radius:12px;margin-top:8px;overflow:hidden;background:#f8fbfe}
+.optpanel-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:600;user-select:none}
+.optpanel-head .opa{transition:transform .2s;font-size:11px}
+.optpanel.open .opa{transform:rotate(90deg)}
+.optpanel-body{display:none;padding:6px 12px 12px;border-top:1px dashed var(--line)}
+.optpanel.open .optpanel-body{display:block}
+.optpanel-body .tchip{margin:4px 4px 0 0}
 /* 特殊检查卡片 */
 .psearch{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:#fbfcfe;outline:none;margin-bottom:10px}
 .psearch:focus{border-color:var(--primary)}
@@ -2010,6 +2018,15 @@ function visibleOf(key, presets){
   const hide=new Set(c.hide);
   return (presets||[]).filter(v=>!hide.has(v)).concat(c.cust.slice());
 }
+function globalAddObj(key, o){
+  const c=globalConf(key);
+  if(!c.cust.some(x=>x&&x.n===o.n)){ c.cust.push(o); saveGlobalOpts(); }
+}
+function globalDelByName(key, name, presets){
+  const c=globalConf(key);
+  if(Array.isArray(presets)&&presets.indexOf(name)>=0){ if(c.hide.indexOf(name)<0){ c.hide.push(name); saveGlobalOpts(); } }
+  else{ c.cust=c.cust.filter(x=>!(x&&x.n===name)); saveGlobalOpts(); }
+}
 function saveGlobalOpts(){ try{ localStorage.setItem('rehab_globalOpts_v1', JSON.stringify(GLOBAL_OPTS)); }catch(e){} }
 (function migrateCustomOpts(){
   try{
@@ -2017,13 +2034,23 @@ function saveGlobalOpts(){ try{ localStorage.setItem('rehab_globalOpts_v1', JSON
     if(!raw||!Array.isArray(raw)) return;
     let changed=false;
     raw.forEach(p=>{
-      if(!p||!p.customOpts||typeof p.customOpts!=='object') return;
-      Object.keys(p.customOpts).forEach(k=>{
-        const arr=p.customOpts[k];
-        if(!Array.isArray(arr)) return;
-        const g=globalList(k);
-        arr.forEach(v=>{ if(v!=null&&g.indexOf(v)<0){ g.push(v); changed=true; } });
-      });
+      if(!p) return;
+      if(p.customOpts&&typeof p.customOpts==='object'){
+        Object.keys(p.customOpts).forEach(k=>{
+          const arr=p.customOpts[k];
+          if(!Array.isArray(arr)) return;
+          const g=globalList(k);
+          arr.forEach(v=>{ if(v!=null&&g.indexOf(v)<0){ g.push(v); changed=true; } });
+        });
+      }
+      if(p.planCustom&&typeof p.planCustom==='object'){
+        ['target','physio','exercise','manual'].forEach(k=>{
+          const arr=p.planCustom[k];
+          if(!Array.isArray(arr)) return;
+          const g=globalConf('plan'+k);
+          arr.forEach(x=>{ if(x&&x.n&&!g.cust.some(y=>y.n===x.n)){ g.cust.push({n:x.n, d:x.d||''}); changed=true; } });
+        });
+      }
     });
     if(changed) saveGlobalOpts();
   }catch(e){}
@@ -2046,9 +2073,9 @@ function defaultPlanSel(p){
   return { physio:(st.physio||[]).map(x=>x.n), exercise:(st.exercise||[]).map(x=>x.n), manual:(st.manual||[]).map(x=>x.n) };
 }
 function planDesc(cat, name){
+  const g=(globalList('plan'+cat)||[]).find(x=>x.n===name);
+  if(g&&g.d) return g.d;
   const p=cur();
-  const ci=((p.planCustom||{})[cat]||[]).find(x=>x.n===name);
-  if(ci&&ci.d) return ci.d;
   const st=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛'])[p.planStage]||{};
   const def=(st[cat]||[]).find(x=>x.n===name);
   if(def&&def.d) return def.d;
@@ -2063,13 +2090,13 @@ function buildPlanLive(p){
   const dp=(DISEASE_PLANS[p.planDisease]||DISEASE_PLANS['腰痛']);
   const st=dp[p.planStage]||dp[PLAN_STAGES[0]];
   const sel=getPlanSel(p);
-  const cust=(cat)=>(p.planCustom||{})[cat]||[];
+  const cust=(cat)=>globalList('plan'+cat);
   return {
     disease:p.planDisease, stage:p.planStage, target:st.target||'',
     goals:cust('target').map(x=>x.d?x.n+'：'+x.d:x.n),
-    physio:sel.physio.concat(cust('physio').map(x=>x.n)),
-    exercise:sel.exercise.concat(cust('exercise').map(x=>x.n)),
-    manual:sel.manual.concat(cust('manual').map(x=>x.n)),
+    physio:Array.from(new Set(sel.physio.concat(cust('physio').map(x=>x.n)))),
+    exercise:Array.from(new Set(sel.exercise.concat(cust('exercise').map(x=>x.n)))),
+    manual:Array.from(new Set(sel.manual.concat(cust('manual').map(x=>x.n)))),
     custom:(p.customTher||[]).slice(),
     short:st.short||[], long:st.long||[], home:st.home||[], video:st.video||''
   };
@@ -2320,17 +2347,24 @@ function clearCustomIfSelected(key, v, p){
   else if(key==='temp' && p.objective.temp===v) p.objective.temp='';
   else if(key==='diag' && p.diagnosis.type===v) p.diagnosis.type='';
 }
+function bindOptPanel(root){
+  root.querySelectorAll('.optpanel-head').forEach(h=>h.addEventListener('click',()=>{ h.closest('.optpanel').classList.toggle('open'); }));
+}
 function renderCustChips(key, refresh){ renderOptChips(key, presetFor(key), refresh); }
 function renderOptChips(key, presets, refresh, labelOf){
   const list=visibleOf(key, presets);
   const box=document.getElementById(key+'Chips');
   if(!box) return;
-  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">选项：</span>`+list.map(v=>`<span class="tchip">${esc(labelOf?labelOf(v):v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
+  box.innerHTML = list.length?`<div class="optpanel">
+    <div class="optpanel-head"><span>选项管理（${list.length}）</span><span class="opa">▸</span></div>
+    <div class="optpanel-body">${list.map(v=>`<span class="tchip">${esc(labelOf?labelOf(v):v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join('')}</div>
+  </div>`:'';
   box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
     globalDel(key, x.dataset.del, presets);
     clearCustomIfSelected(key, x.dataset.del, cur());
     if(refresh) refresh();
   }));
+  bindOptPanel(box);
 }
 function objKey(cat, e){
   if(!e) return '';
@@ -2840,59 +2874,61 @@ function renderPlan(){
 }
 function renderPlanCheck(selId, cat, arr){
   const box=$(selId);
-  const cust=(cur().planCustom||{})[cat]||[];
-  const builtins = arr.map(name=>{
-    const d=planDesc(cat,name);
-    return `<div class="plan-check on" data-cat="${cat}" data-name="${esc(name)}">
-      <div class="cb">✓</div>
-      <div class="cn">${esc(name)}${d?`<span class="cm">${esc(d)}</span>`:''}</div>
-    </div>`;
-  }).join('');
-  const customs = cust.map(it=>`
-    <div class="plan-check on" data-cat="${cat}" data-custom="1" data-name="${esc(it.n)}">
-      <div class="cb">✓</div>
-      <div class="cn">${esc(it.n)}${it.d?`<span class="cm">${esc(it.d)}</span>`:''}</div>
-      <span class="pc-del" data-del="${esc(it.n)}">✕</span>
-    </div>`).join('');
-  box.innerHTML = builtins + customs;
-  box.querySelectorAll('.plan-check[data-custom]').forEach(c=>{
-    const del=c.querySelector('.pc-del');
-    if(del) del.addEventListener('click',e=>{
-      e.stopPropagation();
-      const p=cur();
-      p.planCustom[cat]=(p.planCustom[cat]||[]).filter(x=>x.n!==del.dataset.del);
-      savePatients(); renderPlan();
-    });
-  });
-  box.querySelectorAll('.plan-check:not([data-custom])').forEach(c=>c.addEventListener('click',()=>{
-    const p=cur(); const sel=getPlanSel(p);
-    const cat=c.dataset.cat, name=c.dataset.name;
-    const i=sel[cat].indexOf(name);
-    if(i>=0){ sel[cat].splice(i,1); c.classList.remove('on'); c.querySelector('.cb').textContent=''; }
-    else { sel[cat].push(name); c.classList.add('on'); c.querySelector('.cb').textContent='✓'; }
+  const p=cur();
+  const disease=(p.planDisease||'腰痛'), stage=(p.planStage||'');
+  const dkey='plan'+cat+'__'+disease+'__'+stage;
+  const defs=((DISEASE_PLANS[disease]||DISEASE_PLANS['腰痛'])[stage]||{})[cat]||[];
+  const presets=defs.map(x=>x.n);
+  const hidden=new Set(globalConf(dkey).hide);
+  const presetsVis=defs.filter(x=>!hidden.has(x.n));
+  const gcust=globalList('plan'+cat).filter(x=>!presetsVis.some(q=>q.n===x.n));
+  const all=presetsVis.concat(gcust);
+  box.innerHTML = `<div class="optpanel">
+    <div class="optpanel-head"><span>方案项目（${all.length}）</span><span class="opa">▸</span></div>
+    <div class="optpanel-body">
+      ${all.map(x=>{
+        const on=arr.indexOf(x.n)>=0;
+        return `<div class="plan-check ${on?'on':''}" data-cat="${cat}" data-name="${esc(x.n)}">
+          <div class="cb">${on?'✓':''}</div>
+          <div class="cn">${esc(x.n)}${x.d?`<span class="cm">${esc(x.d)}</span>`:''}</div>
+          <span class="pc-del" data-del="${esc(x.n)}">✕</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  box.querySelectorAll('.plan-check').forEach(c=>c.addEventListener('click',()=>{
+    const name=c.dataset.name, cat2=c.dataset.cat;
+    const sel=getPlanSel(cur());
+    const i=sel[cat2].indexOf(name);
+    if(i>=0){ sel[cat2].splice(i,1); c.classList.remove('on'); c.querySelector('.cb').textContent=''; }
+    else { sel[cat2].push(name); c.classList.add('on'); c.querySelector('.cb').textContent='✓'; }
     savePatients();
   }));
-  const all=(DISEASE_PLANS[cur().planDisease]||DISEASE_PLANS['腰痛'])[cur().planStage]||{};
-  const defs=(all[cat]||[]).map(x=>x.n);
-  const missing=defs.filter(n=>!arr.includes(n));
-  if(missing.length){
-    box.innerHTML += `<div class="empty" style="padding:8px 0;font-size:12px">未勾选：${missing.join('、')}</div>`;
-  }
+  box.querySelectorAll('.pc-del').forEach(del=>del.addEventListener('click',e=>{
+    e.stopPropagation();
+    const name=del.dataset.del;
+    if(presets.indexOf(name)>=0) globalDel(dkey, name, presets);
+    else globalDelByName('plan'+cat, name, []);
+    saveGlobalOpts(); renderPlan();
+  }));
+  bindOptPanel(box);
 }
 function renderTargetCustom(){
-  const p=cur();
-  const list=(p.planCustom.target||[]);
+  const list=globalList('plantarget');
   const box=$('#planTargetCustom');
-  box.innerHTML = list.map((x,i)=>`<div class="plan-check on">
-    <div class="cb">✓</div>
-    <div class="cn">${esc(x.n)}${x.d?`<span class="cm">${esc(x.d)}</span>`:''}</div>
-    <span class="pc-del" data-i="${i}">✕</span>
-  </div>`).join('');
+  box.innerHTML = `<div class="optpanel">
+    <div class="optpanel-head"><span>自定义目标（${list.length}）</span><span class="opa">▸</span></div>
+    <div class="optpanel-body">${list.map((x,i)=>`<div class="plan-check on">
+      <div class="cb">✓</div>
+      <div class="cn">${esc(x.n)}${x.d?`<span class="cm">${esc(x.d)}</span>`:''}</div>
+      <span class="pc-del" data-i="${i}">✕</span>
+    </div>`).join('')}</div>
+  </div>`;
   box.querySelectorAll('.pc-del').forEach(x=>x.addEventListener('click',()=>{
-    const p=cur();
-    p.planCustom.target.splice(+x.dataset.i,1);
-    savePatients(); renderPlan();
+    globalList('plantarget').splice(+x.dataset.i,1);
+    saveGlobalOpts(); renderPlan();
   }));
+  bindOptPanel(box);
 }
 function suggestFor(q){
   const ql=String(q||'').toLowerCase();
@@ -2926,11 +2962,9 @@ function bindSuggs(inputId, suggId, onPick){
   });
 }
 function addPlanCustom(cat, n, how){
-  const p=cur();
-  p.planCustom=p.planCustom||{target:[],physio:[],exercise:[],manual:[]};
-  p.planCustom[cat]=p.planCustom[cat]||[];
-  if(p.planCustom[cat].some(x=>x.n===n)){ toast('已添加'); return; }
-  p.planCustom[cat].push({n, d:how||''});
+  if(globalList('plan'+cat).some(x=>x.n===n)){ toast('已添加'); return; }
+  globalAddObj('plan'+cat, {n, d:how||''});
+  if(cat!=='target'){ const sel=getPlanSel(cur()); if(sel[cat].indexOf(n)<0) sel[cat].push(n); }
   savePatients(); renderPlan();
 }
 function bindPlanCustom(){
