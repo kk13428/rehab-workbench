@@ -1962,6 +1962,28 @@ function makePatient(name,age,gender,complaint,vas){
     createdAt: Date.now()
   });
 }
+/* ---- 全局自定义选项（跨患者共享）：painNature/ashworth/temp/reflexFind/sensoryFind/量表题号__idx ---- */
+let GLOBAL_OPTS = {};
+try{ const _g=JSON.parse(localStorage.getItem('rehab_globalOpts_v1')||'null'); if(_g&&typeof _g==='object') GLOBAL_OPTS=_g; }catch(e){}
+function globalList(key){ if(!Array.isArray(GLOBAL_OPTS[key])) GLOBAL_OPTS[key]=[]; return GLOBAL_OPTS[key]; }
+function saveGlobalOpts(){ try{ localStorage.setItem('rehab_globalOpts_v1', JSON.stringify(GLOBAL_OPTS)); }catch(e){} }
+(function migrateCustomOpts(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    if(!raw||!Array.isArray(raw)) return;
+    let changed=false;
+    raw.forEach(p=>{
+      if(!p||!p.customOpts||typeof p.customOpts!=='object') return;
+      Object.keys(p.customOpts).forEach(k=>{
+        const arr=p.customOpts[k];
+        if(!Array.isArray(arr)) return;
+        const g=globalList(k);
+        arr.forEach(v=>{ if(v!=null&&g.indexOf(v)<0){ g.push(v); changed=true; } });
+      });
+    });
+    if(changed) saveGlobalOpts();
+  }catch(e){}
+})();
 function loadPatients(){
   try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw).map(normalize); }catch(e){}
   return [];
@@ -2184,8 +2206,7 @@ function popSel(sel, opts, val){
   sel.innerHTML = '<option value="">请选择…</option>' + opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('');
 }
 function refreshCustomSelect(selId, storeKey, val){
-  const p=cur();
-  const opts=presetFor(storeKey).concat((p.customOpts||{})[storeKey]||[]);
+  const opts=presetFor(storeKey).concat(globalList(storeKey));
   popSel($(selId), opts, val);
 }
 function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
@@ -2199,10 +2220,8 @@ function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
     const v=$(custId).value.trim();
     const sel=$(selId);
     if(!v){ $(custId).style.display='none'; return; }
-    const p=cur();
-    p.customOpts=p.customOpts||{};
-    p.customOpts[storeKey]=p.customOpts[storeKey]||[];
-    if(p.customOpts[storeKey].indexOf(v)<0) p.customOpts[storeKey].push(v);
+    if(globalList(storeKey).indexOf(v)<0) globalList(storeKey).push(v);
+    saveGlobalOpts();
     $(custId).value=''; $(custId).style.display='none';
     refreshCustomSelect(selId, storeKey, v);
     sel.value=v;
@@ -2219,16 +2238,14 @@ function clearCustomIfSelected(key, v, p){
   else if(key==='temp' && p.objective.temp===v) p.objective.temp='';
 }
 function renderCustChips(key, refresh){
-  const p=cur();
-  const list=(p.customOpts||{})[key]||[];
+  const list=globalList(key);
   const box=document.getElementById(key+'Chips');
   if(!box) return;
   box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
   box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
-    const p=cur();
-    p.customOpts[key]=(p.customOpts[key]||[]).filter(v=>v!==x.dataset.del);
-    clearCustomIfSelected(key, x.dataset.del, p);
-    savePatients();
+    GLOBAL_OPTS[key]=(GLOBAL_OPTS[key]||[]).filter(v=>v!==x.dataset.del);
+    clearCustomIfSelected(key, x.dataset.del, cur());
+    saveGlobalOpts();
     if(refresh) refresh();
   }));
 }
@@ -2309,15 +2326,13 @@ function renderMmt(){
   updateSum('#mmtSum', cur().objective.mmt.length);
 }
 function renderFindChips(key, cat){
-  const p=cur();
-  const list=(p.customOpts||{})[key]||[];
+  const list=globalList(key);
   const box=document.getElementById(key+'Chips');
   if(!box) return;
   box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
   box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
-    const p=cur();
-    p.customOpts[key]=(p.customOpts[key]||[]).filter(v=>v!==x.dataset.del);
-    savePatients(); renderObjective();
+    GLOBAL_OPTS[key]=(GLOBAL_OPTS[key]||[]).filter(v=>v!==x.dataset.del);
+    saveGlobalOpts(); renderObjective();
   }));
 }
 document.querySelectorAll('[data-findadd]').forEach(b=>b.addEventListener('click',()=>{
@@ -2325,17 +2340,15 @@ document.querySelectorAll('[data-findadd]').forEach(b=>b.addEventListener('click
   const key = cat==='reflex'?'reflexFind':'sensoryFind';
   const v=$('#'+cat+'FindCust').value.trim();
   if(!v){ toast('请输入结果'); return; }
-  const p=cur();
-  p.customOpts=p.customOpts||{};
-  p.customOpts[key]=p.customOpts[key]||[];
-  if(p.customOpts[key].indexOf(v)<0) p.customOpts[key].push(v);
+  if(globalList(key).indexOf(v)<0) globalList(key).push(v);
+  saveGlobalOpts();
   $('#'+cat+'FindCust').value='';
-  savePatients(); renderObjective();
+  renderObjective();
 }));
 ['reflex','sensory'].forEach(cat=>{ const el=$('#'+cat+'FindCust'); el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ document.querySelector('[data-findadd="'+cat+'"]').click(); } }); });
 function renderReflex(){
   const box=$('#reflexRows');
-  const finds=REFLEX_FINDS.concat(cur().customOpts.reflexFind||[]);
+  const finds=REFLEX_FINDS.concat(globalList('reflexFind'));
   box.innerHTML = objRows('reflex', REFLEX_DEFS, (k,on,e)=>{
     e=e||{name:k,find:'正常'};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
@@ -2350,7 +2363,7 @@ function renderReflex(){
 }
 function renderSensory(){
   const box=$('#sensoryRows');
-  const finds=SENSORY_FINDS.concat(cur().customOpts.sensoryFind||[]);
+  const finds=SENSORY_FINDS.concat(globalList('sensoryFind'));
   box.innerHTML = objRows('sensory', SENSORY_DEFS, (k,on,e)=>{
     e=e||{type:k,find:'正常',site:''};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
@@ -2554,7 +2567,7 @@ function renderScaleScores(){
     const itemsHtml=sc.items.map((it,idx)=>{
       if(it.words){
         const arr=Array.isArray(vals[idx])?vals[idx]:[];
-        const cust=(p.customOpts||{})[sid+'__'+idx]||[];
+        const cust=globalList(sid+'__'+idx);
         const words=it.words.concat(cust);
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}</div>
@@ -2568,7 +2581,7 @@ function renderScaleScores(){
       }
       if(it.options){
         const val=typeof vals[idx]==='string'?vals[idx]:'';
-        const cust=(p.customOpts||{})[sid+'__'+idx]||[];
+        const cust=globalList(sid+'__'+idx);
         const opts=it.options.concat(cust.map(c=>({v:c, d:'', custom:true})));
         if(val && !opts.some(o=>o.v===val)) opts.push({v:val, d:'', custom:true});
         return `<div class="score-item">
@@ -2632,9 +2645,9 @@ function renderScaleScores(){
       e.stopPropagation();
       const p=cur(), sid=c.dataset.sid, idx=+c.dataset.idx, v=c.dataset.val;
       const k=sid+'__'+idx;
-      if(p.customOpts && p.customOpts[k]) p.customOpts[k]=p.customOpts[k].filter(x=>x!==v);
+      if(GLOBAL_OPTS[k]) GLOBAL_OPTS[k]=GLOBAL_OPTS[k].filter(x=>x!==v);
       if(p.scores[sid] && p.scores[sid][idx]===v) p.scores[sid][idx]='';
-      savePatients(); renderScaleScores();
+      saveGlobalOpts(); savePatients(); renderScaleScores();
     });
     c.addEventListener('click',()=>{
       const p=cur(), sid=c.dataset.sid, idx=+c.dataset.idx;
@@ -2646,9 +2659,9 @@ function renderScaleScores(){
   box.querySelectorAll('.w-del').forEach(x=>x.addEventListener('click',()=>{
     const p=cur(), sid=x.dataset.sid, idx=+x.dataset.idx, v=x.dataset.del;
     const k=sid+'__'+idx;
-    if(p.customOpts && p.customOpts[k]) p.customOpts[k]=p.customOpts[k].filter(w=>w!==v);
+    if(GLOBAL_OPTS[k]) GLOBAL_OPTS[k]=GLOBAL_OPTS[k].filter(w=>w!==v);
     if(p.scores[sid] && Array.isArray(p.scores[sid][idx])){ const i=p.scores[sid][idx].indexOf(v); if(i>=0) p.scores[sid][idx].splice(i,1); }
-    savePatients(); renderScaleScores();
+    saveGlobalOpts(); savePatients(); renderScaleScores();
   }));
   box.querySelectorAll('.wpill').forEach(c=>c.addEventListener('change',()=>{
     const p=cur(); const sid=c.dataset.sid, idx=+c.dataset.idx;
@@ -2668,10 +2681,9 @@ function renderScaleScores(){
     const v=i.value.trim();
     const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
     if(v){
-      p.customOpts=p.customOpts||{};
       const k=sid+'__'+idx;
-      p.customOpts[k]=p.customOpts[k]||[];
-      if(p.customOpts[k].indexOf(v)<0) p.customOpts[k].push(v);
+      if(globalList(k).indexOf(v)<0) globalList(k).push(v);
+      saveGlobalOpts();
       p.scores[sid]=p.scores[sid]||[];
       p.scores[sid][idx]=v;
       savePatients();
@@ -2686,10 +2698,9 @@ function renderScaleScores(){
     const v=i.value.trim();
     const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
     if(v){
-      p.customOpts=p.customOpts||{};
       const k=sid+'__'+idx;
-      p.customOpts[k]=p.customOpts[k]||[];
-      if(p.customOpts[k].indexOf(v)<0) p.customOpts[k].push(v);
+      if(globalList(k).indexOf(v)<0) globalList(k).push(v);
+      saveGlobalOpts();
       savePatients();
       i.value='';
     }
