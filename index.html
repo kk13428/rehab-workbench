@@ -478,7 +478,7 @@ input[type=range]::-webkit-slider-thumb{
           </select>
           <button type="button" class="mini" id="diagPlus" title="自定义诊断">＋</button>
         </div>
-        <input type="text" id="diagCust" class="sel-cust" placeholder="自定义诊断名，回车添加" style="display:none">
+        <input type="text" id="diagCust" class="sel-cust" placeholder="自定义诊断名，点击＋添加" style="display:none">
         <div id="diagChips" class="cust-chips"></div>
       </div>
       <div class="field">
@@ -503,7 +503,7 @@ input[type=range]::-webkit-slider-thumb{
           <select id="fPainNature"></select>
           <button type="button" class="mini" id="painNaturePlus" title="自定义疼痛性质">＋</button>
         </div>
-        <input type="text" id="painNatureCust" class="sel-cust" placeholder="自定义疼痛性质，回车添加" style="display:none">
+        <input type="text" id="painNatureCust" class="sel-cust" placeholder="自定义疼痛性质，点击＋添加" style="display:none">
         <div id="painNatureChips" class="cust-chips"></div>
       </div>
       <div class="field">
@@ -544,7 +544,7 @@ input[type=range]::-webkit-slider-thumb{
         <div class="step-desc">勾选存在的危险因素</div>
         <div id="histList"></div>
         <div class="selrow" style="margin-top:8px">
-          <input type="text" id="histCust" class="sel-cust" placeholder="自定义既往史，回车添加" style="flex:1">
+          <input type="text" id="histCust" class="sel-cust" placeholder="自定义既往史，点击＋添加" style="flex:1">
           <button type="button" class="mini" id="histPlus" title="添加自定义病史">＋</button>
         </div>
         <div id="historyChips" class="cust-chips"></div>
@@ -559,7 +559,7 @@ input[type=range]::-webkit-slider-thumb{
       <div class="step-desc">勾选已做检查，填写所见</div>
       <div class="img-pills" id="imgTypes"></div>
       <div class="selrow" style="margin-top:6px">
-        <input type="text" id="imgCust" class="sel-cust" placeholder="自定义检查项目，回车添加" style="flex:1">
+        <input type="text" id="imgCust" class="sel-cust" placeholder="自定义检查项目，点击＋添加" style="flex:1">
         <button type="button" class="mini" id="imgPlus" title="添加自定义检查">＋</button>
       </div>
       <div id="imagingChips" class="cust-chips"></div>
@@ -605,7 +605,7 @@ input[type=range]::-webkit-slider-thumb{
           <select id="fAshworth"></select>
           <button type="button" class="mini" id="ashworthPlus" title="自定义分级">＋</button>
         </div>
-        <input type="text" id="ashworthCust" class="sel-cust" placeholder="自定义分级，回车添加" style="display:none">
+        <input type="text" id="ashworthCust" class="sel-cust" placeholder="自定义分级，点击＋添加" style="display:none">
         <div id="ashworthChips" class="cust-chips"></div>
       </div>
     </div>
@@ -645,7 +645,7 @@ input[type=range]::-webkit-slider-thumb{
             <select id="fTemp"></select>
             <button type="button" class="mini" id="tempPlus" title="自定义皮温">＋</button>
           </div>
-          <input type="text" id="tempCust" class="sel-cust" placeholder="自定义皮温，回车添加" style="display:none">
+          <input type="text" id="tempCust" class="sel-cust" placeholder="自定义皮温，点击＋添加" style="display:none">
           <div id="tempChips" class="cust-chips"></div>
         </div>
       </div>
@@ -2260,8 +2260,13 @@ function bindComplaint(){
   $('#fImg').addEventListener('input',e=>{ cur().imaging.findings=e.target.value; savePatients(); });
   $('#diagPlus').addEventListener('click',()=>{
     const inp=$('#diagCust');
-    inp.style.display = inp.style.display==='none'?'block':'none';
-    if(inp.style.display==='block') inp.focus();
+    if(inp.style.display==='block' && inp.value.trim()){
+      const v=inp.value.trim();
+      globalAdd('diag', v);
+      inp.value=''; inp.style.display='none';
+      const p=cur(); p.diagnosis.type=v; p.planSel=defaultPlanSel(p); savePatients();
+      refreshComplaint();
+    } else { inp.style.display='block'; inp.focus(); }
   });
   $('#diagCust').addEventListener('keydown',e=>{
     if(e.key!=='Enter') return;
@@ -2320,23 +2325,24 @@ function refreshCustomSelect(selId, storeKey, val){
   popSel($(selId), opts, val);
 }
 function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
-  $(plusId).addEventListener('click',()=>{
+  const commit=()=>{
     const inp=$(custId);
-    inp.style.display = inp.style.display==='none'?'block':'none';
-    if(inp.style.display==='block') inp.focus();
-  });
-  $(custId).addEventListener('keydown',e=>{
-    if(e.key!=='Enter') return;
-    const v=$(custId).value.trim();
+    const v=inp.value.trim();
     const sel=$(selId);
-    if(!v){ $(custId).style.display='none'; return; }
+    if(!v){ inp.style.display='none'; return; }
     globalAdd(storeKey, v);
-    $(custId).value=''; $(custId).style.display='none';
+    inp.value=''; inp.style.display='none';
     refreshCustomSelect(selId, storeKey, v);
     sel.value=v;
     sel.dispatchEvent(new window.Event('change'));
     if(refresh) refresh();
+  };
+  $(plusId).addEventListener('click',()=>{
+    const inp=$(custId);
+    if(inp.style.display==='block' && inp.value.trim()) commit();
+    else { inp.style.display='block'; inp.focus(); }
   });
+  $(custId).addEventListener('keydown',e=>{ if(e.key==='Enter') commit(); });
 }
 function applyOc(){
   document.querySelectorAll('.oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
@@ -2688,7 +2694,7 @@ function renderScaleScores(){
           <div class="wordpills">${words.map(w=>`<label><input type="checkbox" class="wpill" data-sid="${sid}" data-idx="${idx}" value="${esc(w)}" ${arr.includes(w)?'checked':''}><span>${esc(w)}</span></label>`).join('')}</div>
           ${words.length?`<div class="cust-chips">${words.map(w=>`<span class="tchip">${esc(w)}<span class="x w-del" data-sid="${sid}" data-idx="${idx}" data-del="${esc(w)}">✕</span></span>`).join('')}</div>`:''}
           <div class="selrow" style="margin-top:6px">
-            <input type="text" class="w-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义描述词，回车添加" style="flex:1">
+            <input type="text" class="w-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义描述词，点击＋添加" style="flex:1">
             <button type="button" class="mini w-plus" data-sid="${sid}" data-idx="${idx}" title="添加自定义词">＋</button>
           </div>
         </div>`;
@@ -2711,7 +2717,7 @@ function renderScaleScores(){
             </div>`).join('')}
           </div>
           <div class="selrow" style="margin-top:6px">
-            <input type="text" class="sel-cust s-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义选项，回车添加" style="flex:1">
+            <input type="text" class="sel-cust s-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义选项，点击＋添加" style="flex:1">
             <button type="button" class="mini s-plus" data-sid="${sid}" data-idx="${idx}" title="自定义选项">＋</button>
           </div>
         </div>`;
@@ -2798,7 +2804,18 @@ function renderScaleScores(){
     renderScaleScores();
   }));
   box.querySelectorAll('.s-plus').forEach(b=>b.addEventListener('click',()=>{
-    b.closest('.score-item').querySelector('.s-cust').focus();
+    const inp=b.closest('.score-item').querySelector('.s-cust');
+    const v=inp.value.trim();
+    if(v){
+      const p=cur(), sid=inp.dataset.sid, idx=+inp.dataset.idx;
+      const k=sid+'__'+idx;
+      globalAdd(k, v);
+      p.scores[sid]=p.scores[sid]||[];
+      p.scores[sid][idx]=v;
+      savePatients();
+      inp.value='';
+      renderScaleScores();
+    } else inp.focus();
   }));
   box.querySelectorAll('.s-cust').forEach(i=>i.addEventListener('keydown',e=>{
     if(e.key!=='Enter') return;
@@ -2814,7 +2831,16 @@ function renderScaleScores(){
     renderScaleScores();
   }));
   box.querySelectorAll('.w-plus').forEach(b=>b.addEventListener('click',()=>{
-    b.closest('.score-item').querySelector('.w-cust').focus();
+    const inp=b.closest('.score-item').querySelector('.w-cust');
+    const v=inp.value.trim();
+    if(v){
+      const p=cur(), sid=inp.dataset.sid, idx=+inp.dataset.idx;
+      const k=sid+'__'+idx;
+      globalAdd(k, v);
+      savePatients();
+      inp.value='';
+      renderScaleScores();
+    } else inp.focus();
   }));
   box.querySelectorAll('.w-cust').forEach(i=>i.addEventListener('keydown',e=>{
     if(e.key!=='Enter') return;
