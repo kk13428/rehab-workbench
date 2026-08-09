@@ -464,9 +464,14 @@ input[type=range]::-webkit-slider-thumb{
       </div>
       <div class="field">
         <label>主诊断</label>
-        <select id="fDiag">
-          <option value="">请选择主诊断…</option>
-        </select>
+        <div class="selrow">
+          <select id="fDiag">
+            <option value="">请选择主诊断…</option>
+          </select>
+          <button type="button" class="mini" id="diagPlus" title="自定义诊断">＋</button>
+        </div>
+        <input type="text" id="diagCust" class="sel-cust" placeholder="自定义诊断名，回车添加" style="display:none">
+        <div id="diagChips" class="cust-chips"></div>
       </div>
       <div class="field">
         <label>诊断备注</label>
@@ -530,6 +535,11 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选存在的危险因素</div>
         <div id="histList"></div>
+        <div class="selrow" style="margin-top:8px">
+          <input type="text" id="histCust" class="sel-cust" placeholder="自定义既往史，回车添加" style="flex:1">
+          <button type="button" class="mini" id="histPlus" title="添加自定义病史">＋</button>
+        </div>
+        <div id="historyChips" class="cust-chips"></div>
         <div class="field" style="margin-top:10px">
           <label>用药史 / 其他</label>
           <textarea id="fMeds" placeholder="如：抗凝药、降压药等"></textarea>
@@ -540,6 +550,11 @@ input[type=range]::-webkit-slider-thumb{
       <h3><span class="n">4</span>影像学检查</h3>
       <div class="step-desc">勾选已做检查，填写所见</div>
       <div class="img-pills" id="imgTypes"></div>
+      <div class="selrow" style="margin-top:6px">
+        <input type="text" id="imgCust" class="sel-cust" placeholder="自定义检查项目，回车添加" style="flex:1">
+        <button type="button" class="mini" id="imgPlus" title="添加自定义检查">＋</button>
+      </div>
+      <div id="imagingChips" class="cust-chips"></div>
       <div class="field">
         <label>检查所见 / 影像学发现</label>
         <textarea id="fImg" placeholder="如：L4-5 椎间盘突出，硬膜囊受压"></textarea>
@@ -561,7 +576,8 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的关节 → 选左右 / 主动被动 / 填角度，可多选；也可自定义关节</div>
         <div id="romRows"></div>
-        <div class="add-row"><input type="text" id="romCName" placeholder="自定义关节，如：拇指腕掌关节" list="romDL"><datalist id="romDL"></datalist><button class="mini" data-addcat="rom">＋</button></div>
+        <div class="add-row"><input type="text" id="romCName" placeholder="自定义关节，如：拇指腕掌关节" list="romDL"><datalist id="romDL"></datalist><button class="mini" data-additem="rom">＋</button></div>
+        <div id="romItemsChips" class="cust-chips"></div>
       </div>
     </div>
     <div class="card oc" data-oc="mmt">
@@ -569,7 +585,8 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的肢体/肌群 → 选 0-5 级，可多选；也可自定义肌群</div>
         <div id="mmtRows"></div>
-        <div class="add-row"><input type="text" id="mmtCName" placeholder="自定义肌群，如：右踝背屈肌" list="mmtDL"><datalist id="mmtDL"></datalist><button class="mini" data-addcat="mmt">＋</button></div>
+        <div class="add-row"><input type="text" id="mmtCName" placeholder="自定义肌群，如：右踝背屈肌" list="mmtDL"><datalist id="mmtDL"></datalist><button class="mini" data-additem="mmt">＋</button></div>
+        <div id="mmtItemsChips" class="cust-chips"></div>
       </div>
     </div>
     <div class="card oc" data-oc="ashworth">
@@ -589,6 +606,8 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的感觉类型 → 选结果、填部位，可多选；结果可自定义</div>
         <div id="sensoryRows"></div>
+        <div class="add-row"><input type="text" id="sensoryCName" placeholder="自定义感觉类型，如：两点辨别"><button class="mini" data-additem="sensory">＋</button></div>
+        <div id="sensoryItemsChips" class="cust-chips"></div>
         <div class="add-row"><input type="text" id="sensoryFindCust" placeholder="自定义感觉结果（如：痛觉过敏）" ><button class="mini" data-findadd="sensory">＋</button></div>
         <div id="sensoryFindChips" class="cust-chips"></div>
       </div>
@@ -598,6 +617,8 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的反射 / 病理征 → 选结果，可多选；结果可自定义</div>
         <div id="reflexRows"></div>
+        <div class="add-row"><input type="text" id="reflexCName" placeholder="自定义反射项目，如：桡骨膜反射（加强）"><button class="mini" data-additem="reflex">＋</button></div>
+        <div id="reflexItemsChips" class="cust-chips"></div>
         <div class="add-row"><input type="text" id="reflexFindCust" placeholder="自定义反射结果（如：轻度亢进++）" ><button class="mini" data-findadd="reflex">＋</button></div>
         <div id="reflexFindChips" class="cust-chips"></div>
       </div>
@@ -1965,7 +1986,30 @@ function makePatient(name,age,gender,complaint,vas){
 /* ---- 全局自定义选项（跨患者共享）：painNature/ashworth/temp/reflexFind/sensoryFind/量表题号__idx ---- */
 let GLOBAL_OPTS = {};
 try{ const _g=JSON.parse(localStorage.getItem('rehab_globalOpts_v1')||'null'); if(_g&&typeof _g==='object') GLOBAL_OPTS=_g; }catch(e){}
-function globalList(key){ if(!Array.isArray(GLOBAL_OPTS[key])) GLOBAL_OPTS[key]=[]; return GLOBAL_OPTS[key]; }
+/* 每个选项源存 { cust: 自定义项[], hide: 被删除的预设项[] }，渲染时 预设去hide + cust */
+function globalConf(key){
+  let c=GLOBAL_OPTS[key];
+  if(!c || Array.isArray(c)){ c = GLOBAL_OPTS[key] = { cust: Array.isArray(c)? c.slice() : [], hide: [] }; }
+  if(!Array.isArray(c.cust)) c.cust=[];
+  if(!Array.isArray(c.hide)) c.hide=[];
+  return c;
+}
+function globalList(key){ return globalConf(key).cust; }
+function globalIsHidden(key, v){ return globalConf(key).hide.indexOf(v)>=0; }
+function globalAdd(key, v){
+  const c=globalConf(key);
+  if(v!=null && c.cust.indexOf(v)<0){ c.cust.push(v); saveGlobalOpts(); }
+}
+function globalDel(key, v, presets){
+  const c=globalConf(key);
+  if(Array.isArray(presets) && presets.indexOf(v)>=0){ if(c.hide.indexOf(v)<0){ c.hide.push(v); saveGlobalOpts(); } }
+  else{ const i=c.cust.indexOf(v); if(i>=0){ c.cust.splice(i,1); saveGlobalOpts(); } }
+}
+function visibleOf(key, presets){
+  const c=globalConf(key);
+  const hide=new Set(c.hide);
+  return (presets||[]).filter(v=>!hide.has(v)).concat(c.cust.slice());
+}
 function saveGlobalOpts(){ try{ localStorage.setItem('rehab_globalOpts_v1', JSON.stringify(GLOBAL_OPTS)); }catch(e){} }
 (function migrateCustomOpts(){
   try{
@@ -2107,8 +2151,13 @@ function refreshComplaint(){
   $('#fAge').value=p.age;
   document.querySelectorAll('input[name=gender]').forEach(r=>{ if(r.value===p.gender) r.checked=true; });
   const dsel=$('#fDiag');
-  dsel.innerHTML = DIAGNOSES.map(x=>`<option value="${esc(x.v)}">${esc(x.t)}</option>`).join('');
+  const diagPresets=DIAGNOSES.map(x=>x.v);
+  dsel.innerHTML = '<option value="">请选择主诊断…</option>' + visibleOf('diag', diagPresets).map(v=>{
+    const hit=DIAGNOSES.find(x=>x.v===v);
+    return `<option value="${esc(v)}">${esc(hit?hit.t:v)}</option>`;
+  }).join('');
   dsel.value=p.diagnosis.type;
+  renderOptChips('diag', diagPresets, refreshComplaint);
   $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
   refreshCustomSelect('#fPainNature','painNature',p.pain.nature);
@@ -2121,10 +2170,13 @@ function refreshComplaint(){
   $('#vasVal').textContent=p.vas;
   $('#fVas').style.setProperty('--fill',(p.vas/10*100)+'%');
   document.querySelectorAll('input[name=nightPain]').forEach(r=>{ if(r.value===(p.pain.night?'有':'无')) r.checked=true; });
-  $('#histList').innerHTML = HISTORY_ITEMS.map(it=>{
+  const histPresets=HISTORY_ITEMS.map(x=>x.id);
+  $('#histList').innerHTML = visibleOf('history', histPresets).map(id=>{
+    const it=HISTORY_ITEMS.find(x=>x.id===id)||{id, name:id, desc:'自定义'};
     const on=p.history.items.includes(it.id);
-    return `<div class="exam-item"><div class="chk ${on?'on':''}" data-id="${it.id}">✓</div><div class="en">${it.name}<small>${it.desc}</small></div></div>`;
+    return `<div class="exam-item"><div class="chk ${on?'on':''}" data-id="${it.id}">✓</div><div class="en">${esc(it.name)}${it.desc?`<small>${esc(it.desc)}</small>`:''}</div></div>`;
   }).join('');
+  renderOptChips('history', histPresets, refreshComplaint, v=>{ const it=HISTORY_ITEMS.find(x=>x.id===v); return it?it.name:v; });
   $('#histList').querySelectorAll('.chk').forEach(c=>c.addEventListener('click',()=>{
     const p=cur(); const id=c.dataset.id;
     const i=p.history.items.indexOf(id);
@@ -2133,10 +2185,11 @@ function refreshComplaint(){
     savePatients();
   }));
   $('#fMeds').value=p.history.meds;
-  $('#imgTypes').innerHTML = IMAGING_TYPES.map(t=>{
+  $('#imgTypes').innerHTML = visibleOf('imaging', IMAGING_TYPES).map(t=>{
     const on=p.imaging.types.includes(t);
-    return `<label><input type="checkbox" value="${t}" ${on?'checked':''}><span>${t}</span></label>`;
+    return `<label><input type="checkbox" value="${esc(t)}" ${on?'checked':''}><span>${esc(t)}</span></label>`;
   }).join('');
+  renderOptChips('imaging', IMAGING_TYPES, refreshComplaint);
   $('#imgTypes').querySelectorAll('input').forEach(c=>c.addEventListener('change',()=>{
     const p=cur(); const t=c.value;
     const i=p.imaging.types.indexOf(t);
@@ -2178,6 +2231,36 @@ function bindComplaint(){
   document.querySelectorAll('input[name=nightPain]').forEach(r=>r.addEventListener('change',e=>{ cur().pain.night=(e.target.value==='有'); savePatients(); }));
   $('#fMeds').addEventListener('input',e=>{ cur().history.meds=e.target.value; savePatients(); });
   $('#fImg').addEventListener('input',e=>{ cur().imaging.findings=e.target.value; savePatients(); });
+  $('#diagPlus').addEventListener('click',()=>{
+    const inp=$('#diagCust');
+    inp.style.display = inp.style.display==='none'?'block':'none';
+    if(inp.style.display==='block') inp.focus();
+  });
+  $('#diagCust').addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    const v=$('#diagCust').value.trim();
+    if(!v){ $('#diagCust').style.display='none'; return; }
+    globalAdd('diag', v);
+    $('#diagCust').value=''; $('#diagCust').style.display='none';
+    const p=cur(); p.diagnosis.type=v; p.planSel=defaultPlanSel(p); savePatients();
+    refreshComplaint();
+  });
+  $('#histPlus').addEventListener('click',()=>{
+    const v=$('#histCust').value.trim();
+    if(!v){ toast('请输入病史'); return; }
+    globalAdd('history', v);
+    $('#histCust').value='';
+    refreshComplaint();
+  });
+  $('#histCust').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#histPlus').click(); });
+  $('#imgPlus').addEventListener('click',()=>{
+    const v=$('#imgCust').value.trim();
+    if(!v){ toast('请输入检查项目'); return; }
+    globalAdd('imaging', v);
+    $('#imgCust').value='';
+    refreshComplaint();
+  });
+  $('#imgCust').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#imgPlus').click(); });
 }
 function updatePatientChip(){
   const p=cur();
@@ -2206,7 +2289,7 @@ function popSel(sel, opts, val){
   sel.innerHTML = '<option value="">请选择…</option>' + opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('');
 }
 function refreshCustomSelect(selId, storeKey, val){
-  const opts=presetFor(storeKey).concat(globalList(storeKey));
+  const opts=visibleOf(storeKey, presetFor(storeKey));
   popSel($(selId), opts, val);
 }
 function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
@@ -2220,8 +2303,7 @@ function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
     const v=$(custId).value.trim();
     const sel=$(selId);
     if(!v){ $(custId).style.display='none'; return; }
-    if(globalList(storeKey).indexOf(v)<0) globalList(storeKey).push(v);
-    saveGlobalOpts();
+    globalAdd(storeKey, v);
     $(custId).value=''; $(custId).style.display='none';
     refreshCustomSelect(selId, storeKey, v);
     sel.value=v;
@@ -2236,16 +2318,17 @@ function clearCustomIfSelected(key, v, p){
   if(key==='painNature' && p.pain.nature===v) p.pain.nature='';
   else if(key==='ashworth' && p.objective.ashworth===v) p.objective.ashworth='';
   else if(key==='temp' && p.objective.temp===v) p.objective.temp='';
+  else if(key==='diag' && p.diagnosis.type===v) p.diagnosis.type='';
 }
-function renderCustChips(key, refresh){
-  const list=globalList(key);
+function renderCustChips(key, refresh){ renderOptChips(key, presetFor(key), refresh); }
+function renderOptChips(key, presets, refresh, labelOf){
+  const list=visibleOf(key, presets);
   const box=document.getElementById(key+'Chips');
   if(!box) return;
-  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
+  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">选项：</span>`+list.map(v=>`<span class="tchip">${esc(labelOf?labelOf(v):v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
   box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
-    GLOBAL_OPTS[key]=(GLOBAL_OPTS[key]||[]).filter(v=>v!==x.dataset.del);
+    globalDel(key, x.dataset.del, presets);
     clearCustomIfSelected(key, x.dataset.del, cur());
-    saveGlobalOpts();
     if(refresh) refresh();
   }));
 }
@@ -2289,9 +2372,11 @@ function bindObjRows(box, cat){
 }
 function objRows(cat, defs, mkRow){
   const arr=cur().objective[cat];
+  const key=cat+'Items';
   const presets=defs.map(d=>d.name);
-  const customs=arr.map(e=>objKey(cat,e)).filter(k=>presets.indexOf(k)<0);
-  return presets.concat(customs).map(k=>{
+  const visible=visibleOf(key, presets);
+  const recorded=arr.map(e=>objKey(cat,e)).filter(k=>visible.indexOf(k)<0);
+  return visible.concat(recorded).map(k=>{
     const entry=arr.find(e=>objKey(cat,e)===k);
     return mkRow(k, !!entry, entry||null);
   }).join('');
@@ -2311,6 +2396,7 @@ function renderRom(){
   });
   bindObjRows(box,'rom');
   updateSum('#romSum', cur().objective.rom.length);
+  renderOptChips('romItems', ROM_DEFS.map(d=>d.name), renderObjective);
 }
 function renderMmt(){
   const box=$('#mmtRows');
@@ -2324,31 +2410,24 @@ function renderMmt(){
   });
   bindObjRows(box,'mmt');
   updateSum('#mmtSum', cur().objective.mmt.length);
+  renderOptChips('mmtItems', MMT_DEFS.map(d=>d.name), renderObjective);
 }
 function renderFindChips(key, cat){
-  const list=globalList(key);
-  const box=document.getElementById(key+'Chips');
-  if(!box) return;
-  box.innerHTML = list.length?`<span style="font-size:11px;color:var(--muted);margin-right:6px">自定义：</span>`+list.map(v=>`<span class="tchip">${esc(v)}<span class="x" data-del="${esc(v)}">✕</span></span>`).join(''):'';
-  box.querySelectorAll('.x').forEach(x=>x.addEventListener('click',()=>{
-    GLOBAL_OPTS[key]=(GLOBAL_OPTS[key]||[]).filter(v=>v!==x.dataset.del);
-    saveGlobalOpts(); renderObjective();
-  }));
+  renderOptChips(key, key==='reflexFind'?REFLEX_FINDS:SENSORY_FINDS, renderObjective);
 }
 document.querySelectorAll('[data-findadd]').forEach(b=>b.addEventListener('click',()=>{
   const cat=b.dataset.findadd;
   const key = cat==='reflex'?'reflexFind':'sensoryFind';
   const v=$('#'+cat+'FindCust').value.trim();
   if(!v){ toast('请输入结果'); return; }
-  if(globalList(key).indexOf(v)<0) globalList(key).push(v);
-  saveGlobalOpts();
+  globalAdd(key, v);
   $('#'+cat+'FindCust').value='';
   renderObjective();
 }));
 ['reflex','sensory'].forEach(cat=>{ const el=$('#'+cat+'FindCust'); el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ document.querySelector('[data-findadd="'+cat+'"]').click(); } }); });
 function renderReflex(){
   const box=$('#reflexRows');
-  const finds=REFLEX_FINDS.concat(globalList('reflexFind'));
+  const finds=visibleOf('reflexFind', REFLEX_FINDS);
   box.innerHTML = objRows('reflex', REFLEX_DEFS, (k,on,e)=>{
     e=e||{name:k,find:'正常'};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
@@ -2359,11 +2438,12 @@ function renderReflex(){
   });
   bindObjRows(box,'reflex');
   updateSum('#reflexSum', cur().objective.reflex.length);
+  renderOptChips('reflexItems', REFLEX_DEFS.map(d=>d.name), renderObjective);
   renderFindChips('reflexFind','reflex');
 }
 function renderSensory(){
   const box=$('#sensoryRows');
-  const finds=SENSORY_FINDS.concat(globalList('sensoryFind'));
+  const finds=visibleOf('sensoryFind', SENSORY_FINDS);
   box.innerHTML = objRows('sensory', SENSORY_DEFS, (k,on,e)=>{
     e=e||{type:k,find:'正常',site:''};
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
@@ -2375,6 +2455,7 @@ function renderSensory(){
   });
   bindObjRows(box,'sensory');
   updateSum('#sensorySum', cur().objective.sensory.length);
+  renderOptChips('sensoryItems', SENSORY_DEFS.map(d=>d.name), renderObjective);
   renderFindChips('sensoryFind','sensory');
 }
 function renderTend(){
@@ -2394,22 +2475,21 @@ function renderTend(){
 function addCustomRow(cat, inputSel){
   const v=$(inputSel).value.trim();
   if(!v){ toast('请输入名称'); return; }
-  const p=cur(); const arr=p.objective[cat];
-  if(arr.some(e=>objKey(cat,e)===v)){ toast('该项目已存在'); return; }
-  if(cat==='rom') arr.push({joint:v, side:'左', type:'主动', deg:''});
-  else if(cat==='mmt') arr.push({name:v, grade:'3'});
+  const key=cat+'Items';
+  const presets=(cat==='rom'?ROM_DEFS:cat==='mmt'?MMT_DEFS:cat==='reflex'?REFLEX_DEFS:SENSORY_DEFS).map(d=>d.name);
+  if(visibleOf(key, presets).indexOf(v)>=0){ toast('该项目已存在'); return; }
+  globalAdd(key, v);
   $(inputSel).value='';
-  savePatients(); renderObjective();
+  renderObjective();
 }
-document.querySelectorAll('.add-row .mini[data-addcat]').forEach(b=>b.addEventListener('click',()=>{
-  const cat=b.dataset.addcat;
-  addCustomRow(cat, cat==='rom'?'#romCName':'#mmtCName');
+document.querySelectorAll('.add-row .mini[data-additem]').forEach(b=>b.addEventListener('click',()=>{
+  addCustomRow(b.dataset.additem, '#'+b.dataset.additem+'CName');
 }));
-document.querySelectorAll('.add-row input').forEach(i=>i.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){ const cat=i.id==='romCName'?'rom':'mmt'; addCustomRow(cat, '#'+i.id); }
+document.querySelectorAll('.add-row input[id$="CName"]').forEach(i=>i.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ const cat=i.id.replace('CName',''); addCustomRow(cat, '#'+i.id); }
 }));
-$('#romDL').innerHTML = ROM_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
-$('#mmtDL').innerHTML = MMT_DEFS.map(d=>`<option value="${esc(d.name)}">`).join('');
+$('#romDL').innerHTML = visibleOf('romItems', ROM_DEFS.map(d=>d.name)).map(d=>`<option value="${esc(d)}">`).join('');
+$('#mmtDL').innerHTML = visibleOf('mmtItems', MMT_DEFS.map(d=>d.name)).map(d=>`<option value="${esc(d)}">`).join('');
 document.querySelectorAll('.oc-head').forEach(h=>h.addEventListener('click',()=>{
   const oc=h.closest('.oc'); const key=oc.dataset.oc;
   if(objOpen.has(key)) objOpen.delete(key); else objOpen.add(key);
@@ -2567,12 +2647,12 @@ function renderScaleScores(){
     const itemsHtml=sc.items.map((it,idx)=>{
       if(it.words){
         const arr=Array.isArray(vals[idx])?vals[idx]:[];
-        const cust=globalList(sid+'__'+idx);
-        const words=it.words.concat(cust);
+        const wk=sid+'__'+idx;
+        const words=visibleOf(wk, it.words);
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}</div>
           <div class="wordpills">${words.map(w=>`<label><input type="checkbox" class="wpill" data-sid="${sid}" data-idx="${idx}" value="${esc(w)}" ${arr.includes(w)?'checked':''}><span>${esc(w)}</span></label>`).join('')}</div>
-          ${cust.length?`<div class="cust-chips">${cust.map(w=>`<span class="tchip">自定义：${esc(w)}<span class="x w-del" data-sid="${sid}" data-idx="${idx}" data-del="${esc(w)}">✕</span></span>`).join('')}</div>`:''}
+          ${words.length?`<div class="cust-chips">${words.map(w=>`<span class="tchip">${esc(w)}<span class="x w-del" data-sid="${sid}" data-idx="${idx}" data-del="${esc(w)}">✕</span></span>`).join('')}</div>`:''}
           <div class="selrow" style="margin-top:6px">
             <input type="text" class="w-cust" data-sid="${sid}" data-idx="${idx}" placeholder="自定义描述词，回车添加" style="flex:1">
             <button type="button" class="mini w-plus" data-sid="${sid}" data-idx="${idx}" title="添加自定义词">＋</button>
@@ -2581,8 +2661,11 @@ function renderScaleScores(){
       }
       if(it.options){
         const val=typeof vals[idx]==='string'?vals[idx]:'';
-        const cust=globalList(sid+'__'+idx);
-        const opts=it.options.concat(cust.map(c=>({v:c, d:'', custom:true})));
+        const ok=sid+'__'+idx;
+        const opts=visibleOf(ok, it.options.map(o=>o.v)).map(v=>{
+          const base=it.options.find(o=>o.v===v);
+          return base?base:{v, d:'', custom:true};
+        });
         if(val && !opts.some(o=>o.v===val)) opts.push({v:val, d:'', custom:true});
         return `<div class="score-item">
           <div class="q">${idx+1}. ${it.label}${it.hint?`<small>${esc(it.hint)}</small>`:''}</div>
@@ -2590,7 +2673,7 @@ function renderScaleScores(){
             ${opts.map(o=>`<div class="opt-card ${o.v===val?'on':''}" data-sid="${sid}" data-idx="${idx}" data-val="${esc(o.v)}">
               <span class="oc-check">✓</span>
               <span class="oc-main">${esc(o.v)}${o.d?`<small>${esc(o.d)}</small>`:''}</span>
-              ${o.custom?`<span class="oc-del" data-del="${esc(o.v)}">✕</span>`:''}
+              <span class="oc-del" data-del="${esc(o.v)}">✕</span>
             </div>`).join('')}
           </div>
           <div class="selrow" style="margin-top:6px">
@@ -2645,8 +2728,12 @@ function renderScaleScores(){
       e.stopPropagation();
       const p=cur(), sid=c.dataset.sid, idx=+c.dataset.idx, v=c.dataset.val;
       const k=sid+'__'+idx;
-      if(GLOBAL_OPTS[k]) GLOBAL_OPTS[k]=GLOBAL_OPTS[k].filter(x=>x!==v);
+      const sc=SCALES.find(x=>x.id===sid);
+      const it=sc && sc.items[idx];
+      const presets=(it&&it.options?it.options.map(o=>o.v):(it&&it.words?it.words:[]));
+      globalDel(k, v, presets);
       if(p.scores[sid] && p.scores[sid][idx]===v) p.scores[sid][idx]='';
+      if(p.scores[sid] && Array.isArray(p.scores[sid][idx])){ const i=p.scores[sid][idx].indexOf(v); if(i>=0) p.scores[sid][idx].splice(i,1); }
       saveGlobalOpts(); savePatients(); renderScaleScores();
     });
     c.addEventListener('click',()=>{
@@ -2659,7 +2746,10 @@ function renderScaleScores(){
   box.querySelectorAll('.w-del').forEach(x=>x.addEventListener('click',()=>{
     const p=cur(), sid=x.dataset.sid, idx=+x.dataset.idx, v=x.dataset.del;
     const k=sid+'__'+idx;
-    if(GLOBAL_OPTS[k]) GLOBAL_OPTS[k]=GLOBAL_OPTS[k].filter(w=>w!==v);
+    const sc=SCALES.find(y=>y.id===sid);
+    const it=sc && sc.items[idx];
+    const presets=(it&&it.words?it.words:(it&&it.options?it.options.map(o=>o.v):[]));
+    globalDel(k, v, presets);
     if(p.scores[sid] && Array.isArray(p.scores[sid][idx])){ const i=p.scores[sid][idx].indexOf(v); if(i>=0) p.scores[sid][idx].splice(i,1); }
     saveGlobalOpts(); savePatients(); renderScaleScores();
   }));
@@ -2682,8 +2772,7 @@ function renderScaleScores(){
     const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
     if(v){
       const k=sid+'__'+idx;
-      if(globalList(k).indexOf(v)<0) globalList(k).push(v);
-      saveGlobalOpts();
+      globalAdd(k, v);
       p.scores[sid]=p.scores[sid]||[];
       p.scores[sid][idx]=v;
       savePatients();
@@ -2699,8 +2788,7 @@ function renderScaleScores(){
     const p=cur(), sid=i.dataset.sid, idx=+i.dataset.idx;
     if(v){
       const k=sid+'__'+idx;
-      if(globalList(k).indexOf(v)<0) globalList(k).push(v);
-      saveGlobalOpts();
+      globalAdd(k, v);
       savePatients();
       i.value='';
     }
