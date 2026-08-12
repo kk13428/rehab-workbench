@@ -787,6 +787,7 @@ input[type=range]::-webkit-slider-thumb{
       <button class="btn" id="btnAIRender">渲染文书</button>
       <button class="btn ghost" id="btnAISample">载入示例</button>
     </div>
+    <div id="aiHistory" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px"></div>
   </div>
 </div>
 
@@ -3640,10 +3641,42 @@ function renderAIReport(){
   const enforced=window.RedlineEngine.enforce(input,json);
   errEl.style.display='none';
   $('#reportContent').innerHTML=buildAIReportHTML(enforced);
+  const now=new Date();
+  aiSave({ id:now.getTime(), time:`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`, name:(json.patient&&json.patient.diagnosis)||'AI文书', raw, enforced });
   $('#aiMask').classList.remove('show');
   $('#reportMask').classList.add('show');
 }
-$('#abAI').addEventListener('click', ()=>{ $('#aiErrors').style.display='none'; $('#aiInput').value=''; $('#aiMask').classList.add('show'); });
+/* AI 文书持久化:localStorage 保存最近 10 条,可重载 */
+const AI_DOC_KEY='rehab_ai_docs';
+function aiSave(doc){
+  let list=JSON.parse(localStorage.getItem(AI_DOC_KEY)||'[]');
+  list.unshift(doc);
+  if(list.length>10) list=list.slice(0,10);
+  localStorage.setItem(AI_DOC_KEY,JSON.stringify(list));
+  renderAIHistory();
+}
+function aiLoadDoc(id){
+  const list=JSON.parse(localStorage.getItem(AI_DOC_KEY)||'[]');
+  const d=list.find(x=>x.id===id);
+  if(!d) return;
+  $('#aiInput').value=d.raw||JSON.stringify(d.enforced,null,2);
+  $('#aiErrors').style.display='none';
+}
+function renderAIHistory(){
+  const box=$('#aiHistory');
+  if(!box) return;
+  const list=JSON.parse(localStorage.getItem(AI_DOC_KEY)||'[]');
+  if(!list.length){ box.innerHTML=''; return; }
+  box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:4px">历史文书(最近 '+list.length+' 条,点击载入)</div>'+list.map(d=>{
+    const st=d.enforced&&d.enforced.red_line_check&&d.enforced.red_line_check.action;
+    const tag=st==='stop'?'<span style="color:#c0392b">· 终止</span>':st==='downgrade'?'<span style="color:#b9770e">· 降级</span>':'';
+    return `<div class="kv" style="cursor:pointer" data-aiid="${d.id}" title="点击载入"><span class="k">${esc(d.name||'未命名')}${tag}</span><span class="v" style="font-size:12px;color:var(--muted)">${esc(d.time)}</span></div>`;
+  }).join('');
+  box.querySelectorAll('[data-aiid]').forEach(el=>{
+    el.addEventListener('click',()=>aiLoadDoc(Number(el.getAttribute('data-aiid'))));
+  });
+}
+$('#abAI').addEventListener('click', ()=>{ $('#aiErrors').style.display='none'; $('#aiInput').value=''; renderAIHistory(); $('#aiMask').classList.add('show'); });
 $('#aiClose').addEventListener('click', ()=>$('#aiMask').classList.remove('show'));
 $('#aiMask').addEventListener('click', e=>{ if(e.target.id==='aiMask') $('#aiMask').classList.remove('show'); });
 $('#btnAIRender').addEventListener('click', renderAIReport);
