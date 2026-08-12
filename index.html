@@ -3634,7 +3634,12 @@ function renderAIReport(){
   if(!raw){ errEl.textContent='请粘贴 AI 输出的 JSON'; errEl.style.display='block'; return; }
   let json;
   try{ json=JSON.parse(raw); }
-  catch(e){ errEl.textContent='JSON 解析失败:'+e.message; errEl.style.display='block'; return; }
+  catch(e){
+    // 兼容终端复制长JSON时换行/控制字符混入:剔除后重试
+    const cleaned=raw.replace(/[\x00-\x1f\x7f]/g,'');
+    try{ json=JSON.parse(cleaned); }
+    catch(e2){ errEl.textContent='JSON 解析失败:'+e2.message; errEl.style.display='block'; return; }
+  }
   const v=window.RedlineEngine.validateOutput(json);
   if(!v.ok){ errEl.textContent='格式校验未通过:\n'+v.errors.join('\n'); errEl.style.display='block'; return; }
   const input={ vitals:(json.patient&&json.patient.vitals)||{}, diagnosis:(json.patient&&json.patient.diagnosis)||'', stage:(json.patient&&json.patient.stage)||'', events:(json.patient&&json.patient.events)||[] };
