@@ -273,6 +273,7 @@ input[type=range]::-webkit-slider-thumb{
 .actionbar .ab-save{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
 .actionbar .ab-load{background:#fff;color:var(--muted);border:1.5px solid var(--line)}
 .actionbar .ab-report{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(35,74,120,.34)}
+.actionbar .ab-ai{background:linear-gradient(135deg,#6c5ce7,#8e7cf3);color:#fff;box-shadow:0 3px 10px rgba(108,92,231,.34)}
 .actionbar .ab-new{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(14,165,183,.3)}
 /* report */
 .report{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;border:1px solid var(--line)}
@@ -734,6 +735,7 @@ input[type=range]::-webkit-slider-thumb{
   <button class="ab-save" id="abSave">保存病案</button>
   <button class="ab-load" id="abLoad">加载病案</button>
   <button class="ab-report" id="abReport">生成报告</button>
+  <button class="ab-ai" id="abAI">AI 文书</button>
   <button class="ab-new" id="abNew">新建病案</button>
 </div>
 
@@ -773,6 +775,21 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 </div>
 
+<!-- AI 文书 modal -->
+<div class="modal-mask" id="aiMask">
+  <div class="modal">
+    <span class="close" id="aiClose">✕</span>
+    <h3>🤖 AI 康复文书</h3>
+    <div class="hint" style="margin-bottom:8px">粘贴 AI 输出的结构化 JSON,系统自动校验并渲染为文书(内置红线引擎二次强制校验)。</div>
+    <textarea id="aiInput" spellcheck="false" placeholder='粘贴 AI 输出 JSON,如 {"schema_version":"0.2.0",...}' style="width:100%;height:190px;box-sizing:border-box;font-family:Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical"></textarea>
+    <div id="aiErrors" style="color:#c0392b;font-size:12.5px;margin-top:6px;display:none;white-space:pre-wrap"></div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn" id="btnAIRender">渲染文书</button>
+      <button class="btn ghost" id="btnAISample">载入示例</button>
+    </div>
+  </div>
+</div>
+
 <!-- physio library modal -->
 <div class="modal-mask" id="physioMask">
   <div class="modal">
@@ -794,6 +811,116 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 </div>
 
+<script>
+/* ============================================================
+   Redline 规则校验引擎(Phase 3,UMD,浏览器挂载 window.RedlineEngine)
+   来源:~/.claude/skills/rehab-neuro-pt/engine/redline.js
+   ============================================================ */
+const RED_LINES = [
+  { id: 'sbp',  label: '收缩压',      key: 'sbp',  cmp: 'gt',  threshold: 180, unit: 'mmHg',   action: 'stop',       message: '收缩压>180mmHg,立即停止所有训练' },
+  { id: 'dbp',  label: '舒张压',      key: 'dbp',  cmp: 'gt',  threshold: 110, unit: 'mmHg',   action: 'stop',       message: '舒张压>110mmHg,立即停止所有训练' },
+  { id: 'hr',   label: '静息心率',    key: 'hr',   cmp: 'gt',  threshold: 120, unit: '次/分',  action: 'stop',       message: '静息心率>120次/分,立即停止所有训练' },
+  { id: 'spo2', label: '血氧饱和度',  key: 'spo2', cmp: 'lt',  threshold: 93,  unit: '%',      action: 'stop',       message: '血氧饱和度<93%,立即停止所有训练' },
+  { id: 'vas',  label: '疼痛VAS',     key: 'vas',  cmp: 'gte', threshold: 4,   unit: '分',     action: 'stop',       message: 'VAS≥4分,立即停止当前训练' },
+  { id: 'icp',  label: '颅内压',      key: 'icp',  cmp: 'gt',  threshold: 20,  unit: 'mmHg',   action: 'downgrade',  message: '颅内压>20mmHg,禁止任何主动力量训练', downgradeTo: '仅被动活动/床旁体位管理' },
+];
+const CONTRAINDICATIONS = [
+  { id: 'ICH-acute',  match: /脑出血.*(急性|活动性出血)|颅内活动性出血/, message: '脑出血急性期/颅内活动性出血:禁止主动力量训练', action: 'downgrade', downgradeTo: '仅被动活动/床旁体位管理' },
+  { id: 'fracture',   match: /骨折|骨不连|未.*骨性愈合|骨性愈合/,             message: '骨折未达骨性愈合:禁止超范围负重、高强度关节活动', action: 'restrict' },
+  { id: 'aspiration', match: /重度.*误吸|频繁呛咳|吸入性肺炎/,               message: '重度隐匿误吸/频繁呛咳:不提供经口进食训练方案', action: 'restrict' },
+  { id: 'frontal',    match: /额叶.*(躁动|冲动|攻击)|躁动|冲动攻击/,          message: '额叶损伤躁动/冲动攻击:康复操作前必须规范防护、专人陪护', action: 'restrict' },
+];
+const RL_STAGES = ['急性期', '亚急性期', '恢复期', '后遗症期'];
+const RL_WEIGHT_BEARING = ['不负重', '部分负重', '全负重', '坐位', '卧位'];
+const ACUTE_EVENTS = ['低血糖', '高血压危象', '严重眩晕', '喷射性呕吐', '抽搐', '意识模糊'];
+function rl_hit(vitals, rule) {
+  const v = vitals[rule.key];
+  if (v === undefined || v === null || v === '') return false;
+  const n = Number(v);
+  if (Number.isNaN(n)) return false;
+  if (rule.cmp === 'gt') return n > rule.threshold;
+  if (rule.cmp === 'lt') return n < rule.threshold;
+  if (rule.cmp === 'gte') return n >= rule.threshold;
+  return false;
+}
+function rl_validateVitals(input) {
+  input = input || {};
+  const hitList = RED_LINES.filter((r) => rl_hit(input, r));
+  if (!hitList.length) return { triggered: false, action: 'normal', indicators: [], messages: [], downgradeTo: null };
+  const hasStop = hitList.some((r) => r.action === 'stop');
+  const action = hasStop ? 'stop' : 'downgrade';
+  return {
+    triggered: true, action,
+    indicators: hitList.map((r) => ({ id: r.id, label: r.label, value: input[r.key], threshold: r.threshold, unit: r.unit })),
+    messages: hitList.map((r) => r.message),
+    downgradeTo: hasStop ? '停止所有训练,仅观察/体位管理' : (hitList.find((r) => r.action === 'downgrade') || {}).downgradeTo || null,
+  };
+}
+function rl_validateContraindications(input) {
+  input = input || {};
+  const text = `${input.diagnosis || ''} ${input.stage || ''} ${input.notes || ''}`;
+  return CONTRAINDICATIONS.filter((c) => c.match.test(text));
+}
+function rl_validateEvents(input) {
+  input = input || {};
+  const events = Array.isArray(input.events) ? input.events : [];
+  const hit = events.filter((e) => ACUTE_EVENTS.some((k) => String(e).includes(k)));
+  return hit.length ? { triggered: true, events: hit } : { triggered: false, events: [] };
+}
+function rl_validateOutput(json) {
+  const errors = [];
+  if (!json || typeof json !== 'object') return { ok: false, errors: ['输出不是 JSON 对象'] };
+  if (!json.disclaimer || !String(json.disclaimer).includes('复核')) errors.push('缺少免责声明(disclaimer 须含"治疗师复核")');
+  if (!Array.isArray(json.plan) || !json.plan.length) errors.push('缺少 plan(至少一个分期训练模块)');
+  (json.plan || []).forEach((mod, i) => {
+    if (mod.stage && !RL_STAGES.includes(mod.stage)) errors.push(`plan[${i}].stage 非法:${mod.stage}(须 ∈ ${RL_STAGES.join('/')})`);
+    (mod.exercises || []).forEach((ex, j) => {
+      if (!ex.stop_criteria) errors.push(`plan[${i}].exercises[${j}].stop_criteria 缺失(终止标准必填)`);
+      if (ex.weight_bearing && !RL_WEIGHT_BEARING.includes(ex.weight_bearing)) errors.push(`plan[${i}].exercises[${j}].weight_bearing 非法:${ex.weight_bearing}`);
+    });
+  });
+  return { ok: errors.length === 0, errors };
+}
+function rl_downgradeExercises(downgradeTo) {
+  const base = [
+    { name: '被动关节活动度训练(全关节)', frequency: '每日', duration_min: 15, sets_reps: '每关节5个循环', weight_bearing: '不负重', tolerance: '无痛范围', stop_criteria: '疼痛/生命体征波动' },
+    { name: '良肢位摆放与体位管理', frequency: '持续', duration_min: 0, sets_reps: '每2小时翻身', weight_bearing: '卧位', tolerance: '无', stop_criteria: '皮肤受压/不适' },
+  ];
+  if (downgradeTo && downgradeTo.includes('床旁')) {
+    base.push({ name: '床旁坐起(分次,床头抬高)', frequency: '每日', duration_min: 10, sets_reps: '30°起分次耐受', weight_bearing: '坐位', tolerance: '监测面色/血压', stop_criteria: '头晕/面色改变' });
+  }
+  return base;
+}
+function rl_enforce(input, output) {
+  input = input || {};
+  output = output && typeof output === 'object' ? JSON.parse(JSON.stringify(output)) : { schema_version: '0.2.0' };
+  const verdict = rl_validateVitals(input.vitals || {});
+  const contras = rl_validateContraindications(input);
+  const event = rl_validateEvents(input);
+  output.red_line_check = {
+    triggered: verdict.triggered || event.triggered,
+    violated_indicators: [...verdict.indicators, ...event.events.map((e) => ({ id: 'event', label: '急性事件', value: e, threshold: null, unit: '' }))],
+    action: verdict.action !== 'normal' || event.triggered ? (event.triggered || verdict.action === 'stop' ? 'stop' : 'downgrade') : 'normal',
+    messages: [...verdict.messages, ...(event.triggered ? event.events.map((e) => `急性事件:${e},立即停止训练`) : [])],
+  };
+  const contraMsgs = contras.map((c) => c.message);
+  output.contraindications = Array.from(new Set([...contraMsgs, ...(output.contraindications || [])]));
+  const needDowngrade = verdict.action !== 'normal' || contras.some((c) => c.action === 'downgrade') || event.triggered;
+  if (needDowngrade) {
+    const downgradeTo = verdict.downgradeTo || (contras.find((c) => c.action === 'downgrade') || {}).downgradeTo || '仅被动活动/床旁体位管理';
+    output.plan = [{ stage: input.stage || '急性期', exercises: rl_downgradeExercises(downgradeTo), note: '因红线/禁忌触发,方案已强制降级' }];
+    if (verdict.action === 'stop' || event.triggered) {
+      output.emergency = output.emergency || { triggered: false, plan: [] };
+      output.emergency.triggered = true;
+      output.emergency.plan = ['立即停止所有训练', '通知主管医师/医疗组', '监测生命体征,待指标恢复且评估安全后再议'];
+    }
+  }
+  if (!output.disclaimer) output.disclaimer = '本输出为持证治疗师辅助参考,需治疗师复核后执行;不替代临床决策。';
+  if (!output.patient) output.patient = { diagnosis: input.diagnosis, stage: input.stage };
+  return output;
+}
+window.RedlineEngine = { RED_LINES, CONTRAINDICATIONS, RL_STAGES, validateVitals: rl_validateVitals, validateContraindications: rl_validateContraindications, validateEvents: rl_validateEvents, validateOutput: rl_validateOutput, enforce: rl_enforce };
+</script>
 <script>
 /* ============================================================
    演示视频：直接跳转哔哩哔哩观看（link=B站视频链接）
@@ -3426,6 +3553,101 @@ $('#searchInput').addEventListener('input', ()=>{
   clearTimeout(searchTimer);
   searchTimer = setTimeout(doSearch, 220);
 });
+
+/* ================= AI 文书 (Phase 4) ================= */
+const AI_SAMPLE = {
+  schema_version: '0.2.0',
+  patient: { age: 58, sex: '男', diagnosis: '脑梗死(恢复期)', onset_days: 60, stage: '恢复期', vitals: { sbp: 130, dbp: 82, hr: 76, spo2: 97, vas: 0 } },
+  impairment: {
+    core_lesion: '左侧大脑中动脉供血区梗死',
+    primary: ['右侧偏瘫:上肢Brunnstrom III期、下肢IV期', '平衡障碍(Berg 32/56)', '步态异常(Holden III级)'],
+    secondary: ['日常生活依赖(MBI 62/100)']
+  },
+  complications: [
+    { name: '跌倒', risk: 'high', prevention: '平衡训练全程保护,环境无障碍改造' },
+    { name: 'DVT', risk: 'medium', prevention: '踝泵、气压泵,避免长时间静坐' }
+  ],
+  assessment: [
+    { scale: 'MMT', item: '右侧上肢', value: 'Brunnstrom III期', grade: '中度受限' },
+    { scale: 'Berg', item: '平衡', value: '32/56', grade: '中度跌倒风险' },
+    { scale: 'MBI', item: '日常生活', value: '62/100', grade: '中度依赖' }
+  ],
+  goals: {
+    short_term: ['3-7天内右侧下肢主动活动范围增加10°'],
+    mid_term: ['2-4周Berg提升至40分以上'],
+    long_term: ['1-3个月MBI达80分以上,实现社区步行']
+  },
+  plan: [
+    { stage: '恢复期', exercises: [
+      { name: '臀桥', frequency: '每日', duration_min: 10, sets_reps: '3组×10次', weight_bearing: '部分负重', tolerance: '组间休息60秒', stop_criteria: 'VAS≥4分或下肢震颤' },
+      { name: '坐位平衡训练', frequency: '每日', duration_min: 15, sets_reps: '3组×5分钟', weight_bearing: '坐位', tolerance: '需监护,防倾倒', stop_criteria: '头晕或面色改变' },
+      { name: '上下台阶训练(辅助)', frequency: '每日', duration_min: 10, sets_reps: '5次×2组', weight_bearing: '全负重', tolerance: '需扶手+治疗师保护', stop_criteria: '疲劳或步态失稳' }
+    ] }
+  ],
+  contraindications: ['无红线触发;避免过负荷训练,防血压骤升'],
+  emergency: { triggered: false, plan: ['训练中监测血压/心率,异常即停'] },
+  family_education: ['良肢位摆放,每日被动ROM', '如厕/转移使用扶手,防跌倒'],
+  followup: { review: '每周1次全面复评', next: '1周后复评(Berg/MBI/Holden)' },
+  disclaimer: '本输出为持证治疗师辅助参考,需治疗师复核后执行;不替代临床决策。'
+};
+
+function buildAIReportHTML(json){
+  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const list=(arr,fn)=>Array.isArray(arr)&&arr.length?arr.map(fn).join(''):'';
+  const p=json.patient||{}, rlc=json.red_line_check||{}, goals=json.goals||{};
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  let banner='';
+  if(rlc.triggered){
+    const stop=rlc.action==='stop';
+    banner=`<div style="background:${stop?'#fdecea':'#fff7e6'};border:1px solid ${stop?'#f5b7b1':'#f9e7b3'};color:${stop?'#7b241c':'#7d6608'};padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;font-weight:600">⚠️ ${stop?'训练终止':'方案降级'} · ${esc((rlc.messages||[]).join('；'))}</div>`;
+  }
+  const contra=(json.contraindications||[]).length?`<h4>禁忌与红线</h4>${list(json.contraindications,m=>kv('禁忌',esc(m)))}`:'';
+  const comp=(json.complications||[]).length?`<h4>并发症筛查</h4>${list(json.complications,c=>`<div class="kv"><span class="k">${esc(c.name)}</span><span class="v">${esc(c.prevention||'')}${c.risk?` <span class="tag t${c.risk==='high'?1:c.risk==='medium'?2:3}">${esc(c.risk)}</span>`:''}</span></div>`)}`:'';
+  const assess=(json.assessment||[]).length?`<h4>康复评定汇总</h4>${list(json.assessment,a=>`<div class="kv"><span class="k">${esc(a.scale||a.item)}</span><span class="v">${esc(a.item&&a.item!==a.scale?a.item+' · ':'')}${esc(a.value)}${a.grade?` <span class="tag t2">${esc(a.grade)}</span>`:''}</span></div>`)}`:'';
+  const goalRow=[['短期目标',goals.short_term],['中期目标',goals.mid_term],['长期目标',goals.long_term]].filter(x=>x[1]&&x[1].length).map(x=>kv(x[0],esc(x[1].join('；')))).join('');
+  const plan=list(json.plan,mod=>{
+    const exs=list(mod.exercises||[],ex=>`<div class="kv"><span class="k">${esc(ex.name)}</span><span class="v">${esc([ex.frequency,ex.duration_min?ex.duration_min+' 分钟':'',ex.sets_reps,ex.weight_bearing,ex.tolerance?ex.tolerance+' ·':'',ex.stop_criteria?'终止:'+ex.stop_criteria:''].filter(Boolean).join(' · '))}</span></div>`);
+    return `<h4>训练方案 · ${esc(mod.stage||'')}</h4>${exs||'<div class="ritem"><span class="rk">无</span></div>'}${mod.note?`<div style="color:#c0392b;font-size:12.5px;margin-top:6px">${esc(mod.note)}</div>`:''}`;
+  });
+  const emg=json.emergency&&json.emergency.triggered?`<h4>应急处理</h4>${list(json.emergency.plan,m=>kv('步骤',esc(m)))}`:'';
+  const fam=(json.family_education||[]).length?`<h4>家属宣教与居家延伸</h4>${list(json.family_education,m=>kv('宣教',esc(m)))}`:'';
+  const fu=json.followup?`<h4>随访与复评</h4>${kv('复评安排',esc(json.followup.review||''))}${json.followup.next?kv('下次复评',esc(json.followup.next)):''}`:'';
+  return `<div class="report">
+    <h2>${esc((p.diagnosis||'康复'))} · AI 康复评估报告</h2>
+    <div class="r-sub">AI 结构化文书 · 生成日期 ${dateStr}</div>
+    ${banner}
+    <h4>基本信息</h4>
+    ${p.age?kv('年龄 / 性别',`${esc(p.age)} 岁 · ${esc(p.sex||'—')}`):''}
+    ${p.onset_days?kv('病程',esc(p.onset_days)+' 天 · '+esc(p.stage||'')):(p.stage?kv('分期',esc(p.stage)):'')}
+    <h4>主次障碍判定</h4>
+    ${json.impairment?(kv('核心病灶',esc(json.impairment.core_lesion||'—'))+list(json.impairment.primary,m=>kv('主要障碍',esc(m)))+list(json.impairment.secondary,m=>kv('次要障碍',esc(m)))):''}
+    ${contra}${comp}${assess}
+    ${goalRow?`<h4>量化目标</h4>${goalRow}`:''}
+    ${plan}${emg}${fam}${fu}
+    <div class="note">${esc(json.disclaimer||'本输出为持证治疗师辅助参考,需治疗师复核后执行;不替代临床决策。')}</div>
+  </div>`;
+}
+function renderAIReport(){
+  const raw=$('#aiInput').value.trim(), errEl=$('#aiErrors');
+  if(!raw){ errEl.textContent='请粘贴 AI 输出的 JSON'; errEl.style.display='block'; return; }
+  let json;
+  try{ json=JSON.parse(raw); }
+  catch(e){ errEl.textContent='JSON 解析失败:'+e.message; errEl.style.display='block'; return; }
+  const v=window.RedlineEngine.validateOutput(json);
+  if(!v.ok){ errEl.textContent='格式校验未通过:\n'+v.errors.join('\n'); errEl.style.display='block'; return; }
+  const input={ vitals:(json.patient&&json.patient.vitals)||{}, diagnosis:(json.patient&&json.patient.diagnosis)||'', stage:(json.patient&&json.patient.stage)||'', events:(json.patient&&json.patient.events)||[] };
+  const enforced=window.RedlineEngine.enforce(input,json);
+  errEl.style.display='none';
+  $('#reportContent').innerHTML=buildAIReportHTML(enforced);
+  $('#aiMask').classList.remove('show');
+  $('#reportMask').classList.add('show');
+}
+$('#abAI').addEventListener('click', ()=>{ $('#aiErrors').style.display='none'; $('#aiInput').value=''; $('#aiMask').classList.add('show'); });
+$('#aiClose').addEventListener('click', ()=>$('#aiMask').classList.remove('show'));
+$('#aiMask').addEventListener('click', e=>{ if(e.target.id==='aiMask') $('#aiMask').classList.remove('show'); });
+$('#btnAIRender').addEventListener('click', renderAIReport);
+$('#btnAISample').addEventListener('click', ()=>{ $('#aiInput').value=JSON.stringify(AI_SAMPLE,null,2); $('#aiErrors').style.display='none'; });
 
 /* ================= init ================= */
 bindComplaint();
