@@ -18,7 +18,7 @@ html,body{height:100%}
 body{
   font-family:var(--font);
   background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;
-  padding-bottom:70px;padding-top:100px;
+  padding-bottom:70px;padding-top:132px;
 }
 /* ---- header ---- */
 .appbar{
@@ -62,18 +62,18 @@ main{max-width:520px;margin:0 auto;padding:14px 14px 24px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .card{
   background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-  padding:16px;margin-bottom:14px;border:1px solid var(--line);
+  padding:15px;margin-bottom:13px;border:1px solid var(--line);
 }
 .card h3{
   font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:12px;
 }
 .card h3 .n{
-  width:22px;height:22px;border-radius:7px;background:var(--primary);color:#fff;
-  display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none;
+  width:20px;height:20px;border-radius:7px;background:var(--primary);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none;
 }
 .step-desc{font-size:12px;color:var(--muted);margin:-6px 0 14px}
 /* ---- form ---- */
-.field{margin-bottom:14px}
+.field{margin-bottom:12px}
 .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;color:#2a3d52}
 .field input[type=text],.field input[type=number],.field textarea,.field select{
   width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;
@@ -335,6 +335,36 @@ input[type=range]::-webkit-slider-thumb{
   background:#fff;cursor:pointer;flex:none;
 }
 .plist .pcard .del:hover{border-color:var(--danger)}
+.tmpl-wrap{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+.tmpl-t{font-size:12px;color:var(--muted);margin-bottom:6px}
+.tmpls{display:flex;flex-wrap:wrap;gap:8px}
+.tmpl-chip{padding:7px 12px;border:1.5px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--primary);background:#fbfcfe;cursor:pointer}
+.tmpl-chip:active{background:#e7f0fa}
+.ocr-tools{margin-bottom:4px}
+.ocr-upload{display:inline-block;padding:10px 16px;border:1.5px solid var(--primary);border-radius:10px;color:var(--primary);font-size:14px;font-weight:600;background:#fff;cursor:pointer}
+.ocr-img{max-width:100%;max-height:260px;border-radius:10px;margin-top:10px;border:1.5px solid var(--line)}
+.ocr-progress{font-size:12px;color:var(--muted);margin-top:8px}
+.ocr-result{margin-top:10px}
+.ocr-result label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--muted)}
+.ocr-result textarea{width:100%;min-height:120px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fbfcfe}
+.ocr-result textarea:focus{border-color:var(--primary)}
+.ocr-filled{margin-top:8px;font-size:12.5px;color:var(--primary);line-height:1.7}
+.ocr-warn{color:var(--warn)}
+.qphrases{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.qp{padding:5px 10px;border:1.5px solid var(--line);border-radius:16px;font-size:12px;color:var(--muted);background:#fbfcfe;cursor:pointer}
+.qp:active{background:#e7f0fa;color:var(--primary)}
+.bundle-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.bundle-label{font-size:12px;color:var(--muted)}
+.bundle-chip{padding:6px 12px;border:1.5px solid var(--accent);border-radius:16px;font-size:12.5px;color:var(--accent);background:#fff;cursor:pointer}
+.bundle-chip:active{background:#e6f6f8}
+.progbar{position:fixed;top:100px;left:0;right:0;z-index:18;height:32px;display:flex;align-items:center;gap:4px;background:#fff;border-bottom:1px solid var(--line);padding:0 10px}
+.pseg{flex:1;display:flex;align-items:center;justify-content:center;gap:2px;font-size:11px;color:var(--muted);background:#f2f6fa;border-radius:7px;cursor:pointer;height:20px;user-select:none}
+.pseg.ok{background:var(--ok);color:#fff;font-weight:600}
+.ppct{flex:none;font-size:11px;color:var(--primary);font-weight:700;padding:0 4px}
+.miss-bar{background:#fff7ec;border:1.5px solid var(--warn);border-radius:10px;padding:10px 12px;font-size:12.5px;color:#8a5a16;margin-bottom:14px}
+.miss-link{display:inline-block;background:var(--warn);color:#fff;border-radius:14px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0;cursor:pointer;font-weight:600}
+.miss-tip{font-size:11px;color:#b0823a;margin-top:5px}
+@media (max-width:420px){ .appbar .sub{display:none} }
 /* print */
 @media print{
   body{padding:0;background:#fff}
@@ -350,6 +380,8 @@ input[type=range]::-webkit-slider-thumb{
 .search-btn:active{background:rgba(255,255,255,.32)}
 #searchInput{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;background:#fbfcfe;color:var(--text);outline:none;margin-bottom:12px}
 #searchInput:focus{border-color:var(--primary)}
+#patientSearch{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:#fbfcfe;color:var(--text);outline:none;margin-bottom:10px}
+#patientSearch:focus{border-color:var(--primary)}
 .smeta{font-size:12px;color:var(--muted);margin:0 2px 10px}
 .sres{display:block;width:100%;text-align:left;font-family:inherit;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;cursor:pointer;transition:all .15s}
 .sres:active{border-color:var(--primary);background:#eaf3fc}
@@ -425,6 +457,27 @@ input[type=range]::-webkit-slider-thumb{
 .oscale.open .oscale-head .osarrow{transform:rotate(180deg)}
 .oscale .oscale-body{display:none;padding:4px 14px 14px;border-top:1px dashed var(--line)}
 .oscale.open .oscale-body{display:block}
+/* ---- 视觉降噪 v1：徽章三色体系 + 补充卡弱化 ---- */
+.card h3 .n.sym{background:var(--accent)}
+.card.sub{background:#f7fafd;box-shadow:none}
+.card.sub h3,.card.sub .oc-head .oc-title{font-size:14.5px;color:var(--muted)}
+.card.sub h3 .n{background:#c7d5e3}
+.card.sub .oc-head .oc-n{background:#c7d5e3}
+.card.sub .step-desc{color:#8497a8}
+.cmp-last{font-size:11px;color:var(--warn);flex:none;font-weight:600}
+.os-last{font-size:11px;color:var(--warn);font-weight:600;flex:none}
+.cmp-line{font-size:12px;color:var(--warn);margin-top:4px}
+/* ---- 收敛自定义入口：默认折叠，点击展开 ---- */
+.cadd{margin-top:8px}
+.cadd-link{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:7px 0;border:1.5px dashed var(--line);border-radius:9px;
+  font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none;background:#fbfcfe;
+}
+.cadd-link:hover{color:var(--primary);border-color:var(--primary)}
+.cadd-body{display:none;margin-top:8px}
+.cadd.open .cadd-body{display:block}
+.cadd.open .cadd-link{border-style:solid;color:var(--primary);border-color:var(--primary)}
 </style>
 </head>
 <body>
@@ -437,6 +490,7 @@ input[type=range]::-webkit-slider-thumb{
   </div>
   <button class="pt" id="appPatient" title="切换患者">未选择患者</button>
   <button class="search-btn" id="btnSearch" title="搜索康复笔记">🔍</button>
+  <button class="search-btn" id="btnOcr" title="拍照识别 · 自动填充" style="background:rgba(255,255,255,.28)">📷</button>
   <button class="search-btn" id="btnAppNew" title="新建病案" style="background:rgba(255,255,255,.28);font-weight:700">＋</button>
 </div>
 
@@ -448,11 +502,14 @@ input[type=range]::-webkit-slider-thumb{
   <div class="tab" data-sec="sec-plan"><span class="ic">💡</span>康复方案</div>
 </div>
 
+<!-- 评估进度条 -->
+<div class="progbar" id="progBar"></div>
+
 <main>
   <!-- 1 主诉 -->
   <section class="section active" id="sec-complaint">
     <div class="card">
-      <h3><span class="n">◈</span>基本资料</h3>
+      <h3><span class="n sym">◈</span>基本资料</h3>
       <div class="row">
         <div class="field">
           <label>姓名</label>
@@ -493,6 +550,7 @@ input[type=range]::-webkit-slider-thumb{
       <div class="field">
         <label>主诉内容</label>
         <textarea id="fComplaint" placeholder="例：腰痛伴右下肢放射痛 2 周，久坐加重"></textarea>
+        <div class="qphrases" id="cmpPhrases"></div>
       </div>
     </div>
     <div class="card">
@@ -530,6 +588,7 @@ input[type=range]::-webkit-slider-thumb{
           <div class="slider-val" id="vasVal">0</div>
         </div>
         <div class="slider-hint"><span>无痛</span><span>剧痛</span></div>
+        <div id="vasLast" class="cmp-line"></div>
       </div>
       <div class="field">
         <label>夜间疼痛</label>
@@ -539,14 +598,19 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
-    <div class="card oc" data-oc="hist">
+    <div class="card sub oc" data-oc="hist">
       <div class="oc-head"><div class="oc-title"><span class="oc-n">3</span>既往史<span class="oc-sum" id="histSum"></span></div><div class="oc-arrow">▾</div></div>
       <div class="oc-body">
         <div class="step-desc">勾选存在的危险因素</div>
         <div id="histList"></div>
-        <div class="selrow" style="margin-top:8px">
-          <input type="text" id="histCust" class="sel-cust" placeholder="自定义既往史，点击＋添加" style="flex:1">
-          <button type="button" class="mini" id="histPlus" title="添加自定义病史">＋</button>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义病史</div>
+          <div class="cadd-body">
+            <div class="selrow">
+              <input type="text" id="histCust" class="sel-cust" placeholder="自定义既往史，点击＋添加" style="flex:1">
+              <button type="button" class="mini" id="histPlus" title="添加自定义病史">＋</button>
+            </div>
+          </div>
         </div>
         <div id="historyChips" class="cust-chips"></div>
         <div class="field" style="margin-top:10px">
@@ -555,18 +619,24 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
-    <div class="card">
+    <div class="card sub">
       <h3><span class="n">4</span>影像学检查</h3>
       <div class="step-desc">勾选已做检查，填写所见</div>
       <div class="img-pills" id="imgTypes"></div>
-      <div class="selrow" style="margin-top:6px">
-        <input type="text" id="imgCust" class="sel-cust" placeholder="自定义检查项目，点击＋添加" style="flex:1">
-        <button type="button" class="mini" id="imgPlus" title="添加自定义检查">＋</button>
+      <div class="cadd">
+        <div class="cadd-link">＋ 添加自定义检查</div>
+        <div class="cadd-body">
+          <div class="selrow">
+            <input type="text" id="imgCust" class="sel-cust" placeholder="自定义检查项目，点击＋添加" style="flex:1">
+            <button type="button" class="mini" id="imgPlus" title="添加自定义检查">＋</button>
+          </div>
+        </div>
       </div>
       <div id="imagingChips" class="cust-chips"></div>
       <div class="field">
         <label>检查所见 / 影像学发现</label>
         <textarea id="fImg" placeholder="如：L4-5 椎间盘突出，硬膜囊受压"></textarea>
+        <div class="qphrases" id="imgPhrases"></div>
       </div>
     </div>
   </section>
@@ -585,7 +655,12 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的关节 → 选左右 / 主动被动 / 填角度，可多选；也可自定义关节</div>
         <div id="romRows"></div>
-        <div class="add-row"><input type="text" id="romCName" placeholder="自定义关节，如：拇指腕掌关节" list="romDL"><datalist id="romDL"></datalist><button class="mini" data-additem="rom">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义关节</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="romCName" placeholder="自定义关节，如：拇指腕掌关节" list="romDL"><datalist id="romDL"></datalist><button class="mini" data-additem="rom">＋</button></div>
+          </div>
+        </div>
         <div id="romItemsChips" class="cust-chips"></div>
       </div>
     </div>
@@ -594,7 +669,12 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的肢体/肌群 → 选 0-5 级，可多选；也可自定义肌群</div>
         <div id="mmtRows"></div>
-        <div class="add-row"><input type="text" id="mmtCName" placeholder="自定义肌群，如：右踝背屈肌" list="mmtDL"><datalist id="mmtDL"></datalist><button class="mini" data-additem="mmt">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义肌群</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="mmtCName" placeholder="自定义肌群，如：右踝背屈肌" list="mmtDL"><datalist id="mmtDL"></datalist><button class="mini" data-additem="mmt">＋</button></div>
+          </div>
+        </div>
         <div id="mmtItemsChips" class="cust-chips"></div>
       </div>
     </div>
@@ -615,9 +695,19 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的感觉类型 → 选结果、填部位，可多选；结果可自定义</div>
         <div id="sensoryRows"></div>
-        <div class="add-row"><input type="text" id="sensoryCName" placeholder="自定义感觉类型，如：两点辨别"><button class="mini" data-additem="sensory">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义感觉类型</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="sensoryCName" placeholder="自定义感觉类型，如：两点辨别"><button class="mini" data-additem="sensory">＋</button></div>
+          </div>
+        </div>
         <div id="sensoryItemsChips" class="cust-chips"></div>
-        <div class="add-row"><input type="text" id="sensoryFindCust" placeholder="自定义感觉结果（如：痛觉过敏）" ><button class="mini" data-findadd="sensory">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义结果</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="sensoryFindCust" placeholder="自定义感觉结果（如：痛觉过敏）" ><button class="mini" data-findadd="sensory">＋</button></div>
+          </div>
+        </div>
         <div id="sensoryFindChips" class="cust-chips"></div>
       </div>
     </div>
@@ -626,9 +716,19 @@ input[type=range]::-webkit-slider-thumb{
       <div class="oc-body">
         <div class="step-desc">勾选要评估的反射 / 病理征 → 选结果，可多选；结果可自定义</div>
         <div id="reflexRows"></div>
-        <div class="add-row"><input type="text" id="reflexCName" placeholder="自定义反射项目，如：桡骨膜反射（加强）"><button class="mini" data-additem="reflex">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义反射</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="reflexCName" placeholder="自定义反射项目，如：桡骨膜反射（加强）"><button class="mini" data-additem="reflex">＋</button></div>
+          </div>
+        </div>
         <div id="reflexItemsChips" class="cust-chips"></div>
-        <div class="add-row"><input type="text" id="reflexFindCust" placeholder="自定义反射结果（如：轻度亢进++）" ><button class="mini" data-findadd="reflex">＋</button></div>
+        <div class="cadd">
+          <div class="cadd-link">＋ 添加自定义结果</div>
+          <div class="cadd-body">
+            <div class="add-row"><input type="text" id="reflexFindCust" placeholder="自定义反射结果（如：轻度亢进++）" ><button class="mini" data-findadd="reflex">＋</button></div>
+          </div>
+        </div>
         <div id="reflexFindChips" class="cust-chips"></div>
       </div>
     </div>
@@ -652,7 +752,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
     <div class="card">
-      <h3><span class="n">7</span>特殊检查·视频参考</h3>
+      <h3><span class="n">9</span>特殊检查·视频参考</h3>
       <div class="step-desc">按部位筛选，勾选阳性结果，可查看示范视频</div>
       <div class="filter" id="examPartFilter"></div>
       <input type="search" class="psearch" id="examSearch" placeholder="搜索检查名称…" autocomplete="off">
@@ -663,13 +763,14 @@ input[type=range]::-webkit-slider-thumb{
   <!-- 3 康复评定（量表） -->
   <section class="section" id="sec-scale">
     <div class="card">
-      <h3><span class="n">◈</span>康复评定量表</h3>
+      <h3><span class="n sym">◈</span>康复评定量表</h3>
       <div class="step-desc">按类别筛选，点击卡片「添加到评估」，可多选</div>
       <div class="filter" id="scaleFilter"></div>
+      <div class="bundle-row" id="bundleRow"></div>
       <div id="scaleList"></div>
     </div>
     <div class="card" id="scaleScoreCard" style="display:none">
-      <h3><span class="n">✎</span>量表填写</h3>
+      <h3><span class="n sym">✎</span>量表填写</h3>
       <div id="scaleScores"></div>
     </div>
   </section>
@@ -689,32 +790,52 @@ input[type=range]::-webkit-slider-thumb{
       <h3><span class="n">2</span>治疗目标</h3>
       <div class="target-box" id="planTarget"></div>
       <div id="planTargetCustom"></div>
-      <div class="add-row"><input type="text" id="targetCust" placeholder="输入目标，如：恢复独立行走"><button class="mini" data-addplan="target">＋</button></div>
+      <div class="cadd">
+        <div class="cadd-link">＋ 添加自定义目标</div>
+        <div class="cadd-body">
+          <div class="add-row"><input type="text" id="targetCust" placeholder="输入目标，如：恢复独立行走"><button class="mini" data-addplan="target">＋</button></div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h3><span class="n">3</span>物理因子治疗</h3>
       <div class="step-desc">点击勾选/取消，可增删项目</div>
       <div id="planPhysio"></div>
       <button class="addbtn" id="btnPhysioLib">＋ 添加物理因子治疗项目</button>
-      <div class="add-row"><input type="text" id="physioCust" placeholder="输入动作/治疗项目，自动提示做法"><button class="mini" data-addplan="physio">＋</button></div>
-      <div class="sugg-box" id="physioSugg"></div>
+      <div class="cadd">
+        <div class="cadd-link">＋ 添加自定义项目</div>
+        <div class="cadd-body">
+          <div class="add-row"><input type="text" id="physioCust" placeholder="输入动作/治疗项目，自动提示做法"><button class="mini" data-addplan="physio">＋</button></div>
+          <div class="sugg-box" id="physioSugg"></div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h3><span class="n">4</span>运动疗法</h3>
       <div class="step-desc">点击勾选/取消；可输入动作自动带做法</div>
       <div id="planExercise"></div>
-      <div class="add-row"><input type="text" id="exCust" placeholder="输入动作，如：臀桥，自动提示怎么做"><button class="mini" data-addplan="exercise">＋</button></div>
-      <div class="sugg-box" id="exSugg"></div>
+      <div class="cadd">
+        <div class="cadd-link">＋ 添加自定义动作</div>
+        <div class="cadd-body">
+          <div class="add-row"><input type="text" id="exCust" placeholder="输入动作，如：臀桥，自动提示怎么做"><button class="mini" data-addplan="exercise">＋</button></div>
+          <div class="sugg-box" id="exSugg"></div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h3><span class="n">5</span>手法治疗</h3>
       <div class="step-desc">点击勾选/取消；可输入手法自动带做法</div>
       <div id="planManual"></div>
-      <div class="add-row"><input type="text" id="manualCust" placeholder="输入手法，如：肌筋膜松解，自动提示怎么做"><button class="mini" data-addplan="manual">＋</button></div>
-      <div class="sugg-box" id="manualSugg"></div>
+      <div class="cadd">
+        <div class="cadd-link">＋ 添加自定义手法</div>
+        <div class="cadd-body">
+          <div class="add-row"><input type="text" id="manualCust" placeholder="输入手法，如：肌筋膜松解，自动提示怎么做"><button class="mini" data-addplan="manual">＋</button></div>
+          <div class="sugg-box" id="manualSugg"></div>
+        </div>
+      </div>
     </div>
     <div class="card">
-      <h3><span class="n">＋</span>自定义疗法</h3>
+      <h3><span class="n sym">＋</span>自定义疗法</h3>
       <div class="step-desc">添加个性化疗法</div>
       <div class="add-ther">
         <input type="text" id="therInput" placeholder="如：中频电疗 20min / 患侧负重训练">
@@ -723,7 +844,7 @@ input[type=range]::-webkit-slider-thumb{
       <div class="therapy-list" id="therList"></div>
     </div>
     <div class="card">
-      <h3><span class="n">▶</span>演示视频</h3>
+      <h3><span class="n sym">▶</span>演示视频</h3>
       <div class="step-desc" id="planVideoDesc"></div>
       <div class="video-grid" id="planVideos"></div>
     </div>
@@ -744,8 +865,40 @@ input[type=range]::-webkit-slider-thumb{
   <div class="modal">
     <span class="close" id="patientClose">✕</span>
     <h3>患者档案</h3>
+    <input type="search" id="patientSearch" placeholder="搜索姓名 / 诊断…" autocomplete="off">
     <div class="plist" id="patientList"></div>
-    <button class="btn" id="btnAddPatient" style="margin-top:6px">＋ 新建患者档案</button>
+    <div class="btn-row" style="margin-top:6px">
+      <button class="btn" id="btnAddPatient">＋ 新建患者</button>
+      <button class="btn ghost" id="btnCopyLast">复制上一位</button>
+    </div>
+    <div class="tmpl-wrap">
+      <div class="tmpl-t">快速建档模板（预填诊断 + 常用量表）：</div>
+      <div class="tmpls" id="tmplList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OCR modal -->
+<div class="modal-mask" id="ocrMask">
+  <div class="modal">
+    <span class="close" id="ocrClose">✕</span>
+    <h3>📷 拍照识别 · 自动填充</h3>
+    <div class="ocr-tools">
+      <label class="ocr-upload" for="ocrFile">📷 拍照 / 选择图片</label>
+      <input type="file" id="ocrFile" accept="image/*" capture="environment" style="display:none">
+    </div>
+    <div id="ocrPreview"></div>
+    <div class="ocr-progress" id="ocrProgress" style="display:none"></div>
+    <div class="ocr-result" id="ocrResult" style="display:none">
+      <label>识别文本（可编辑后点击下方按钮）：</label>
+      <textarea id="ocrText" placeholder="识别出的文字会显示在这里…"></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" id="ocrFill">自动填充表单</button>
+        <button class="btn ghost" id="ocrComplaint">识别文本填入主诉</button>
+      </div>
+      <div id="ocrFilled"></div>
+    </div>
+    <div class="hint">本地识别，图片不会上传。打印体（出院小结/检查报告）效果最佳；首次使用需下载识别模型（约数 MB，网络慢会等一会儿）。</div>
   </div>
 </div>
 
@@ -780,8 +933,8 @@ input[type=range]::-webkit-slider-thumb{
   <div class="modal">
     <span class="close" id="aiClose">✕</span>
     <h3>🤖 AI 康复文书</h3>
-    <div class="hint" style="margin-bottom:8px">粘贴 AI 输出的结构化 JSON,系统自动校验并渲染为文书(内置红线引擎二次强制校验)。</div>
-    <textarea id="aiInput" spellcheck="false" placeholder='粘贴 AI 输出 JSON,如 {"schema_version":"0.2.0",...}' style="width:100%;height:190px;box-sizing:border-box;font-family:Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical"></textarea>
+    <div class="hint" style="margin-bottom:8px">直接粘贴中文文书文本即可渲染；或粘贴 AI 输出的结构化 JSON（自动校验 + 红线二次校验）。</div>
+    <textarea id="aiInput" spellcheck="false" placeholder='粘贴中文康复文书文本，或 AI 输出 JSON，如 {"schema_version":"0.2.0",...}' style="width:100%;height:190px;box-sizing:border-box;font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical"></textarea>
     <div id="aiErrors" style="color:#c0392b;font-size:12.5px;margin-top:6px;display:none;white-space:pre-wrap"></div>
     <div class="btn-row" style="margin-top:10px">
       <button class="btn" id="btnAIRender">渲染文书</button>
@@ -2116,8 +2269,45 @@ function makePatient(name,age,gender,complaint,vas){
     planDisease: '腰痛', planStage: PLAN_STAGES[0], planSel: null,
     plan: null, customTher: [], customOpts: {},
     planCustom: { target:[], physio:[], exercise:[], manual:[] },
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    lastUsed: Date.now(),
+    visits: []
   });
+}
+/* ---- 复诊对比：评估快照 ---- */
+function lastVisit(p){ const v=p.visits||[]; return v.length? v[v.length-1] : null; }
+function snapshotVisit(){
+  const p=cur();
+  const snap={
+    t:Date.now(), vas:p.vas,
+    rom:p.objective.rom.map(e=>({joint:e.joint,side:e.side,type:e.type,deg:e.deg})),
+    mmt:p.objective.mmt.map(e=>({name:e.name,grade:e.grade})),
+    scores:JSON.parse(JSON.stringify(p.scores||{}))
+  };
+  const v=p.visits=p.visits||[];
+  const last=v[v.length-1];
+  if(last && last.vas===snap.vas && JSON.stringify(last.scores)===JSON.stringify(snap.scores)){
+    last.t=Date.now();
+  } else {
+    v.push(snap);
+    if(v.length>30) v.splice(0,v.length-30);
+  }
+  savePatients();
+}
+function lastRomDeg(joint,side,type){
+  const lv=lastVisit(cur()); if(!lv) return null;
+  const e=(lv.rom||[]).find(x=>x.joint===joint&&x.side===side&&x.type===type);
+  return e?e.deg:null;
+}
+function lastMmtGrade(name){
+  const lv=lastVisit(cur()); if(!lv) return null;
+  const e=(lv.mmt||[]).find(x=>x.name===name);
+  return e?e.grade:null;
+}
+function lastScaleTotal(sid, sc){
+  const lv=lastVisit(cur());
+  if(!lv||!lv.scores||!lv.scores[sid]) return null;
+  try{ const g=scaleGrade(sc, lv.scores[sid]); return (g&&typeof g.total==='number')?g.total:null; }catch(e){ return null; }
 }
 /* ---- 全局自定义选项（跨患者共享）：painNature/ashworth/temp/reflexFind/sensoryFind/量表题号__idx ---- */
 let GLOBAL_OPTS = {};
@@ -2233,25 +2423,54 @@ function buildPlanLive(p){
 /* ============================================================
    tab 切换
    ============================================================ */
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    tab.classList.add('on');
-    const sec=document.getElementById(tab.dataset.sec);
-    sec.classList.add('active');
-    if(tab.dataset.sec==='sec-objective') renderObjective();
-    if(tab.dataset.sec==='sec-scale'){ renderScaleList(currentScaleFilter); renderScaleScores(); }
-    if(tab.dataset.sec==='sec-plan') renderPlan();
-  });
-});
+function switchTab(secId){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const tab=document.querySelector('.tab[data-sec="'+secId+'"]');
+  if(tab) tab.classList.add('on');
+  const sec=document.getElementById(secId);
+  if(!sec) return;
+  sec.classList.add('active');
+  if(secId==='sec-objective') renderObjective();
+  if(secId==='sec-scale'){ renderScaleList(currentScaleFilter); renderScaleScores(); }
+  if(secId==='sec-plan') renderPlan();
+}
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchTab(tab.dataset.sec)));
+/* ---- 评估进度提示 ---- */
+function assessProgress(p){
+  return [
+    { label:'主诉', done: !!(p.complaint||p.diagnosis.type||p.vas>0||p.pain.nature) },
+    { label:'查体', done: !!(p.objective.tend.length||p.objective.rom.length||p.objective.mmt.length||p.objective.ashworth||p.objective.sensory.length||p.objective.reflex.length) },
+    { label:'评定', done: p.scales.length>0 },
+    { label:'方案', done: (()=>{ const s=getPlanSel(p); return !!(s&&(s.physio&&s.physio.length||s.exercise&&s.exercise.length||s.manual&&s.manual.length)||(p.customTher&&p.customTher.length)); })() },
+  ];
+}
+function renderProgress(){
+  const bar=$('#progBar'); if(!bar) return;
+  const steps=assessProgress(cur());
+  const done=steps.filter(s=>s.done).length;
+  const secs=['sec-complaint','sec-objective','sec-scale','sec-plan'];
+  bar.innerHTML = steps.map((s,i)=>`<div class="pseg ${s.done?'ok':''}" data-i="${i}">${s.done?'✓ ':''}${esc(s.label)}</div>`).join('')
+    + `<div class="ppct">${done}/4</div>`;
+  bar.querySelectorAll('.pseg').forEach(seg=>seg.addEventListener('click',()=>switchTab(secs[seg.dataset.i])));
+}
+function buildMissBar(p){
+  const steps=assessProgress(p);
+  const secs=['sec-complaint','sec-objective','sec-scale','sec-plan'];
+  const miss=steps.filter(s=>!s.done);
+  if(!miss.length) return '';
+  return `<div class="miss-bar">评估待完善：${miss.map(s=>`<span class="miss-link" data-sec="${secs[steps.indexOf(s)]}">${esc(s.label)}</span>`).join('')}<div class="miss-tip">点击跳转补填</div></div>`;
+}
 
 /* ============================================================
    患者档案弹层
    ============================================================ */
 function renderPatientList(){
   const box=$('#patientList');
-  box.innerHTML = patients.map(p=>{
+  const kw=String(($('#patientSearch')||{}).value||'').trim().toLowerCase();
+  const list=patients.slice().sort((a,b)=>(b.lastUsed||b.createdAt||0)-(a.lastUsed||a.createdAt||0));
+  const flt=kw?list.filter(p=>(p.name||'').toLowerCase().includes(kw)||String(p.diagnosis&&p.diagnosis.type||p.planDisease||'').toLowerCase().includes(kw)):list;
+  box.innerHTML = flt.map(p=>{
     const on = p.id===currentId;
     const d = new Date(p.createdAt);
     const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
@@ -2260,10 +2479,12 @@ function renderPatientList(){
       <div class="pn">${esc(p.name||'未命名')}<small>${p.age||'?'} 岁 · ${p.gender||'?'} · ${esc(p.diagnosis&&p.diagnosis.type||p.planDisease||'')} · 建档 ${dateStr}</small></div>
       ${on?'':`<button class="del" data-del="${p.id}">删除</button>`}
     </div>`;
-  }).join('') || '<div class="empty">暂无患者，点击下方新建</div>';
+  }).join('') || (patients.length?`<div class="empty">未找到匹配患者</div>`:'<div class="empty">暂无患者，点击下方新建</div>');
   box.querySelectorAll('.pcard').forEach(c=>{
     c.addEventListener('click',()=>{
-      currentId=c.dataset.id; savePatients();
+      currentId=c.dataset.id;
+      const pp=patients.find(x=>x.id===currentId); if(pp) pp.lastUsed=Date.now();
+      savePatients();
       $('#patientMask').classList.remove('show');
       refreshAll();
     });
@@ -2280,9 +2501,10 @@ function renderPatientList(){
     });
   });
 }
-function openPatientModal(){ renderPatientList(); $('#patientMask').classList.add('show'); }
+function openPatientModal(){ renderPatientList(); renderTemplates(); $('#patientMask').classList.add('show'); }
 $('#appPatient').addEventListener('click', openPatientModal);
 $('#patientClose').addEventListener('click', ()=>$('#patientMask').classList.remove('show'));
+$('#patientSearch').addEventListener('input', renderPatientList);
 $('#patientMask').addEventListener('click', e=>{ if(e.target.id==='patientMask')$('#patientMask').classList.remove('show'); });
 function newPatient(){
   patients.push(makePatient('','','男','',0));
@@ -2294,6 +2516,160 @@ function newPatient(){
 $('#btnAddPatient').addEventListener('click',()=>{ newPatient(); $('#patientMask').classList.remove('show'); });
 $('#btnAppNew').addEventListener('click',()=>newPatient());
 $('#abNew').addEventListener('click',()=>newPatient());
+/* ---- 快速建档：复制上一位框架 / 疾病模板 ---- */
+const DISEASE_TEMPLATES = [
+  { name:'腰痛', diag:'腰痛', plan:'腰痛', scales:['vas','oddi'] },
+  { name:'颈椎病', diag:'颈椎病', plan:'颈椎病', scales:['vas'] },
+  { name:'肩周炎', diag:'肩周炎', plan:'肩周炎', scales:['vas'] },
+  { name:'脑卒中', diag:'脑梗死恢复期', plan:'脑卒中', scales:['mrs','nihss','brunnstrom','barthel','moca'] },
+  { name:'骨折术后', diag:'骨折术后', plan:'骨折术后', scales:['vas'] },
+  { name:'脊髓损伤', diag:'脊髓损伤', plan:'脊髓损伤', scales:['scim','fim'] },
+];
+function newPatientWith(init){
+  const p=makePatient('','','男','',0);
+  if(init){
+    if(init.diagnosis) p.diagnosis=init.diagnosis;
+    if(init.plan) p.planDisease=init.plan;
+    if(init.scales) p.scales=init.scales.slice();
+    p.planSel=defaultPlanSel(p);
+  }
+  patients.push(p);
+  currentId=p.id;
+  savePatients(); refreshAll();
+  $('#patientMask').classList.remove('show');
+  toast('已新建患者档案');
+}
+function copyLastTemplate(){
+  const src = patients.find(x=>x.id===currentId) || patients[patients.length-1];
+  newPatientWith(src?{ diagnosis:{ type:src.diagnosis.type, note:'' }, plan:src.planDisease, scales:src.scales.slice() } : null);
+}
+function applyTemplate(tpl){
+  newPatientWith({ diagnosis:{ type:tpl.diag, note:'' }, plan:tpl.plan, scales:tpl.scales });
+}
+function renderTemplates(){
+  const box=$('#tmplList'); if(!box) return;
+  box.innerHTML = DISEASE_TEMPLATES.map((t,i)=>`<div class="tmpl-chip" data-i="${i}">${esc(t.name)}</div>`).join('');
+  box.querySelectorAll('.tmpl-chip').forEach(c=>c.addEventListener('click',()=>applyTemplate(DISEASE_TEMPLATES[c.dataset.i])));
+}
+$('#btnCopyLast').addEventListener('click', copyLastTemplate);
+/* ---- 拍照识别 · 自动填充（本地 OCR，图片不上传） ---- */
+const OCR_DIAG_KEYWORDS = [
+  ['腰椎间盘突出','腰椎间盘突出症'], ['腰椎','腰椎间盘突出症'],
+  ['腰肌劳损','腰肌劳损'], ['腰痛','腰肌劳损'],
+  ['颈椎病','颈椎病'], ['肩袖损伤','肩袖损伤'], ['肩袖','肩袖损伤'], ['肩周炎','肩周炎'],
+  ['半月板','半月板损伤'], ['前交叉韧带','前交叉韧带损伤'], ['交叉韧带','前交叉韧带损伤'],
+  ['肱骨外上髁炎','网球肘'], ['网球肘','网球肘'],
+  ['脊髓损伤','脊髓损伤'], ['骨折','骨折术后'], ['骨质疏松','骨质疏松'],
+  ['脑梗死','脑梗死恢复期'], ['脑梗','脑梗死恢复期'], ['脑出血','脑出血恢复期'],
+];
+let ocrWorker=null;
+function ocrFill(){
+  const p=cur();
+  const txt=$('#ocrText').value||'';
+  const filled=[];
+  for(const [kw,v] of OCR_DIAG_KEYWORDS){
+    if(txt.includes(kw)){
+      const d=DIAGNOSES.find(x=>x.v===v);
+      p.diagnosis.type=v;
+      if(d&&d.d) p.planDisease=d.d;
+      p.planSel=defaultPlanSel(p);
+      filled.push('主诊断：'+(d?d.t:v));
+      break;
+    }
+  }
+  HISTORY_ITEMS.forEach(it=>{
+    if(it.name && txt.includes(it.name) && !p.history.items.includes(it.id)){
+      p.history.items.push(it.id); filled.push('既往史：'+it.name);
+    }
+  });
+  const vm=txt.match(/VAS\s*[:：]?\s*(\d+(?:\.\d+)?)/i)||txt.match(/疼痛\s*(\d+)\s*[\/分]/);
+  if(vm){ const v=parseFloat(vm[1]); if(v>=0&&v<=10){ p.vas=v; filled.push('VAS：'+v); } }
+  savePatients(); refreshAll();
+  $('#ocrFilled').innerHTML = filled.length
+    ? '<div class="ocr-filled">已自动填充：<br>'+filled.map(esc).join('<br>')+'</div>'
+    : '<div class="ocr-filled ocr-warn">未匹配到可自动填充项，可手动从识别文本复制</div>';
+}
+async function ocrRecognize(dataUrl){
+  const prog=$('#ocrProgress'); prog.style.display='block';
+  try{
+    if(!ocrWorker){
+      if(typeof Tesseract==='undefined'){
+        await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js'; s.onload=res; s.onerror=()=>rej(new Error('Tesseract 加载失败，请检查网络')); document.head.appendChild(s); });
+      }
+      prog.textContent='加载识别模型…';
+      ocrWorker = await Tesseract.createWorker('chi_sim', 1, {
+        logger: m=>{ if(m.status==='recognizing text'&&m.progress!=null) prog.textContent='识别中 '+(m.progress*100).toFixed(0)+'%'; else if(m.status) prog.textContent=m.status; },
+        langPath:'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0'
+      });
+    }
+    prog.textContent='识别中…';
+    const { data } = await ocrWorker.recognize(dataUrl);
+    $('#ocrText').value=(data.text||'').trim();
+    $('#ocrResult').style.display='block';
+    prog.style.display='none';
+  }catch(e){
+    prog.style.display='none';
+    toast('识别失败：'+(e&&e.message||e));
+  }
+}
+$('#btnOcr').addEventListener('click', ()=>{ $('#ocrResult').style.display='none'; $('#ocrPreview').innerHTML=''; $('#ocrProgress').style.display='none'; $('#ocrFilled').innerHTML=''; $('#ocrMask').classList.add('show'); });
+$('#ocrClose').addEventListener('click', ()=>$('#ocrMask').classList.remove('show'));
+$('#ocrMask').addEventListener('click', e=>{ if(e.target.id==='ocrMask')$('#ocrMask').classList.remove('show'); });
+$('#ocrFile').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ $('#ocrPreview').innerHTML='<img class="ocr-img" src="'+rd.result+'">'; $('#ocrResult').style.display='none'; ocrRecognize(rd.result); };
+  rd.readAsDataURL(f);
+});
+$('#ocrFill').addEventListener('click', ocrFill);
+$('#ocrComplaint').addEventListener('click', ()=>{
+  const t=$('#ocrText').value.trim();
+  if(!t){ toast('识别文本为空'); return; }
+  const p=cur(); p.complaint = p.complaint? p.complaint+'；'+t : t; savePatients(); refreshComplaint(); toast('已填入主诉');
+});
+/* ---- 常用语快捷插入 ---- */
+const QUICK_PHRASES = {
+  complaint:['久坐加重','弯腰受限','活动后加重','休息后缓解','夜间疼痛明显','放射至下肢','麻木感','晨僵','乏力','反复发作'],
+  imaging:['椎间盘突出','硬膜囊受压','关节间隙狭窄','骨质增生','韧带损伤','积液','退行性改变','未见明显异常']
+};
+function insertPhrase(id, phrase){
+  const el=document.getElementById(id);
+  const v=el.value;
+  const start=el.selectionStart!=null?el.selectionStart:v.length;
+  const sep = start>0 && !/[\s；;，,。]/.test(v[start-1]) ? '；' : '';
+  el.value = v.slice(0,start)+sep+phrase+v.slice(start);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.focus();
+}
+function renderQuickPhrases(){
+  const rows=[[QUICK_PHRASES.complaint,'cmpPhrases','fComplaint'],[QUICK_PHRASES.imaging,'imgPhrases','fImg']];
+  rows.forEach(([phrases,boxId,fieldId])=>{
+    const box=document.getElementById(boxId); if(!box) return;
+    box.innerHTML=phrases.map(p=>`<span class="qp" data-t="${esc(p)}" data-id="${fieldId}">${esc(p)}</span>`).join('');
+  });
+  document.querySelectorAll('.qp').forEach(s=>s.addEventListener('click',()=>insertPhrase(s.dataset.id, s.dataset.t)));
+}
+renderQuickPhrases();
+/* ---- 量表套餐一键勾选 ---- */
+const SCALE_BUNDLES = [
+  { name:'腰痛', scales:['vas','oddi'] },
+  { name:'疼痛评估', scales:['vas','mpq','oddi'] },
+  { name:'脑卒中', scales:['mrs','nihss','brunnstrom','barthel','holden','moca','mmse'] },
+  { name:'脊髓损伤', scales:['scim','fim'] },
+];
+function applyBundle(b){
+  const p=cur();
+  let added=0;
+  b.scales.forEach(sid=>{ if(!p.scales.includes(sid)){ p.scales.push(sid); added++; } });
+  savePatients(); renderScaleList(currentScaleFilter); renderScaleScores();
+  toast(added? ('已添加 '+added+' 个量表'):'所选量表已在评估中');
+}
+function renderBundles(){
+  const box=$('#bundleRow'); if(!box) return;
+  box.innerHTML = '<span class="bundle-label">一键套餐：</span>' + SCALE_BUNDLES.map((b,i)=>`<span class="bundle-chip" data-i="${i}">${esc(b.name)}</span>`).join('');
+  box.querySelectorAll('.bundle-chip').forEach(c=>c.addEventListener('click',()=>applyBundle(SCALE_BUNDLES[c.dataset.i])));
+}
+renderBundles();
 $('#abSave').addEventListener('click',()=>{ savePatients(); toast('病案已保存'); });
 $('#abLoad').addEventListener('click', openPatientModal);
 
@@ -2324,6 +2700,7 @@ function refreshComplaint(){
   $('#fVas').value=p.vas;
   $('#vasVal').textContent=p.vas;
   $('#fVas').style.setProperty('--fill',(p.vas/10*100)+'%');
+  const _lv=lastVisit(p); $('#vasLast').textContent = _lv?('上次 VAS：'+_lv.vas):'';
   document.querySelectorAll('input[name=nightPain]').forEach(r=>{ if(r.value===(p.pain.night?'有':'无')) r.checked=true; });
   const histPresets=HISTORY_ITEMS.map(x=>x.id);
   $('#histList').innerHTML = visibleOf('history', histPresets).map(id=>{
@@ -2441,6 +2818,7 @@ const REFLEX_FINDS = ['正常','减弱','亢进','消失','阳性','阴性'];
 const SENSORY_DEFS = [{name:'浅感觉（触/痛/温）'},{name:'深感觉（位置/振动）'},{name:'复合感觉（两点辨别）'},{name:'皮节感觉（按节段）'}];
 const SENSORY_FINDS = ['正常','减退','消失','过敏'];
 const objOpen = new Set(['tend']);
+const objUserToggle = new Set();
 let currentExamPart='';
 
 /* ---- 自定义选项 / 折叠公共工具 ---- */
@@ -2472,8 +2850,24 @@ function bindCustomSelect(plusId, custId, selId, storeKey, refresh){
   });
   $(custId).addEventListener('keydown',e=>{ if(e.key==='Enter') commit(); });
 }
+function ocHasData(key, p){
+  if(key==='tend') return p.objective.tend.length>0;
+  if(key==='rom') return p.objective.rom.length>0;
+  if(key==='mmt') return p.objective.mmt.length>0;
+  if(key==='ashworth') return !!p.objective.ashworth;
+  if(key==='sensory') return p.objective.sensory.length>0;
+  if(key==='reflex') return p.objective.reflex.length>0;
+  if(key==='hist') return p.history.items.length>0 || !!p.history.meds;
+  return false;
+}
 function applyOc(){
-  document.querySelectorAll('.oc').forEach(c=>c.classList.toggle('open', objOpen.has(c.dataset.oc)));
+  const p=cur();
+  document.querySelectorAll('.oc').forEach(c=>{
+    const key=c.dataset.oc;
+    let open = objUserToggle.has(key) ? objOpen.has(key) : (ocHasData(key,p) || key==='tend');
+    if(open) objOpen.add(key); else objOpen.delete(key);
+    c.classList.toggle('open', open);
+  });
 }
 function clearCustomIfSelected(key, v, p){
   if(key==='painNature' && p.pain.nature===v) p.pain.nature='';
@@ -2554,12 +2948,14 @@ function renderRom(){
   const box=$('#romRows');
   box.innerHTML = objRows('rom', ROM_DEFS, (k,on,e)=>{
     e=e||{joint:k,side:'左',type:'主动',deg:''};
+    const ld=lastRomDeg(k, e.side||'左', e.type||'主动');
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
       <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
       <span class="srow-name">${esc(k)}</span>
       <select class="srow-sel" data-f="side">${ROM_SIDES.map(o=>`<option ${o===e.side?'selected':''}>${o}</option>`).join('')}</select>
       <select class="srow-sel" data-f="type">${ROM_TYPES.map(o=>`<option ${o===e.type?'selected':''}>${o}</option>`).join('')}</select>
       <input type="text" class="srow-in" data-f="deg" placeholder="°" value="${esc(e.deg)}">
+      ${ld!=null&&ld!==''?`<span class="cmp-last">上次 ${esc(ld)}°</span>`:''}
     </div>`;
   });
   bindObjRows(box,'rom');
@@ -2570,10 +2966,12 @@ function renderMmt(){
   const box=$('#mmtRows');
   box.innerHTML = objRows('mmt', MMT_DEFS, (k,on,e)=>{
     e=e||{name:k,grade:'3'};
+    const lg=lastMmtGrade(k);
     return `<div class="srow ${on?'on':''}" data-key="${esc(k)}">
       <label class="srow-chk"><input type="checkbox" ${on?'checked':''}><span>✓</span></label>
       <span class="srow-name">${esc(k)}</span>
       <select class="srow-sel" data-f="grade">${MMT_GRADES.map(o=>`<option value="${o}" ${o===e.grade?'selected':''}>${o} 级</option>`).join('')}</select>
+      ${lg!=null?`<span class="cmp-last">上次 ${esc(lg)} 级</span>`:''}
     </div>`;
   });
   bindObjRows(box,'mmt');
@@ -2660,9 +3058,14 @@ $('#romDL').innerHTML = visibleOf('romItems', ROM_DEFS.map(d=>d.name)).map(d=>`<
 $('#mmtDL').innerHTML = visibleOf('mmtItems', MMT_DEFS.map(d=>d.name)).map(d=>`<option value="${esc(d)}">`).join('');
 document.querySelectorAll('.oc-head').forEach(h=>h.addEventListener('click',()=>{
   const oc=h.closest('.oc'); const key=oc.dataset.oc;
+  objUserToggle.add(key);
   if(objOpen.has(key)) objOpen.delete(key); else objOpen.add(key);
   oc.classList.toggle('open');
 }));
+document.addEventListener('click',e=>{
+  const link=e.target.closest('.cadd-link');
+  if(link) link.closest('.cadd').classList.toggle('open');
+});
 function renderObjective(){
   const p=cur();
   renderTend(); renderRom(); renderMmt(); renderReflex(); renderSensory();
@@ -2744,6 +3147,16 @@ $('#videoMask').addEventListener('click',e=>{ if(e.target.id==='videoMask')$('#v
    ============================================================ */
 let currentScaleFilter='';
 const expandedScales = new Set();
+const scaleUserToggle = new Set();
+function scaleHasData(vals, sc){
+  return vals.some((v,idx)=>{
+    const it=sc.items[idx];
+    if(!it) return false;
+    if(it.words) return Array.isArray(v)&&v.length>0;
+    if(it.options) return typeof v==='string'&&v!=='';
+    return typeof v==='number'&&v>0;
+  });
+}
 function renderScaleFilter(){
   const box=$('#scaleFilter');
   box.innerHTML = SCALE_CATS.map((d,i)=>`<div class="fchip ${i===0?'on':''}" data-f="${d}">${d}</div>`).join('');
@@ -2862,11 +3275,13 @@ function renderScaleScores(){
     }).join('');
     const hasSelect=sc.items.some(it=>it.options)||sc.items.some(it=>it.words);
     const totalRow = hasSelect ? '' : `<div class="scale-total">总分 ${g.total} / ${g.full}<span class="grade g${g.c}">${esc(g.label)}</span></div>`;
-    const open=expandedScales.has(sid);
+    const open = scaleUserToggle.has(sid) ? expandedScales.has(sid) : scaleHasData(vals, sc);
+    if(open) expandedScales.add(sid); else expandedScales.delete(sid);
     return `<div class="oscale ${open?'open':''}">
       <div class="oscale-head" data-toggle="${sid}">
         <div class="ost">${esc(sc.name)}<span style="display:block;font-size:11px;color:var(--muted);font-weight:400">${esc(sc.desc)}</span></div>
         <div class="osg g${g.c}">${esc(g.label)}</div>
+        ${(()=>{const lt=lastScaleTotal(sid, sc); return lt!=null?`<span class="os-last">上次 ${lt}</span>`:'';})()}
         <div class="osarrow">▾</div>
       </div>
       <div class="oscale-body">${itemsHtml}${totalRow}</div>
@@ -2874,6 +3289,7 @@ function renderScaleScores(){
   }).join('');
   box.querySelectorAll('.oscale-head').forEach(h=>h.addEventListener('click',()=>{
     const sid=h.dataset.toggle;
+    scaleUserToggle.add(sid);
     if(expandedScales.has(sid)) expandedScales.delete(sid); else expandedScales.add(sid);
     renderScaleScores();
   }));
@@ -3186,6 +3602,7 @@ $('#therInput').addEventListener('keydown',e=>{ if(e.key==='Enter')$('#btnAddThe
    ============================================================ */
 function buildReportHTML(){
   const p=cur();
+  const missBar=buildMissBar(p);
   const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
   const diagTxt = (p.diagnosis&&p.diagnosis.type)||p.planDisease||'康复';
   const histStr = p.history.items.map(id=>{ const it=HISTORY_ITEMS.find(x=>x.id===id); return it?it.name:id; }).join('、');
@@ -3240,6 +3657,7 @@ function buildReportHTML(){
     <div class="report">
       <h2>${esc(diagTxt)}康复评估报告</h2>
       <div class="r-sub">康复临床一体化工具 · 生成日期 ${dateStr}</div>
+      ${missBar}
       <h4>基本信息</h4>
       ${kv('姓名', esc(p.name)||'—')}
       ${kv('年龄 / 性别', `${esc(p.age)||'—'} 岁 · ${esc(p.gender)||'—'}`)}
@@ -3279,7 +3697,9 @@ function buildReportHTML(){
 }
 function renderReportModal(){
   const p=cur();
+  snapshotVisit();
   $('#reportContent').innerHTML = buildReportHTML();
+  $('#reportContent').querySelectorAll('.miss-link').forEach(l=>l.addEventListener('click',()=>{ $('#reportMask').classList.remove('show'); switchTab(l.dataset.sec); }));
   $('#reportMask').classList.add('show');
 }
 $('#abReport').addEventListener('click', renderReportModal);
@@ -3307,6 +3727,7 @@ function refreshAll(){
   renderScaleScores();
   renderTher();
   renderPlan();
+  renderProgress();
 }
 
 /* ============================================================
@@ -3629,25 +4050,42 @@ function buildAIReportHTML(json){
     <div class="note">${esc(json.disclaimer||'本输出为持证治疗师辅助参考,需治疗师复核后执行;不替代临床决策。')}</div>
   </div>`;
 }
+function buildPlainReportHTML(text){
+  const p=cur();
+  const lines=text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  const body=lines.map(l=>{
+    if(/^#{1,4}\s+/.test(l)){ const m=l.match(/^#+\s+(.*)/); return `<h4>${esc(m[1])}</h4>`; }
+    if(/^[•·\-]\s+/.test(l)) return `<div class="ritem"><span class="rk">· ${esc(l.replace(/^[•·\-]\s+/,''))}</span></div>`;
+    return `<p style="margin:6px 0;line-height:1.75;font-size:13.5px">${esc(l)}</p>`;
+  }).join('');
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  return `<div class="report"><h2>${esc(p.name||'康复')} · 康复评估文书</h2>
+    <div class="r-sub">中文文书 · 生成日期 ${dateStr}</div>
+    ${body}
+    <div class="note">本输出为持证治疗师辅助参考，需治疗师复核后执行；不替代临床决策。</div></div>`;
+}
 function renderAIReport(){
   const raw=$('#aiInput').value.trim(), errEl=$('#aiErrors');
-  if(!raw){ errEl.textContent='请粘贴 AI 输出的 JSON'; errEl.style.display='block'; return; }
-  let json;
+  if(!raw){ errEl.textContent='请输入中文文书，或粘贴 AI 输出的 JSON'; errEl.style.display='block'; return; }
+  let json=null, cleaned=raw;
   try{ json=JSON.parse(raw); }
-  catch(e){
-    // 兼容终端复制长JSON时换行/控制字符混入:剔除后重试
-    const cleaned=raw.replace(/[\x00-\x1f\x7f]/g,'');
-    try{ json=JSON.parse(cleaned); }
-    catch(e2){ errEl.textContent='JSON 解析失败:'+e2.message; errEl.style.display='block'; return; }
-  }
-  const v=window.RedlineEngine.validateOutput(json);
-  if(!v.ok){ errEl.textContent='格式校验未通过:\n'+v.errors.join('\n'); errEl.style.display='block'; return; }
-  const input={ vitals:(json.patient&&json.patient.vitals)||{}, diagnosis:(json.patient&&json.patient.diagnosis)||'', stage:(json.patient&&json.patient.stage)||'', events:(json.patient&&json.patient.events)||[] };
-  const enforced=window.RedlineEngine.enforce(input,json);
-  errEl.style.display='none';
-  $('#reportContent').innerHTML=buildAIReportHTML(enforced);
+  catch(e){ cleaned=raw.replace(/[\x00-\x1f\x7f]/g,''); try{ json=JSON.parse(cleaned); }catch(e2){ json=null; } }
   const now=new Date();
-  aiSave({ id:now.getTime(), time:`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`, name:(json.patient&&json.patient.diagnosis)||'AI文书', raw, enforced });
+  const stamp=`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if(json){
+    const v=window.RedlineEngine.validateOutput(json);
+    if(!v.ok){ errEl.textContent='JSON 格式校验未通过:\n'+v.errors.join('\n'); errEl.style.display='block'; return; }
+    const input={ vitals:(json.patient&&json.patient.vitals)||{}, diagnosis:(json.patient&&json.patient.diagnosis)||'', stage:(json.patient&&json.patient.stage)||'', events:(json.patient&&json.patient.events)||[] };
+    const enforced=window.RedlineEngine.enforce(input,json);
+    errEl.style.display='none';
+    $('#reportContent').innerHTML=buildAIReportHTML(enforced);
+    aiSave({ id:now.getTime(), time:stamp, name:(json.patient&&json.patient.diagnosis)||'AI文书', raw, enforced });
+  } else {
+    errEl.style.display='none';
+    $('#reportContent').innerHTML=buildPlainReportHTML(cleaned);
+    aiSave({ id:now.getTime(), time:stamp, name:'中文文书', raw:cleaned, enforced:null });
+  }
   $('#aiMask').classList.remove('show');
   $('#reportMask').classList.add('show');
 }
