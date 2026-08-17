@@ -343,6 +343,7 @@ input[type=range]::-webkit-slider-thumb{
 .ocr-tools{margin-bottom:4px}
 .ocr-upload{display:inline-block;padding:10px 16px;border:1.5px solid var(--primary);border-radius:10px;color:var(--primary);font-size:14px;font-weight:600;background:#fff;cursor:pointer}
 .ocr-img{max-width:100%;max-height:260px;border-radius:10px;margin-top:10px;border:1.5px solid var(--line)}
+.ocr-preview-multi .ocr-img{max-height:150px;margin-top:6px}
 .ocr-progress{font-size:12px;color:var(--muted);margin-top:8px}
 .ocr-result{margin-top:10px}
 .ocr-result label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--muted)}
@@ -884,8 +885,8 @@ input[type=range]::-webkit-slider-thumb{
     <span class="close" id="ocrClose">✕</span>
     <h3>📷 拍照识别 · 自动填充</h3>
     <div class="ocr-tools">
-      <label class="ocr-upload" for="ocrFile">📷 拍照 / 选择图片</label>
-      <input type="file" id="ocrFile" accept="image/*" capture="environment" style="display:none">
+      <label class="ocr-upload" for="ocrFile">📷 拍照 / 从相册选图</label>
+      <input type="file" id="ocrFile" accept="image/*" multiple style="display:none">
     </div>
     <div id="ocrPreview"></div>
     <div class="ocr-progress" id="ocrProgress" style="display:none"></div>
@@ -898,7 +899,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
       <div id="ocrFilled"></div>
     </div>
-    <div class="hint">本地识别，图片不会上传。打印体（出院小结/检查报告）效果最佳；首次使用需下载识别模型（约数 MB，网络慢会等一会儿）。</div>
+    <div class="hint">本地识别，图片不会上传。可一次多选几张，逐张识别后自动合并。打印体（出院小结/检查报告）效果最佳；首次使用需下载识别模型（约 2MB，国内网络稍等片刻，之后不再重复下载）。</div>
   </div>
 </div>
 
@@ -2562,6 +2563,23 @@ const OCR_DIAG_KEYWORDS = [
   ['脊髓损伤','脊髓损伤'], ['骨折','骨折术后'], ['骨质疏松','骨质疏松'],
   ['脑梗死','脑梗死恢复期'], ['脑梗','脑梗死恢复期'], ['脑出血','脑出血恢复期'],
 ];
+// 识别引擎多源：npmmirror（国内最快）→ jsdelivr → unpkg，逐源回退
+const OCR_CDNS = [
+  { name:'npmmirror',
+    lib:'https://registry.npmmirror.com/tesseract.js/4.1.1/files/dist/tesseract.min.js',
+    worker:'https://registry.npmmirror.com/tesseract.js/4.1.1/files/dist/worker.min.js',
+    core:'https://registry.npmmirror.com/tesseract.js-core/4.0.4/files' },
+  { name:'jsdelivr',
+    lib:'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js',
+    worker:'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
+    core:'https://cdn.jsdelivr.net/npm/tesseract.js-core@4.0.4' },
+  { name:'unpkg',
+    lib:'https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js',
+    worker:'https://unpkg.com/tesseract.js@4.1.1/dist/worker.min.js',
+    core:'https://unpkg.com/tesseract.js-core@4.0.4' }
+];
+// 中文模型用 4.0.0_fast（仅 1.7MB，打印体效果好、下载快；jsdelivr 有 CORS 头可用）
+const OCR_LANG_PATH = 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_fast';
 let ocrWorker=null;
 function ocrFill(){
   const p=cur();
@@ -2589,37 +2607,73 @@ function ocrFill(){
     ? '<div class="ocr-filled">已自动填充：<br>'+filled.map(esc).join('<br>')+'</div>'
     : '<div class="ocr-filled ocr-warn">未匹配到可自动填充项，可手动从识别文本复制</div>';
 }
-async function ocrRecognize(dataUrl){
+function loadScriptFromList(urls){
+  return new Promise((res,rej)=>{
+    let i=0;
+    (function next(){
+      if(i>=urls.length){ rej(new Error('Tesseract 加载失败，请检查网络')); return; }
+      const s=document.createElement('script'); s.src=urls[i++];
+      s.onload=res; s.onerror=next; document.head.appendChild(s);
+    })();
+  });
+}
+async function createOcrWorker(){
+  const prog=$('#ocrProgress');
+  if(typeof Tesseract==='undefined'){
+    prog.textContent='下载识别引擎…（国内网络稍等）';
+    await loadScriptFromList(OCR_CDNS.map(c=>c.lib));
+  }
+  let lastErr=null;
+  for(const c of OCR_CDNS){
+    try{
+      prog.textContent='加载识别模型（首次约 2MB）…';
+      return await Tesseract.createWorker('chi_sim', 1, {
+        workerPath:c.worker, corePath:c.core, langPath:OCR_LANG_PATH,
+        logger:m=>{ if(m.status==='recognizing text'&&m.progress!=null) prog.textContent='识别中 '+(m.progress*100).toFixed(0)+'%'; else if(m.status) prog.textContent=m.status; }
+      });
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr||new Error('识别引擎初始化失败');
+}
+async function ocrRecognize(dataUrls){
   const prog=$('#ocrProgress'); prog.style.display='block';
   try{
-    if(!ocrWorker){
-      if(typeof Tesseract==='undefined'){
-        await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js'; s.onload=res; s.onerror=()=>rej(new Error('Tesseract 加载失败，请检查网络')); document.head.appendChild(s); });
-      }
-      prog.textContent='加载识别模型…';
-      ocrWorker = await Tesseract.createWorker('chi_sim', 1, {
-        logger: m=>{ if(m.status==='recognizing text'&&m.progress!=null) prog.textContent='识别中 '+(m.progress*100).toFixed(0)+'%'; else if(m.status) prog.textContent=m.status; },
-        langPath:'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0'
-      });
+    if(!ocrWorker) ocrWorker=await createOcrWorker();
+    const parts=[], fails=[];
+    for(let i=0;i<dataUrls.length;i++){
+      prog.textContent=(dataUrls.length>1?('第 '+(i+1)+'/'+dataUrls.length+' 张，'):'')+'识别中…';
+      try{
+        const { data } = await ocrWorker.recognize(dataUrls[i]);
+        const t=(data.text||'').trim();
+        if(t) parts.push(t); else fails.push(i+1);
+      }catch(err){ fails.push(i+1); }
     }
-    prog.textContent='识别中…';
-    const { data } = await ocrWorker.recognize(dataUrl);
-    $('#ocrText').value=(data.text||'').trim();
+    $('#ocrText').value=parts.join('\n');
     $('#ocrResult').style.display='block';
     prog.style.display='none';
+    if(fails.length) toast('第 '+fails.join('、')+' 张未能识别出文字，请换清晰的打印体图片');
   }catch(e){
     prog.style.display='none';
-    toast('识别失败：'+(e&&e.message||e));
+    if(ocrWorker){ try{ ocrWorker.terminate(); }catch(_){} ocrWorker=null; }
+    toast('识别失败：'+(e&&e.message||e)+'。请检查网络后重试');
   }
 }
 $('#btnOcr').addEventListener('click', ()=>{ $('#ocrResult').style.display='none'; $('#ocrPreview').innerHTML=''; $('#ocrProgress').style.display='none'; $('#ocrFilled').innerHTML=''; $('#ocrMask').classList.add('show'); });
 $('#ocrClose').addEventListener('click', ()=>$('#ocrMask').classList.remove('show'));
 $('#ocrMask').addEventListener('click', e=>{ if(e.target.id==='ocrMask')$('#ocrMask').classList.remove('show'); });
 $('#ocrFile').addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{ $('#ocrPreview').innerHTML='<img class="ocr-img" src="'+rd.result+'">'; $('#ocrResult').style.display='none'; ocrRecognize(rd.result); };
-  rd.readAsDataURL(f);
+  const files=[...e.target.files].filter(f=>f&&f.type.indexOf('image/')===0);
+  e.target.value='';
+  if(!files.length) return;
+  $('#ocrResult').style.display='none';
+  $('#ocrFilled').innerHTML='';
+  $('#ocrPreview').classList.toggle('ocr-preview-multi', files.length>1);
+  Promise.all(files.map(f=>new Promise((res,rej)=>{ const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(f); })))
+    .then(urls=>{
+      $('#ocrPreview').innerHTML=urls.map(u=>'<img class="ocr-img" src="'+u+'">').join('');
+      ocrRecognize(urls);
+    })
+    .catch(()=>toast('读取图片失败，请重试'));
 });
 $('#ocrFill').addEventListener('click', ocrFill);
 $('#ocrComplaint').addEventListener('click', ()=>{
