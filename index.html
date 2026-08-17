@@ -2583,31 +2583,88 @@ const OCR_CDNS = [
 const OCR_LANG_PATH = 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_fast';
 let ocrWorker=null;
 let ocrPrefix='';
+// 模糊包含：容忍 OCR 个别错字（替换型错误），kw 越短越保守
+function fuzzyIncludes(text, kw){
+  if(!kw) return false;
+  if(text.includes(kw)) return true;
+  if(kw.length<3) return false;
+  const maxErr=Math.max(1,Math.floor(kw.length*0.25));
+  for(let i=0;i<=text.length-kw.length;i++){
+    let err=0;
+    for(let j=0;j<kw.length;j++) if(text[i+j]!==kw[j]) err++;
+    if(err<=maxErr) return true;
+  }
+  return false;
+}
+const short=s=>s&&s.length>40?(s.slice(0,40)+'…'):(s||'');
+// 把识别文本按「查体/影像/诊断/既往史」等段落标记切开，返回 {complaint, imaging, diagnosis}
+function splitDoc(txt){
+  const marks=['查体','体格检查','专科检查','影像','辅助检查','实验室检查','既往史','诊断'];
+  const idx=[];
+  marks.forEach(m=>{ const i=txt.indexOf(m); if(i>=0) idx.push([i,m]); });
+  idx.sort((a,b)=>a[0]-b[0]);
+  const first=idx[0]?idx[0][0]:txt.length;
+  const complaint=txt.slice(0,first).trim();
+  let imaging='', diagnosis='';
+  for(let k=0;k<idx.length;k++){
+    const [i,m]=idx[k];
+    let b=i+m.length;
+    if(txt[b]==='学') b++;
+    if(txt[b]==='：'||txt[b]===':') b++;
+    const end=idx[k+1]?idx[k+1][0]:txt.length;
+    const body=txt.slice(b,end).trim();
+    if(m==='影像'||m==='辅助检查') imaging=(imaging?imaging+'；':'')+body;
+    if(m==='诊断') diagnosis=body;
+  }
+  return { complaint, imaging, diagnosis };
+}
 function ocrFill(){
   const p=cur();
   const txt=$('#ocrText').value||'';
   const filled=[];
+  const { complaint, imaging, diagnosis }=splitDoc(txt);
+  // 1) 主诊断：优先匹配「诊断」段，其次全文关键词；模糊容错
+  const diagText=diagnosis||txt;
+  let diagSet=false;
   for(const [kw,v] of OCR_DIAG_KEYWORDS){
-    if(txt.includes(kw)){
+    if(fuzzyIncludes(diagText,kw)||fuzzyIncludes(txt,kw)){
       const d=DIAGNOSES.find(x=>x.v===v);
       p.diagnosis.type=v;
       if(d&&d.d) p.planDisease=d.d;
       p.planSel=defaultPlanSel(p);
       filled.push('主诊断：'+(d?d.t:v));
+      diagSet=true;
       break;
     }
   }
+  // 诊断段有内容但下拉没匹配上 → 填诊断备注，不丢信息
+  if(!diagSet && diagnosis){
+    p.diagnosis.note = p.diagnosis.note? p.diagnosis.note+'；'+diagnosis : diagnosis;
+    filled.push('诊断备注：'+short(diagnosis));
+  }
+  // 2) 既往史：模糊匹配
   HISTORY_ITEMS.forEach(it=>{
-    if(it.name && txt.includes(it.name) && !p.history.items.includes(it.id)){
+    if(it.name && fuzzyIncludes(txt,it.name) && !p.history.items.includes(it.id)){
       p.history.items.push(it.id); filled.push('既往史：'+it.name);
     }
   });
-  const vm=txt.match(/VAS\s*[:：]?\s*(\d+(?:\.\d+)?)/i)||txt.match(/疼痛\s*(\d+)\s*[\/分]/);
+  // 3) VAS
+  const vm=txt.match(/VAS\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||txt.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
   if(vm){ const v=parseFloat(vm[1]); if(v>=0&&v<=10){ p.vas=v; filled.push('VAS：'+v); } }
+  // 4) 影像所见
+  if(imaging){
+    p.imaging.findings = p.imaging.findings? p.imaging.findings+'；'+imaging : imaging;
+    filled.push('影像所见：'+short(imaging));
+  }
+  // 5) 主诉：填文本主体（去重），保证识别内容不丢
+  if(complaint && !(p.complaint||'').includes(complaint.slice(0,20))){
+    p.complaint = p.complaint? p.complaint+'；'+complaint : complaint;
+    filled.push('主诉：'+short(complaint));
+  }
   savePatients(); refreshAll();
   $('#ocrFilled').innerHTML = filled.length
     ? '<div class="ocr-filled">已自动填充：<br>'+filled.map(esc).join('<br>')+'</div>'
-    : '<div class="ocr-filled ocr-warn">未匹配到可自动填充项，可手动从识别文本复制</div>';
+    : '<div class="ocr-filled ocr-warn">未匹配到可填充项，可点下方「填入主诉」把整段文字存进主诉</div>';
 }
 function loadScriptFromList(urls){
   return new Promise((res,rej)=>{
