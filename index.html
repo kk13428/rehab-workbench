@@ -2564,19 +2564,20 @@ const OCR_DIAG_KEYWORDS = [
   ['脑梗死','脑梗死恢复期'], ['脑梗','脑梗死恢复期'], ['脑出血','脑出血恢复期'],
 ];
 // 识别引擎多源：npmmirror（国内最快）→ jsdelivr → unpkg，逐源回退
+// 必须用 tesseract.js 5.x：4.1.1 在现代浏览器（新版 Edge/Chrome）worker 初始化失败，识别必挂（实测 SetImageFile null）
 const OCR_CDNS = [
   { name:'npmmirror',
-    lib:'https://registry.npmmirror.com/tesseract.js/4.1.1/files/dist/tesseract.min.js',
-    worker:'https://registry.npmmirror.com/tesseract.js/4.1.1/files/dist/worker.min.js',
-    core:'https://registry.npmmirror.com/tesseract.js-core/4.0.4/files' },
+    lib:'https://registry.npmmirror.com/tesseract.js/5.1.1/files/dist/tesseract.min.js',
+    worker:'https://registry.npmmirror.com/tesseract.js/5.1.1/files/dist/worker.min.js',
+    core:'https://registry.npmmirror.com/tesseract.js-core/5.1.1/files' },
   { name:'jsdelivr',
-    lib:'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js',
-    worker:'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-    core:'https://cdn.jsdelivr.net/npm/tesseract.js-core@4.0.4' },
+    lib:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',
+    worker:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    core:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1' },
   { name:'unpkg',
-    lib:'https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js',
-    worker:'https://unpkg.com/tesseract.js@4.1.1/dist/worker.min.js',
-    core:'https://unpkg.com/tesseract.js-core@4.0.4' }
+    lib:'https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js',
+    worker:'https://unpkg.com/tesseract.js@5.1.1/dist/worker.min.js',
+    core:'https://unpkg.com/tesseract.js-core@5.1.1' }
 ];
 // 中文模型用 4.0.0_fast（仅 1.7MB，打印体效果好、下载快；jsdelivr 有 CORS 头可用）
 const OCR_LANG_PATH = 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_fast';
