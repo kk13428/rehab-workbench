@@ -899,7 +899,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
       <div id="ocrFilled"></div>
     </div>
-    <div class="hint">本地识别，图片不会上传。可一次多选几张，逐张识别后自动合并。打印体（出院小结/检查报告）效果最佳；首次使用需下载识别模型（约 2MB，国内网络稍等片刻，之后不再重复下载）。</div>
+    <div class="hint">本地识别，图片不会上传。会自动做灰度/对比度增强再识别，屏幕照片也认；可一次多选几张，逐张识别后自动合并。首次使用需下载识别模型（约 2MB，之后不再重复下载）。太模糊或文字太小的照片仍可能失败。</div>
   </div>
 </div>
 
@@ -2581,6 +2581,7 @@ const OCR_CDNS = [
 // 中文模型用 4.0.0_fast（仅 1.7MB，打印体效果好、下载快；jsdelivr 有 CORS 头可用）
 const OCR_LANG_PATH = 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_fast';
 let ocrWorker=null;
+let ocrPrefix='';
 function ocrFill(){
   const p=cur();
   const txt=$('#ocrText').value||'';
@@ -2629,11 +2630,45 @@ async function createOcrWorker(){
       prog.textContent='加载识别模型（首次约 2MB）…';
       return await Tesseract.createWorker('chi_sim', 1, {
         workerPath:c.worker, corePath:c.core, langPath:OCR_LANG_PATH,
-        logger:m=>{ if(m.status==='recognizing text'&&m.progress!=null) prog.textContent='识别中 '+(m.progress*100).toFixed(0)+'%'; else if(m.status) prog.textContent=m.status; }
+        logger:m=>{ if(m.status==='recognizing text'&&m.progress!=null) prog.textContent=ocrPrefix+'识别中 '+(m.progress*100).toFixed(0)+'%'; else if(m.status) prog.textContent=ocrPrefix+m.status; }
       });
     }catch(e){ lastErr=e; }
   }
   throw lastErr||new Error('识别引擎初始化失败');
+}
+// 图片预处理：放大/缩小到合适尺寸 + 灰度 + 对比度拉伸（大幅提升屏幕照片/打印体识别率）
+function preprocessForOcr(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const maxD=Math.max(img.width,img.height);
+        let s=Math.min(2, 2600/maxD);
+        if(s<0.2) s=0.2;
+        const w=Math.max(1,Math.round(img.width*s)), h=Math.max(1,Math.round(img.height*s));
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx=c.getContext('2d');
+        ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+        ctx.drawImage(img,0,0,w,h);
+        const id=ctx.getImageData(0,0,w,h), d=id.data;
+        const n=w*h, g=new Uint8ClampedArray(n);
+        for(let i=0,j=0;i<d.length;i+=4,j++) g[j]=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0;
+        const hist=new Uint32Array(256); for(let i=0;i<n;i++) hist[g[i]]++;
+        let cum=0, lo=0, hi=255, target=n*0.02|0;
+        for(let v=0;v<256;v++){ cum+=hist[v]; if(cum>=target){ lo=v; break; } }
+        cum=0; for(let v=255;v>=0;v--){ cum+=hist[v]; if(cum>=target){ hi=v; break; } }
+        const range=Math.max(hi-lo,1);
+        for(let i=0,j=0;i<d.length;i+=4,j++){
+          const v=Math.min(255,Math.max(0,((g[j]-lo)*255/range)|0));
+          d[i]=d[i+1]=d[i+2]=v;
+        }
+        ctx.putImageData(id,0,0);
+        resolve(c.toDataURL('image/png'));
+      }catch(e){ reject(e); }
+    };
+    img.onerror=()=>reject(new Error('图片加载失败'));
+    img.src=dataUrl;
+  });
 }
 async function ocrRecognize(dataUrls){
   const prog=$('#ocrProgress'); prog.style.display='block';
@@ -2641,18 +2676,25 @@ async function ocrRecognize(dataUrls){
     if(!ocrWorker) ocrWorker=await createOcrWorker();
     const parts=[], fails=[];
     for(let i=0;i<dataUrls.length;i++){
-      prog.textContent=(dataUrls.length>1?('第 '+(i+1)+'/'+dataUrls.length+' 张，'):'')+'识别中…';
+      ocrPrefix=dataUrls.length>1?('第 '+(i+1)+'/'+dataUrls.length+' 张，'):'';
+      prog.textContent=ocrPrefix+'优化图片…';
+      let processed;
+      try{ processed=await preprocessForOcr(dataUrls[i]); }
+      catch(e){ fails.push(i+1); continue; }
+      prog.textContent=ocrPrefix+'识别中…';
       try{
-        const { data } = await ocrWorker.recognize(dataUrls[i]);
+        const { data } = await ocrWorker.recognize(processed);
         const t=(data.text||'').trim();
         if(t) parts.push(t); else fails.push(i+1);
       }catch(err){ fails.push(i+1); }
     }
+    ocrPrefix='';
     $('#ocrText').value=parts.join('\n');
     $('#ocrResult').style.display='block';
     prog.style.display='none';
     if(fails.length) toast('第 '+fails.join('、')+' 张未能识别出文字，请换清晰的打印体图片');
   }catch(e){
+    ocrPrefix='';
     prog.style.display='none';
     if(ocrWorker){ try{ ocrWorker.terminate(); }catch(_){} ocrWorker=null; }
     toast('识别失败：'+(e&&e.message||e)+'。请检查网络后重试');
