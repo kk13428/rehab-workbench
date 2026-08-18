@@ -2666,17 +2666,34 @@ async function ensureOcrEngine(prog){
   try{ return await ocrEngineLoading; }
   catch(e){ ocrEngineLoading=null; throw e; }
 }
-async function ocrRecognize(dataUrls){
+// 手机大图压缩：canvas 缩到最长边 2000px 再转 JPEG。手机照片常 12MP+，直接喂 PaddleOCR(wasm) 解码会撑爆内存导致页面秒退
+const OCR_MAX_DIM=2000;
+function downscaleForOcr(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1, OCR_MAX_DIM/Math.max(img.width,img.height));
+      if(scale>=1){ fetch(dataUrl).then(r=>r.blob()).then(resolve).catch(reject); return; }
+      const w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cv.toBlob(b=>b?resolve(b):reject(new Error('图片压缩失败')),'image/jpeg',0.85);
+    };
+    img.onerror=()=>reject(new Error('图片解码失败'));
+    img.src=dataUrl;
+  });
+}
+async function ocrRecognize(blobs){
   const prog=$('#ocrProgress'); prog.style.display='block';
   try{
     if(location.protocol==='file:') throw new Error('本地文件打开不支持识别引擎，请用在线版 https://kk13428.github.io/rehab-workbench/');
     const ocr=await ensureOcrEngine(prog);
     const parts=[], fails=[];
-    for(let i=0;i<dataUrls.length;i++){
-      ocrPrefix=dataUrls.length>1?('第 '+(i+1)+'/'+dataUrls.length+' 张，'):'';
+    for(let i=0;i<blobs.length;i++){
+      ocrPrefix=blobs.length>1?('第 '+(i+1)+'/'+blobs.length+' 张，'):'';
       prog.textContent=ocrPrefix+'识别中…';
       try{
-        const blob=await (await fetch(dataUrls[i])).blob();
+        const blob=blobs[i];
         const [res]=await ocr.predict(blob);
         const t=(res.items||[]).map(it=>it.text).join('\n').trim();
         if(t) parts.push(t); else fails.push(i+1);
@@ -2704,9 +2721,10 @@ $('#ocrFile').addEventListener('change', e=>{
   $('#ocrFilled').innerHTML='';
   $('#ocrPreview').classList.toggle('ocr-preview-multi', files.length>1);
   Promise.all(files.map(f=>new Promise((res,rej)=>{ const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(f); })))
-    .then(urls=>{
-      $('#ocrPreview').innerHTML=urls.map(u=>'<img class="ocr-img" src="'+u+'">').join('');
-      ocrRecognize(urls);
+    .then(urls=>Promise.all(urls.map(u=>downscaleForOcr(u))))
+    .then(blobs=>{
+      $('#ocrPreview').innerHTML=blobs.map(b=>'<img class="ocr-img" src="'+URL.createObjectURL(b)+'">').join('');
+      ocrRecognize(blobs);
     })
     .catch(()=>toast('读取图片失败，请重试'));
 });
