@@ -130,17 +130,6 @@ input[type=range]::-webkit-slider-thumb{
 }
 .img-pills input{display:none}
 .img-pills label:has(input:checked){background:var(--primary);border-color:var(--primary);color:#fff}
-/* video card */
-.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.vcard{
-  border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;cursor:pointer;
-}
-.vcard .thumb{
-  aspect-ratio:16/10;background:linear-gradient(135deg,#eaf2ff,#d9f4f6);
-  display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--primary);
-}
-.vcard .vt{padding:8px 10px;font-size:12px;font-weight:600}
-.vcard .vt small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
 /* scale chips & filter */
 .filter{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
 .fchip{
@@ -351,6 +340,20 @@ input[type=range]::-webkit-slider-thumb{
 .ocr-result textarea:focus{border-color:var(--primary)}
 .ocr-filled{margin-top:8px;font-size:12.5px;color:var(--primary);line-height:1.7}
 .ocr-warn{color:var(--warn)}
+/* 临床记录 */
+.plan-note-ta{width:100%;min-height:130px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;line-height:1.7;outline:none;background:#fbfcfe;resize:vertical}
+.plan-note-ta:focus{border-color:var(--primary)}
+.note-bar{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.note-count{font-size:11px;color:var(--muted)}
+.note-risk{margin-top:10px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.8;background:#fffaf3;color:#5d4a1a}
+.note-risk .nr-h{font-weight:700;color:#b9770e;margin:6px 0 2px}
+.note-risk .nr-h:first-child{margin-top:0}
+.note-risk ul{margin:0 0 4px;padding-left:18px}
+.modal.note-full{position:fixed;inset:0;max-width:none;max-height:none;width:auto;height:100%;border-radius:0;display:flex;flex-direction:column;padding:16px}
+.modal.note-full h3{margin-bottom:8px}
+.note-full-ta{flex:1;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;line-height:1.9;outline:none;background:#fbfcfe;resize:none}
+.note-full-ta:focus{border-color:var(--primary)}
+.modal.note-full .btn-row{margin-top:10px;justify-content:flex-end}
 .qphrases{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .qp{padding:5px 10px;border:1.5px solid var(--line);border-radius:16px;font-size:12px;color:var(--muted);background:#fbfcfe;cursor:pointer}
 .qp:active{background:#e7f0fa;color:var(--primary)}
@@ -845,9 +848,17 @@ input[type=range]::-webkit-slider-thumb{
       <div class="therapy-list" id="therList"></div>
     </div>
     <div class="card">
-      <h3><span class="n sym">▶</span>演示视频</h3>
-      <div class="step-desc" id="planVideoDesc"></div>
-      <div class="video-grid" id="planVideos"></div>
+      <h3><span class="n sym">📝</span>临床记录</h3>
+      <div class="step-desc">手动输入，或拍照识别后一键按逻辑顺序填入；字数多可点「全屏」编辑查看；可生成风险分析</div>
+      <textarea id="planNote" class="plan-note-ta" placeholder="在此记录本病例的康复说明、注意事项、随访要点、医嘱等…（点右下角「全屏」可放大编辑，不用一直下拉）"></textarea>
+      <div class="note-bar">
+        <span class="note-count" id="planNoteCount"></span>
+        <span style="flex:1"></span>
+        <button class="mini" id="btnNoteOcr" title="把已填写的病案内容按逻辑顺序填入记录">📷 填入识别内容</button>
+        <button class="mini" id="btnNoteRisk" title="根据病案数据自动分析高危因素与注意事项">⚠ 风险分析</button>
+        <button class="mini" id="btnNoteFull" title="全屏查看/编辑，免逐行下拉">⛶ 全屏</button>
+      </div>
+      <div class="note-risk" id="planRisk" style="display:none"></div>
     </div>
   </section>
 </main>
@@ -913,6 +924,19 @@ input[type=range]::-webkit-slider-thumb{
       <div class="vb-note" id="videoNote">演示视频占位</div>
     </div>
     <div class="hint">注：点击"在哔哩哔哩观看"将跳转到 B 站视频页，无需本地存放视频。</div>
+  </div>
+</div>
+
+<!-- 临床记录全屏 modal -->
+<div class="modal-mask" id="noteMask">
+  <div class="modal note-full">
+    <span class="close" id="noteClose">✕</span>
+    <h3>📝 临床记录 · 全屏</h3>
+    <textarea id="noteFull" class="note-full-ta" placeholder="编辑临床记录…"></textarea>
+    <div class="btn-row">
+      <button class="btn" id="noteFullSave">保存</button>
+      <button class="btn ghost" id="noteFullCancel">取消</button>
+    </div>
   </div>
 </div>
 
@@ -1848,13 +1872,6 @@ const PLAN_DISEASES = ['腰痛','颈椎病','肩周炎','半月板损伤','交�
 const PLAN_STAGES = ['急性期(0-2周)','亚急性期(2-6周)','慢性期(6周以上)'];
 
 /* 演示视频（方案页）：素材待补充，点击提示 */
-const DEMO_VIDEOS = [
-  { name:'腰痛急性期处理要点',   disease:'腰痛', link:'https://www.bilibili.com/video/BV1gbGGzKEs1' },
-  { name:'McKenzie 伸展体操示范', disease:'腰痛', link:'https://www.bilibili.com/video/BV1PvKLeoEru' },
-  { name:'腰痛核心稳定性训练',   disease:'腰痛' },
-  { name:'网球肘急性期处理',     disease:'网球肘', link:'https://www.bilibili.com/video/BV1nV411p7Bq' }
-];
-
 /* 主诊断下拉：d=方案疾病；s=自动分期（脑卒中类按病期带出） */
 const DIAGNOSES = [
   { v:'', t:'请选择主诊断…', d:'', s:'' },
@@ -2252,6 +2269,7 @@ function normalize(p){
   p.customOpts = p.customOpts || {};
   p.planCustom = p.planCustom || { target:[], physio:[], exercise:[], manual:[] };
   ['target','physio','exercise','manual'].forEach(k=>{ if(!Array.isArray(p.planCustom[k])) p.planCustom[k]=[]; });
+  p.planNote = p.planNote || '';
   return p;
 }
 function makePatient(name,age,gender,complaint,vas){
@@ -2270,6 +2288,7 @@ function makePatient(name,age,gender,complaint,vas){
     planDisease: '腰痛', planStage: PLAN_STAGES[0], planSel: null,
     plan: null, customTher: [], customOpts: {},
     planCustom: { target:[], physio:[], exercise:[], manual:[] },
+    planNote: '',
     createdAt: Date.now(),
     lastUsed: Date.now(),
     visits: []
@@ -2584,73 +2603,229 @@ function fuzzyIncludes(text, kw){
   return false;
 }
 const short=s=>s&&s.length>40?(s.slice(0,40)+'…'):(s||'');
-// 把识别文本按「查体/影像/诊断/既往史」等段落标记切开，返回 {complaint, imaging, diagnosis}
-function splitDoc(txt){
-  const marks=['查体','体格检查','专科检查','影像','辅助检查','实验室检查','既往史','诊断'];
-  const idx=[];
-  marks.forEach(m=>{ const i=txt.indexOf(m); if(i>=0) idx.push([i,m]); });
-  idx.sort((a,b)=>a[0]-b[0]);
-  const first=idx[0]?idx[0][0]:txt.length;
-  const complaint=txt.slice(0,first).trim();
-  let imaging='', diagnosis='';
-  for(let k=0;k<idx.length;k++){
-    const [i,m]=idx[k];
-    let b=i+m.length;
-    if(txt[b]==='学') b++;
-    if(txt[b]==='：'||txt[b]===':') b++;
-    const end=idx[k+1]?idx[k+1][0]:txt.length;
-    const body=txt.slice(b,end).trim();
-    if(m==='影像'||m==='辅助检查') imaging=(imaging?imaging+'；':'')+body;
-    if(m==='诊断') diagnosis=body;
+// 智能归类：按行 + 段落标记，把识别文本路由到对应字段，避免整段塞进主诉
+const OCR_IMG_KW=['影像','CT','MRI','核磁','X线','拍片','间盘','硬膜囊','骨质增生','关节间隙','积液','退行','椎管狭窄','滑脱','骨刺','骨折线','半月板','韧带','压缩骨折','椎体'];
+const OCR_HX_KW=['高血压','糖尿病','高脂','房颤','心脏病','冠心病','心梗','卒中','吸烟','饮酒','手术史','外伤史','过敏史','脑血管'];
+const OCR_TEND_KW=['压痛','肿胀','水肿','肌张力','皮温','温度'];
+// 强诊断词（症状/部位里不常见），用于无段落标记时的归类；「诊断」段内用全量 OCR_DIAG_KEYWORDS
+const OCR_DIAG_STRONG=['腰椎间盘突出','间盘突出','腰肌劳损','颈椎病','肩袖损伤','肩周炎','半月板','前交叉韧带','交叉韧带','网球肘','肱骨外上髁炎','脊髓损伤','骨质疏松','脑梗死','脑出血','脑梗','骨折'];
+const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科检查|影像|辅助检查|实验室检查|既往史|诊断|疼痛)[：:、\s]*/;
+function normLine(s){ return (s||'').replace(/^\s*(?:[•·\-—>、]|(?:[0-9]+[、.．）)]))\s*/,'').replace(/[，。；;：:]$/,'').trim(); }
+function hasCJK(s){ return /[一-龥]/.test(s); }
+function isStrongImg(line){ return /硬膜囊|受压|节段|退行|骨质增生|关节间隙|积液|CT|MRI|X线|影像学?/.test(line) || /L\s*[1-5]\s*-?\s*[1-5S]/i.test(line); }
+function classifyOcrLine(line, sec){
+  if(sec==='诊断') return 'diag';
+  if(sec==='影像'||sec==='辅助检查'||sec==='实验室检查') return 'img';
+  if(sec==='既往史') return 'hx';
+  if(sec==='查体'||sec==='体格检查'||sec==='专科检查') return 'exam';
+  if(sec==='疼痛') return 'pain';
+  if(sec==='主诉'||sec==='现病史') return 'complaint';
+  // 无段落标记时：影像特征词（硬膜囊/节段/退行/L节段）优先于诊断，避免「L4-L5椎间盘突出」被当成诊断
+  if(isStrongImg(line)) return 'img';
+  if(OCR_DIAG_STRONG.some(k=>fuzzyIncludes(line,k))) return 'diag';
+  if(OCR_IMG_KW.some(k=>line.includes(k))) return 'img';
+  if(OCR_HX_KW.some(k=>line.includes(k))) return 'hx';
+  if(OCR_TEND_KW.some(k=>line.includes(k))) return 'exam';
+  return 'complaint';
+}
+/* ---- 结构化解析：肌力/肌张力Ashworth/关节活动度/反射 ---- */
+function parseMmt(line){
+  const out=[];
+  const push=(n,g)=>{ if(n&&g!=null&&g>=0&&g<=5&&!out.find(x=>x[0]===n)) out.push([n,String(g)]); };
+  const m4=line.match(/四肢肌力\s*([0-5])\s*级/);
+  if(m4){ ['左上肢','右上肢','左下肢','右下肢'].forEach(n=>push(n,m4[1])); return out; }
+  const re=/(左上肢|右上肢|左下肢|右下肢|躯干核心)\s*肌力?\s*([0-5])\s*级/g;
+  let mm, any=false;
+  while((mm=re.exec(line))){ push(mm[1],mm[2]); any=true; }
+  if(any) return out;
+  const re2=/(左上肢|右上肢|左下肢|右下肢|躯干核心)\s*([0-5])\s*级/g;
+  while((mm=re2.exec(line))){ push(mm[1],mm[2]); }
+  return out;
+}
+function parseAshworth(line){
+  const m=line.match(/Ashworth\s*[:：]?\s*([0-4])\s*级/i)||line.match(/肌张力\s*[:：]?\s*Ashworth\s*([0-4])\s*级/i);
+  if(m){ const map={'0':'0 级 · 无肌张力增高','1':'1 级 · 轻度增高','2':'2 级 · 明显增高','3':'3 级 · 严重增高','4':'4 级 · 僵硬'}; return map[m[1]]||null; }
+  return null;
+}
+function parseRom(line){
+  const out=[];
+  const JOINTS=['颈椎','肩关节','肘关节','腕关节','腰椎','髋关节','膝关节','踝关节'];
+  const MOTIONS=['前屈','后伸','屈曲','伸展','外展','内收','内旋','外旋','侧屈','背伸','跖屈'];
+  for(const j of JOINTS){
+    if(!line.includes(j)) continue;
+    const side=(line.match(/右侧|右/)&&!line.match(/左侧|左/))?'右':(line.match(/左侧|左/)&&!line.match(/右侧|右/))?'左':'双侧';
+    const type=line.includes('被动')?'被动':'主动';
+    const parts=[];
+    MOTIONS.forEach(mo=>{ const m=line.match(new RegExp(mo+'\\s*[：:]?\\s*(\\d{1,3})\\s*[°度]')); if(m) parts.push(mo+m[1]+'°'); });
+    if(!parts.length){ const m=line.match(/(\d{1,3})\s*[°度]/); if(m) parts.push(m[1]+'°'); }
+    if(parts.length) out.push({joint:j, side, type, deg:parts.join('，')});
   }
-  return { complaint, imaging, diagnosis };
+  return out;
+}
+function parseReflex(line){
+  const out=[];
+  const DEFS=[['肱二头肌反射','肱二头肌反射'],['肱三头肌反射','肱三头肌反射'],['桡骨膜反射','桡骨膜反射'],['膝腱反射','膝腱反射'],['跟腱反射','跟腱反射'],['腹壁反射','腹壁反射'],['Babinski','Babinski 征'],['巴氏征','Babinski 征'],['Hoffmann','Hoffmann 征'],['踝阵挛','踝阵挛']];
+  const RES={'亢进':'亢进','减弱':'减弱','减退':'减弱','消失':'消失','阴性':'阴性','阳性':'阳性','正常':'正常'};
+  for(const [kw,name] of DEFS){
+    const start=line.indexOf(kw); if(start<0) continue;
+    let end=line.length;
+    for(const [kw2] of DEFS){ if(kw2!==kw){ const j=line.indexOf(kw2, start+kw.length); if(j>=0) end=Math.min(end,j); } }
+    const seg=line.slice(start+kw.length, end);
+    let find=null;
+    for(const k in RES){ if(seg.includes(k)){ find=RES[k]; break; } }
+    if(!find){ const m=seg.match(/[（(]?([＋+]{1,3})[)）]?/); if(m) find = m[1].length>=2?'亢进':'阳性'; }
+    out.push([name, find||'正常']);
+  }
+  return out;
+}
+/* ---- 量表检测与赋值 ---- */
+const SCALE_KW=[
+  ['Barthel','barthel'],['功能独立性','fim'],['FIM','fim'],['Berg','bbs'],['平衡量表','bbs'],['BBS','bbs'],
+  ['MMSE','mmse'],['MoCA','moca'],['蒙特利尔','moca'],['NIHSS','nihss'],['PHQ-9','phq9'],['PHQ9','phq9'],
+  ['GAD-7','gad7'],['GAD7','gad7'],['ODI','oddi'],['功能障碍指数','oddi'],['Borg','borg'],
+  ['Brunnstrom','brunnstrom'],['mRS','mrs'],['改良Rankin','mrs'],['Holden','holden'],['洼田','watian'],
+  ['ASIA','asia'],['WISCI','wisci'],['SCIM','scim'],['SS-QOL','ssqol'],['Frenchay','frenchay'],
+  ['SSA','ssa'],['McGill','mpq'],['MPQ','mpq'],['6分钟','sixmwt'],['6MWT','sixmwt'],['10米','tenmwt'],['10MWT','tenmwt'],
+  ['mini-BESTest','minibest'],['BESTest','minibest'],['HHD','hhd'],['ARAT','arat'],['WAB','wab'],['Penn','penn'],['Clonus','clonus'],['MAS','mas']
+];
+function scaleName(sid){ const s=SCALES.find(x=>x.id===sid); return s?s.name:sid; }
+function isStructuredExam(line){ return OCR_TEND_KW.some(k=>line.includes(k)) || !!parseMmt(line).length || !!parseAshworth(line) || !!parseRom(line).length || !!parseReflex(line).length; }
+function setScaleValueFromLine(sid, line, p){
+  const sc=SCALES.find(x=>x.id===sid); if(!sc) return null;
+  if(sid==='brunnstrom'){
+    const order=[['上肢',0],['手',1],['下肢',2]];
+    let got=false;
+    for(const [kw,idx] of order){
+      const m=line.match(new RegExp(kw+'[^，。；;]{0,8}?([ⅠⅡⅢⅣⅤⅥ])期'));
+      if(m){ (p.scores[sid]=p.scores[sid]||[])[idx]=m[1]+'期'; got=true; }
+    }
+    if(got){ const v=(p.scores[sid]||[]).filter(x=>x).join('，'); return v||null; }
+    return null;
+  }
+  for(let i=0;i<sc.items.length;i++){
+    const it=sc.items[i];
+    if(it.options){
+      for(const o of it.options){
+        const seg=String(o.v).split('-')[0].split('(')[0].trim();
+        if(seg && line.includes(seg)){ (p.scores[sid]=p.scores[sid]||[])[i]=o.v; return o.v; }
+      }
+    }
+  }
+  if(sc.items.length===1 && sc.items[0].max!=null){
+    let m=null;
+    if(sid==='sixmwt') m=line.match(/(\d{2,4})\s*(?:米|m)(?![0-9])/i);
+    else if(sid==='tenmwt') m=line.match(/(\d+(?:\.\d+)?)\s*m\s*\/\s*s/i)||line.match(/(\d+(?:\.\d+)?)\s*(?:m\/s|米每秒)/i);
+    else m=line.match(/(\d+(?:\.\d+)?)\s*分?$/);
+    if(m){ const v=parseFloat(m[1]); if(v>=0&&v<=sc.items[0].max*1.5){ (p.scores[sid]=p.scores[sid]||[])[0]=v; return v; } }
+  }
+  return null;
+}
+function scaleScoreHint(sid, line){
+  const sc=SCALES.find(x=>x.id===sid); if(!sc) return null;
+  const kws=SCALE_KW.filter(x=>x[1]===sid).map(x=>x[0]);
+  for(const kw of kws){
+    const i=line.indexOf(kw); if(i<0) continue;
+    const m=line.slice(i+kw.length).match(/(\d+(?:\.\d+)?)\s*(?:分|级|米|m|秒|%)?/);
+    if(m) return m[1];
+  }
+  return null;
 }
 function ocrFill(){
-  const p=cur();
-  const txt=$('#ocrText').value||'';
-  const filled=[];
-  const { complaint, imaging, diagnosis }=splitDoc(txt);
-  // 1) 主诊断：优先匹配「诊断」段，其次全文关键词；模糊容错
-  const diagText=diagnosis||txt;
-  let diagSet=false;
-  for(const [kw,v] of OCR_DIAG_KEYWORDS){
-    if(fuzzyIncludes(diagText,kw)||fuzzyIncludes(txt,kw)){
-      const d=DIAGNOSES.find(x=>x.v===v);
-      p.diagnosis.type=v;
-      if(d&&d.d) p.planDisease=d.d;
-      p.planSel=defaultPlanSel(p);
-      filled.push('主诊断：'+(d?d.t:v));
-      diagSet=true;
-      break;
+  const p=cur(); const txt=$('#ocrText').value||''; const filled=[];
+  const add=l=>{ if(!filled.includes(l)) filled.push(l); };
+  const complaintParts=[], imgParts=[], hxParts=[], diagNote=[], examParts=[], painParts=[];
+  const scaleAdded={}, scaleVal={}, scaleHint={};
+  let diagSet=false, sec='';
+  const lines=txt.split(/\n+/).map(normLine).filter(Boolean);
+  for(const raw of lines){
+    let line=raw;
+    const m=line.match(OCR_SECTION_RE);
+    if(m){ sec=m[1]; line=normLine(line.slice(m[0].length)); if(!line) continue; }
+    // VAS 优先（任意位置），只填一次
+    if(!p.vas){
+      const vm=line.match(/(?:VAS|NRS)\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||line.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
+      if(vm){ const v=parseFloat(vm[1]); if(v>=0&&v<=10){ p.vas=v; add('VAS：'+v); continue; } }
     }
+    // 量表检测：命中名字 → 加入量表并尝试赋值
+    let hadScale=false;
+    for(const [kw,sid] of SCALE_KW){
+      if(!line.includes(kw)) continue;
+      hadScale=true;
+      if(!p.scales.includes(sid)) p.scales.push(sid);
+      scaleAdded[sid]=1;
+      if(!scaleVal[sid]){ const v=setScaleValueFromLine(sid,line,p); if(v) scaleVal[sid]=v; }
+      if(!scaleHint[sid]){ const h=scaleScoreHint(sid,line); if(h) scaleHint[sid]=h; }
+    }
+    // 过滤纯碎片（无中文且很短，如 OCR 把 L4 拆成单独 "L"）
+    if(!hasCJK(line) && line.length<=5) continue;
+    // 结构化查体内容（肌力/ROM/反射/Ashworth/触诊），即使不在「查体」段也路由过去
+    if(isStructuredExam(line)){ examParts.push(line); continue; }
+    // 纯量表行（无结构化查体）不再走段落归类，避免被「诊断」段误收
+    if(hadScale) continue;
+    const cls=classifyOcrLine(line, sec);
+    if(cls==='diag'){
+      let matched=false;
+      if(!diagSet){
+        const kws=sec==='诊断'?OCR_DIAG_KEYWORDS:OCR_DIAG_KEYWORDS.filter(([kw])=>OCR_DIAG_STRONG.includes(kw));
+        for(const [kw,v] of kws){
+          if(fuzzyIncludes(line,kw)){
+            const d=DIAGNOSES.find(x=>x.v===v);
+            p.diagnosis.type=v; if(d&&d.d) p.planDisease=d.d; p.planSel=defaultPlanSel(p);
+            add('主诊断：'+(d?d.t:v)); diagSet=true; matched=true; break;
+          }
+        }
+      }
+      if(!matched) diagNote.push(line);
+      continue;
+    }
+    if(cls==='img'){ imgParts.push(line); continue; }
+    if(cls==='hx'){ hxParts.push(line); continue; }
+    if(cls==='exam'){ examParts.push(line); continue; }
+    if(cls==='pain'){ painParts.push(line); continue; }
+    if(!hadScale) complaintParts.push(line);
   }
-  // 诊断段有内容但下拉没匹配上 → 填诊断备注，不丢信息
-  if(!diagSet && diagnosis){
-    p.diagnosis.note = p.diagnosis.note? p.diagnosis.note+'；'+diagnosis : diagnosis;
-    filled.push('诊断备注：'+short(diagnosis));
-  }
-  // 2) 既往史：模糊匹配
+  // 诊断备注：诊断段内未匹配主诊断下拉的正文，不丢信息
+  const note=diagNote.join('；').trim();
+  if(note){ p.diagnosis.note=p.diagnosis.note?p.diagnosis.note+'；'+note:note; add('诊断备注：'+short(note)); }
+  // 影像所见
+  if(imgParts.length){ const s=imgParts.join('；'); p.imaging.findings=p.imaging.findings?p.imaging.findings+'；'+s:s; add('影像所见：'+short(s)); }
+  // 既往史：命中 HISTORY_ITEMS 就勾选对应项
   HISTORY_ITEMS.forEach(it=>{
-    if(it.name && fuzzyIncludes(txt,it.name) && !p.history.items.includes(it.id)){
-      p.history.items.push(it.id); filled.push('既往史：'+it.name);
-    }
+    if(it.name && hxParts.some(x=>fuzzyIncludes(x,it.name)) && !p.history.items.includes(it.id)){ p.history.items.push(it.id); add('既往史：'+it.name); }
   });
-  // 3) VAS
-  const vm=txt.match(/VAS\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||txt.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
-  if(vm){ const v=parseFloat(vm[1]); if(v>=0&&v<=10){ p.vas=v; filled.push('VAS：'+v); } }
-  // 4) 影像所见
-  if(imaging){
-    p.imaging.findings = p.imaging.findings? p.imaging.findings+'；'+imaging : imaging;
-    filled.push('影像所见：'+short(imaging));
-  }
-  // 5) 主诉：填文本主体（去重），保证识别内容不丢
-  if(complaint && !(p.complaint||'').includes(complaint.slice(0,20))){
-    p.complaint = p.complaint? p.complaint+'；'+complaint : complaint;
-    filled.push('主诉：'+short(complaint));
-  }
+  // 查体 → 触诊勾选项 + 肌力/Ashworth/关节活动度/反射 结构化解析
+  examParts.forEach(e=>{
+    if(/压痛/.test(e) && !p.objective.tend.includes('压痛点')){ p.objective.tend.push('压痛点'); add('触诊：压痛点'); }
+    if(/肿胀|水肿/.test(e) && !p.objective.tend.includes('肿胀')){ p.objective.tend.push('肿胀'); add('触诊：肿胀'); }
+    if(/肌张力/.test(e) && !p.objective.tend.includes('肌张力增高')){ p.objective.tend.push('肌张力增高'); add('触诊：肌张力增高'); }
+    if(/皮温|温度/.test(e) && !p.objective.tend.includes('局部温度异常')){ p.objective.tend.push('局部温度异常'); add('触诊：局部温度异常'); }
+    if(/皮温|温度/.test(e)){ p.objective.temp=p.objective.temp||e; }
+    if(/肿胀|水肿/.test(e) && /\d/.test(e)){ p.objective.swelling=p.objective.swelling||e; }
+    parseMmt(e).forEach(([n,g])=>{ if(!p.objective.mmt.find(x=>x.name===n)){ p.objective.mmt.push({name:n,grade:g}); add('肌力：'+n+' '+g+'级'); } });
+    const ash=parseAshworth(e);
+    if(ash && !p.objective.ashworth){ p.objective.ashworth=ash; add('肌张力(Ashworth)：'+ash.split(' · ')[0]); }
+    parseRom(e).forEach(r=>{ const ex=p.objective.rom.find(x=>x.joint===r.joint); if(ex){ ex.deg=[ex.deg,r.deg].filter(Boolean).join('，'); ex.side=r.side; ex.type=r.type; } else p.objective.rom.push(r); add('关节活动度：'+r.joint+(r.side==='双侧'?'':'·'+r.side)+' '+r.deg); });
+    parseReflex(e).forEach(([n,f])=>{ if(!p.objective.reflex.find(x=>x.name===n)){ p.objective.reflex.push({name:n,find:f}); add('反射：'+n+' '+f); } });
+  });
+  // 疼痛问卷：部位/放射/加重/缓解（仅在有明确表述时填）
+  painParts.concat(complaintParts).forEach(e=>{
+    if(!p.pain.radiation){ const rm=e.match(/放射[至到向]?\S{0,6}(?:肢|腿|肩|背|腰|臀|足|手|臂)/); if(rm){ p.pain.radiation=rm[0]; add('放射：'+rm[0]); } }
+    if(!p.pain.aggravate){ const am=e.match(/(?:久坐|久站|弯腰|咳嗽|用力|行走|活动|劳累)[^\s，。；;]{0,8}(?:加重|明显)/); if(am){ p.pain.aggravate=am[0]; add('加重：'+am[0]); } }
+    if(!p.pain.relieve){ const rm=e.match(/(?:休息|平卧|热敷|药物|改变体位|卧床)[^\s，。；;]{0,8}(?:缓解|减轻)/); if(rm){ p.pain.relieve=rm[0]; add('缓解：'+rm[0]); } }
+  });
+  // 主诉：只剩真正的症状类内容
+  if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=p.complaint?p.complaint+'；'+s:s; add('主诉：'+short(s)); } }
   savePatients(); refreshAll();
-  $('#ocrFilled').innerHTML = filled.length
-    ? '<div class="ocr-filled">已自动填充：<br>'+filled.map(esc).join('<br>')+'</div>'
+  Object.keys(scaleAdded).forEach(sid=>{
+    if(scaleVal[sid]) add('量表：'+scaleName(sid)+'：'+scaleVal[sid]);
+    else if(scaleHint[sid]) add('量表：'+scaleName(sid)+' '+scaleHint[sid]+'（已加入，请逐项核对）');
+    else add('量表：'+scaleName(sid)+'（已加入）');
+  });
+  const examLeft=examParts.filter(e=>!/(压痛|肿胀|水肿|肌张力|皮温|温度)/.test(e) && !parseMmt(e).length && !parseRom(e).length && !parseReflex(e).length && !parseAshworth(e));
+  const summary=[...filled];
+  if(examLeft.length) summary.push('查体（未匹配项需人工核对）：'+short(examLeft.join('；')));
+  $('#ocrFilled').innerHTML = summary.length
+    ? '<div class="ocr-filled">已自动填充：<br>'+summary.map(esc).join('<br>')+'</div>'
     : '<div class="ocr-filled ocr-warn">未匹配到可填充项，可点下方「填入主诉」把整段文字存进主诉</div>';
 }
 async function ensureOcrEngine(prog){
@@ -3535,19 +3710,7 @@ function renderPlan(){
   renderPlanCheck('#planPhysio','physio',sel.physio);
   renderPlanCheck('#planExercise','exercise',sel.exercise);
   renderPlanCheck('#planManual','manual',sel.manual);
-  const vids=DEMO_VIDEOS.filter(v=>v.disease===p.planDisease);
-  const vg=$('#planVideos');
-  $('#planVideoDesc').textContent = vids.length?`当前方案相关演示视频（${p.planDisease}）`:'该疾病暂未配置演示视频';
-  vg.innerHTML = vids.map(v=>`
-    <div class="vcard" data-link="${esc(v.link||'')}">
-      <div class="thumb">▶</div>
-      <div class="vt">${esc(v.name)}<small>${v.link?'点击跳转 B站观看':'素材待补充'}</small></div>
-    </div>`).join('') || '';
-  vg.querySelectorAll('.vcard').forEach(c=>c.addEventListener('click',()=>{
-    const link=c.dataset.link;
-    if(link) window.open(link,'_blank');
-    else toast('演示视频素材待补充（见 design-trace 待补清单）');
-  }));
+  renderPlanNote();
 }
 function renderPlanCheck(selId, cat, arr){
   const box=$(selId);
@@ -3662,6 +3825,135 @@ function bindPlanCustom(){
     const inp=$(sel);
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); const b=document.querySelector('[data-addplan="'+inp.id.replace('Cust','')+'"]'); if(b) b.click(); } });
   });
+}
+/* ---- 临床记录：文本编辑 + 全屏 + 逻辑填入 + 风险分析 ---- */
+function renderPlanNote(){
+  const ta=$('#planNote'); if(!ta) return;
+  const p=cur();
+  if(document.activeElement!==ta) ta.value=p.planNote||'';
+  const n=(p.planNote||'').length;
+  const c=$('#planNoteCount');
+  if(c) c.textContent = n? n+' 字'+(n>200?'（可点全屏）':'') : '';
+}
+function buildPlanLogText(){
+  const p=cur(); const parts=[];
+  const sec=(h,b)=>{ if(b&&String(b).trim()) parts.push('【'+h+'】'+String(b).trim()); };
+  const ocr=((document.querySelector('#ocrText')&&document.querySelector('#ocrText').value)||'').trim();
+  sec('主诉', p.complaint);
+  if(p.vas>0) sec('疼痛评分', 'VAS '+p.vas+' 分');
+  if(p.diagnosis.type) sec('诊断', p.diagnosis.type+(p.diagnosis.note?'（'+p.diagnosis.note+'）':''));
+  if(p.imaging.findings) sec('影像', p.imaging.findings);
+  if(p.history.items.length) sec('既往史', p.history.items.map(id=>{ const it=HISTORY_ITEMS.find(x=>x.id===id); return it?it.name:id; }).join('、'));
+  const obj=[];
+  if(p.objective.tend.length) obj.push('触诊：'+p.objective.tend.join('、'));
+  p.objective.mmt.forEach(e=>obj.push('肌力：'+e.name+' '+e.grade+'级'));
+  p.objective.rom.forEach(e=>obj.push('活动度：'+e.joint+(e.side==='双侧'?'':e.side)+' '+e.deg));
+  p.objective.reflex.forEach(e=>obj.push('反射：'+e.name+' '+e.find));
+  if(p.objective.ashworth) obj.push('肌张力：'+p.objective.ashworth);
+  if(p.objective.temp) obj.push('皮温：'+p.objective.temp);
+  if(p.objective.swelling) obj.push('肿胀：'+p.objective.swelling);
+  if(obj.length) sec('查体', obj.join('；'));
+  if(p.scales.length) sec('量表', p.scales.map(sid=>{ const s=SCALES.find(x=>x.id===sid); return s?s.name:sid; }).join('、'));
+  if(p.planDisease&&p.planStage) sec('治疗方案', p.planDisease+' · '+p.planStage);
+  if(ocr && !parts.join('').includes(ocr.slice(0,8))) sec('识别原文', ocr);
+  return parts.join('\n\n');
+}
+function fillPlanFromOcr(){
+  const t=buildPlanLogText();
+  if(!t){ toast('暂无内容，请先填写病案或拍照识别'); return; }
+  const p=cur();
+  p.planNote = p.planNote? p.planNote+'\n\n'+t : t;
+  savePatients(); renderPlanNote();
+  toast('已按逻辑顺序填入临床记录');
+}
+function buildRiskAnalysis(p){
+  const risk=[], note=[], tips=[];
+  const R=t=>risk.push(t), N=t=>note.push(t), T=t=>tips.push(t);
+  const diag=p.diagnosis.type||'';
+  const disease=p.planDisease||'';
+  const stage=p.planStage||'';
+  const hx=new Set(p.history.items||[]);
+  if(/腰椎间盘突出|腰肌劳损|腰痛/.test(disease)||/腰椎|间盘/.test(diag)){
+    R('急性期避免弯腰负重、搬抬重物，防再损伤');
+    R('避免久坐（每 30-40 分钟起身活动），坐时腰后加垫保持生理曲度');
+    R('咳嗽、打喷嚏时用手护腰，避免突然用力');
+    N('卧硬板床，腰下垫薄枕；急性期以休息+无痛活动为主');
+    N('症状缓解后尽早训练核心肌群（腹横肌、多裂肌、臀肌）');
+  }
+  if(/颈椎/.test(disease)||/颈椎病/.test(diag)){
+    R('避免长时间低头看手机/电脑，保持颈椎中立位');
+    R('避免颈部快速大幅旋转、甩头动作');
+    N('枕头高度适中，睡眠保持颈曲；可做颈椎等长抗阻训练');
+  }
+  if(/肩周炎|肩袖|肩关节/.test(disease)||/肩/.test(diag)){
+    R('避免突然提重物、上肢过度外展上举，防肩袖再损伤');
+    N('被动+主动活动循序渐进，夜间痛明显可肩下垫枕');
+  }
+  if(/脑卒中|脑梗|脑出血/.test(diag)||/脑卒中/.test(disease)){
+    R('跌倒风险高：下床/行走需陪护，防坠床、防滑倒');
+    R('注意血压监测，避免用力屏气（排便、搬物）致血压骤升');
+    R('合并吞咽障碍者防误吸：进食坐位、细嚼慢咽、抬高床头');
+    N('良肢位摆放防关节挛缩与肩手综合征；按时翻身防压疮');
+  }
+  if(/骨折/.test(diag)||/骨折术后/.test(disease)){
+    R('严格遵医嘱控制负重时机，过早负重可致内固定失败或再骨折');
+    R('防跌倒为第一要务，注意居家环境防滑');
+    N('循序渐进训练邻近关节活动度与肌力，防肌肉萎缩');
+  }
+  if(/骨质疏松/.test(diag)){
+    R('骨脆性高，严格防跌倒；避免弯腰捡物、搬重物');
+    N('补充钙与维生素D，配合适度负重运动');
+  }
+  if(/脊髓损伤/.test(diag)){
+    R('压疮风险：定时翻身、使用减压垫，检查骨突部位皮肤');
+    R('注意自主神经反射异常（头晕、大汗、血压骤升）');
+    N('规律膀胱/肠道管理，防止泌尿系感染');
+  }
+  if(hx.has('htn')) R('高血压：运动前后测血压，避免屏气用力、等长收缩为主的剧烈运动');
+  if(hx.has('dm')) R('糖尿病：运动性低血糖风险，随身带糖，避免空腹长时间训练');
+  if(hx.has('af')||hx.has('mi')) R('心脏病史：运动需心率监测，胸闷/胸痛/气促立即停止并就医');
+  if(hx.has('stroke')||hx.has('tia')) R('既往卒中/TIA：复发风险高，坚持服药、控制血压血脂，避免情绪激动');
+  if(hx.has('smoke')) N('建议戒烟：吸烟影响组织修复与血管健康');
+  if(hx.has('alcohol')) N('建议限制饮酒');
+  if(p.vas>=7) R('VAS≥7 疼痛剧烈：避免诱发疼痛的动作，训练以无痛或轻微酸胀为度');
+  else if(p.vas>=4) N('VAS 4-6 中度疼痛：训练时观察疼痛反应，加重即减量');
+  if(p.objective.mmt.some(e=>parseInt(e.grade)<=3)) R('患肢肌力≤3级：转移/行走需辅助或陪护，防跌倒');
+  if(p.objective.reflex.some(e=>/亢进|阳性/.test(e.find))) R('病理反射/腱反射亢进提示上运动神经元损害，训练注意张力管理');
+  if(/急性/.test(stage)) N('急性期（0-2周）：以休息、消肿止痛、无痛被动活动为主，避免高强度训练');
+  if(/慢性|恢复/.test(stage)) T('恢复/慢性期：可逐渐增加强度，注意运动量与疼痛/疲劳的平衡，坚持随访复评');
+  return { risk, note, tips };
+}
+function riskAnalysis(){
+  const p=cur();
+  const a=buildRiskAnalysis(p);
+  const rows=[];
+  if(a.risk.length) rows.push('<div class="nr-h">⚠ 高危因素 / 需警惕</div><ul>'+a.risk.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>');
+  if(a.note.length) rows.push('<div class="nr-h">📌 注意事项</div><ul>'+a.note.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>');
+  if(a.tips.length) rows.push('<div class="nr-h">✅ 训练要点</div><ul>'+a.tips.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>');
+  const box=$('#planRisk');
+  if(!rows.length){ rows.push('<div style="color:var(--muted)">数据较少，暂无法生成针对性分析。请先完成主诉/诊断/查体等填写。</div>'); }
+  box.innerHTML=rows.join(''); box.style.display='block';
+  const text='【风险分析】\n'+(a.risk.map(x=>'· ⚠ '+x).concat(a.note.map(x=>'· 📌 '+x)).concat(a.tips.map(x=>'· ✅ '+x))).join('\n');
+  if(text!=='【风险分析】' && !(p.planNote||'').includes('【风险分析】')){
+    p.planNote = p.planNote? p.planNote+'\n\n'+text : text;
+    savePatients(); renderPlanNote();
+  }
+  toast('已生成风险分析');
+}
+function bindPlanNote(){
+  const ta=$('#planNote');
+  if(!ta) return;
+  ta.addEventListener('input',()=>{
+    const p=cur(); p.planNote=ta.value; savePatients();
+    const n=ta.value.length; $('#planNoteCount').textContent = n+' 字'+(n>200?'（可点全屏）':'');
+  });
+  $('#btnNoteFull').addEventListener('click',()=>{ $('#noteFull').value=cur().planNote||''; $('#noteMask').classList.add('show'); });
+  $('#noteClose').addEventListener('click',()=>$('#noteMask').classList.remove('show'));
+  $('#noteFullCancel').addEventListener('click',()=>$('#noteMask').classList.remove('show'));
+  $('#noteMask').addEventListener('click',e=>{ if(e.target.id==='noteMask') $('#noteMask').classList.remove('show'); });
+  $('#noteFullSave').addEventListener('click',()=>{ cur().planNote=$('#noteFull').value; savePatients(); renderPlanNote(); $('#noteMask').classList.remove('show'); toast('已保存'); });
+  $('#btnNoteOcr').addEventListener('click', fillPlanFromOcr);
+  $('#btnNoteRisk').addEventListener('click', riskAnalysis);
 }
 $('#btnPhysioLib').addEventListener('click',()=>{ renderPhysioLib(); $('#physioMask').classList.add('show'); });
 function renderPhysioLib(){
@@ -4236,6 +4528,7 @@ $('#btnAISample').addEventListener('click', ()=>{ $('#aiInput').value=JSON.strin
 bindComplaint();
 bindObjective();
 bindPlanCustom();
+bindPlanNote();
 renderScaleFilter();
 refreshAll();
 </script>
