@@ -684,6 +684,14 @@ input[type=range]::-webkit-slider-thumb{
 
   <!-- 2 客观评估 -->
   <section class="section" id="sec-objective">
+    <div class="card">
+      <h3><span class="n sym">◈</span>专科情况</h3>
+      <div class="step-desc">拍照识别后自动填入，或手动补充（点击格子可半屏编辑）</div>
+      <div class="hbox">
+        <textarea id="fExamNote" placeholder="如：神志清，左侧肢体活动不利，肌力Ⅲ级，Brunnstrom分期…"></textarea>
+        <span class="hbox-x" data-full="fExamNote" title="半屏查看/编辑">✎</span>
+      </div>
+    </div>
     <div class="card oc open" data-oc="tend">
       <div class="oc-head"><div class="oc-title"><span class="oc-n">1</span>触诊<span class="oc-sum" id="tendSum"></span></div><div class="oc-arrow">▾</div></div>
       <div class="oc-body">
@@ -2327,6 +2335,7 @@ function normalize(p){
   p.planCustom = p.planCustom || { target:[], physio:[], exercise:[], manual:[] };
   ['target','physio','exercise','manual'].forEach(k=>{ if(!Array.isArray(p.planCustom[k])) p.planCustom[k]=[]; });
   p.planNote = p.planNote || '';
+  p.examNote = p.examNote || '';
   return p;
 }
 function makePatient(name,age,gender,complaint,vas){
@@ -2345,7 +2354,7 @@ function makePatient(name,age,gender,complaint,vas){
     planDisease: '腰痛', planStage: PLAN_STAGES[0], planSel: null,
     plan: null, customTher: [], customOpts: {},
     planCustom: { target:[], physio:[], exercise:[], manual:[] },
-    planNote: '',
+    planNote: '', examNote: '',
     createdAt: Date.now(),
     lastUsed: Date.now(),
     visits: []
@@ -2660,6 +2669,24 @@ function fuzzyIncludes(text, kw){
   return false;
 }
 const short=s=>s&&s.length>40?(s.slice(0,40)+'…'):(s||'');
+// 最终元信息清洗：兜底移除字段里残留的 住院号/地址/电话/日期/医嘱 等（无论从哪条路径填入）
+function cleanMetaText(s){
+  if(!s) return s;
+  return String(s)
+    .replace(/[（(]?(?:姓名|性别|年龄|住院号|床号|医师姓名|医师工号|日期|联系人住址|联系人地址|联系住址|出生地|现在住址|住址|单位|联系人|电话|民族|职业|婚配|入院时间|出院时间|病史采集时间|病史陈述者|发病节气|可靠程度|文书类型|身份证号|医保号)(?:[：:]\s*|\s+)[^，。；;]*[，。；;]?[)）]?/g,'')
+    .replace(/医嘱[：:][^，。；;]*[。；;]?/g,'')
+    .replace(/\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[\d:：年月日\s\-/]*/g,'')
+    .replace(/\d{2}[-/.]\d{2}[-/.]\d{2,4}/g,'')
+    .replace(/\d{17}[\dXx]/g,'')
+    .replace(/1[3-9]\d{9}/g,'')
+    .replace(/[；;，,]\s*[；;，,]+/g,'；')
+    .replace(/^[；;，,、\s]+|[；;，,、\s]+$/g,'');
+}
+// 长文字分段：超过阈值时在句号/分号后换行，避免一格子里糊成一整段
+function breakLong(t){
+  if(!t || t.length<=80) return t;
+  return t.split(/(?<=[。；！？])\s*/).map(s=>s.trim()).filter(Boolean).join('\n');
+}
 // 智能归类：按行 + 段落标记，把识别文本路由到对应字段，避免整段塞进主诉
 const OCR_IMG_KW=['影像','CT','MRI','核磁','X线','拍片','间盘','硬膜囊','骨质增生','关节间隙','积液','退行','椎管狭窄','滑脱','骨刺','骨折线','半月板','韧带','压缩骨折','椎体'];
 const OCR_HX_KW=['高血压','糖尿病','高脂','房颤','心脏病','冠心病','心梗','卒中','吸烟','饮酒','手术史','外伤史','过敏史','脑血管'];
@@ -2804,7 +2831,7 @@ function scaleScoreHint(sid, line){
 function ocrFill(){
   const p=cur(); const txt=$('#ocrText').value||''; const filled=[];
   const add=l=>{ if(!filled.includes(l)) filled.push(l); };
-  const complaintParts=[], presentParts=[], imgParts=[], hxParts=[], diagNote=[], examParts=[], painParts=[];
+  const complaintParts=[], presentParts=[], imgParts=[], hxParts=[], diagNote=[], examParts=[], examNoteParts=[], painParts=[];
   const scaleAdded={}, scaleVal={}, scaleHint={};
   let diagSet=false, sec='';
   let lastMeta=''; // 元信息「标签/值」分行：上一行元信息标签无值时，下一行短值作为其值
@@ -2843,6 +2870,8 @@ function ocrFill(){
     if(/^\d{2}-\d{2}-\d{2}\s+\S+\s+执行/.test(line)) continue;
     if(/检验记录/.test(line)) continue;
     if(/执行\s+一次性/.test(line)) continue;
+    // 专科情况/查体段落：原文整体存进「专科情况」格子（结构化字段仍照常解析）
+    if(sec==='专科情况'||sec==='查体'||sec==='体格检查'||sec==='专科检查'){ if(line) examNoteParts.push(line); }
     // VAS 优先（任意位置），只填一次
     if(!p.vas){
       const vm=line.match(/(?:VAS|NRS)\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||line.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
@@ -2909,7 +2938,7 @@ function ocrFill(){
   // 影像所见 + 自动勾选检查类型（MRI/CT/X线…）
   if(imgParts.length){
     const s=imgParts.join('；');
-    p.imaging.findings=p.imaging.findings?p.imaging.findings+'；'+s:s;
+    p.imaging.findings=cleanMetaText(p.imaging.findings?p.imaging.findings+'；'+s:s);
     IMAGING_TYPES.forEach(t=>{ if(s.includes(t)&&!p.imaging.types.includes(t)){ p.imaging.types.push(t); add('影像检查：'+t); } });
     add('影像所见：'+short(s));
   }
@@ -2946,10 +2975,12 @@ function ocrFill(){
     if(!p.pain.aggravate){ const am=e.match(/(?:久坐|久站|弯腰|咳嗽|用力|行走|活动|劳累)[^\s，。；;]{0,8}(?:加重|明显)/); if(am){ p.pain.aggravate=am[0]; add('加重：'+am[0]); } }
     if(!p.pain.relieve){ const rm=e.match(/(?:休息|平卧|热敷|药物|改变体位|卧床)[^\s，。；;]{0,8}(?:缓解|减轻)/); if(rm){ p.pain.relieve=rm[0]; add('缓解：'+rm[0]); } }
   });
-  // 现病史：多行段落直接拼接成连贯叙述（避免 OCR 拆行处出现「无恶心、；呕吐」式断句）
-  if(presentParts.length){ const s=presentParts.join(''); p.presentHistory=p.presentHistory?p.presentHistory+s:s; add('现病史：'+short(s)); }
+  // 现病史：多行段落直接拼接成连贯叙述，长文自动分段（避免 OCR 拆行处断句混乱 + 全文糊一段）
+  if(presentParts.length){ const s=presentParts.join(''); p.presentHistory=breakLong(cleanMetaText(p.presentHistory?p.presentHistory+s:s)); add('现病史：'+short(s)); }
+  // 专科情况：识别原文整体存入（长文自动分段），结构化字段仍已在上方解析
+  if(examNoteParts.length){ const s=examNoteParts.join(''); p.examNote=breakLong(cleanMetaText(p.examNote?p.examNote+'\n'+s:s)); add('专科情况：'+short(s)); }
   // 主诉：只剩真正的症状类内容
-  if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=p.complaint?p.complaint+'；'+s:s; add('主诉：'+short(s)); } }
+  if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=cleanMetaText(p.complaint?p.complaint+'；'+s:s); add('主诉：'+short(s)); } }
   // 诊断联动量表：按疾病自动添加对应套餐（脑卒中→脑卒中套餐、脊髓损伤→脊髓套餐、腰痛→腰痛套餐）
   if(p.diagnosis.type){
     const d=DIAGNOSES.find(x=>x.v===p.diagnosis.type);
@@ -3050,7 +3081,9 @@ $('#ocrFill').addEventListener('click', ocrFill);
 $('#ocrComplaint').addEventListener('click', ()=>{
   const t=$('#ocrText').value.trim();
   if(!t){ toast('识别文本为空'); return; }
-  const p=cur(); p.complaint = p.complaint? p.complaint+'；'+t : t; savePatients(); refreshComplaint(); toast('已填入主诉');
+  // 与「自动填充」同走过滤逻辑：只把主诉相关内容填进主诉，住院号/地址/电话等元信息不进去
+  ocrFill();
+  toast('已按识别内容填入主诉（元信息已过滤）');
 });
 /* ---- 常用语快捷插入 ---- */
 const QUICK_PHRASES = {
@@ -3495,6 +3528,7 @@ document.addEventListener('click',e=>{
 });
 function renderObjective(){
   const p=cur();
+  const en=$('#fExamNote'); if(en && document.activeElement!==en) en.value=p.examNote||'';
   renderTend(); renderRom(); renderMmt(); renderReflex(); renderSensory();
   refreshCustomSelect('#fAshworth','ashworth',p.objective.ashworth);
   renderCustChips('ashworth', renderObjective);
@@ -3545,6 +3579,8 @@ function renderExamList(part='', kw=''){
 $('#examSearch').addEventListener('input',()=>renderExamList(currentExamPart, $('#examSearch').value));
 
 function bindObjective(){
+  const fEx=$('#fExamNote');
+  if(fEx){ fEx.addEventListener('input',e=>{ cur().examNote=e.target.value; savePatients(); }); }
   $('#fAshworth').addEventListener('change',e=>{ cur().objective.ashworth=e.target.value; savePatients(); });
   $('#fSwelling').addEventListener('input',e=>{ cur().objective.swelling=e.target.value; savePatients(); });
   $('#fTemp').addEventListener('change',e=>{ cur().objective.temp=e.target.value; savePatients(); });
@@ -3987,6 +4023,7 @@ function buildPlanLogText(){
   const ocr=((document.querySelector('#ocrText')&&document.querySelector('#ocrText').value)||'').trim();
   sec('主诉', p.complaint);
   sec('现病史', p.presentHistory);
+  sec('专科情况', p.examNote);
   if(p.vas>0) sec('疼痛评分', 'VAS '+p.vas+' 分');
   if(p.diagnosis.type) sec('诊断', p.diagnosis.type+(p.diagnosis.note?'（'+p.diagnosis.note+'）':''));
   if(p.imaging.findings) sec('影像', p.imaging.findings);
@@ -4102,7 +4139,7 @@ function bindPlanNote(){
   $('#btnNoteOcr').addEventListener('click', fillPlanFromOcr);
   $('#btnNoteRisk').addEventListener('click', riskAnalysis);
   /* ---- 半屏编辑器：主诉/现病史/影像/诊断备注/用药史 点击格子弹出 ---- */
-  const HALF_FIELDS=[['fComplaint','主诉内容'],['fPresent','现病史'],['fImg','影像学检查'],['fDiagNote','诊断备注'],['fMeds','用药史 / 其他']];
+  const HALF_FIELDS=[['fComplaint','主诉内容'],['fPresent','现病史'],['fImg','影像学检查'],['fDiagNote','诊断备注'],['fMeds','用药史 / 其他'],['fExamNote','专科情况']];
   let halfTarget=null;
   const openHalf=(id,label)=>{
     const el=document.getElementById(id); if(!el) return;
@@ -4242,6 +4279,7 @@ function buildReportHTML(){
       <h4>主诉</h4>
       ${kv('主诉', esc(p.complaint)||'—')}
       ${p.presentHistory?kv('现病史', esc(p.presentHistory)):''}
+      ${p.examNote?kv('专科情况', esc(p.examNote)):''}
       <h4>疼痛问卷</h4>
       ${kv('疼痛性质', esc(pain.nature)||'—')}
       ${kv('疼痛部位', esc(pain.location)||'—')}
