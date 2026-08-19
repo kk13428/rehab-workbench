@@ -268,10 +268,16 @@ input[type=range]::-webkit-slider-thumb{
 .report{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;border:1px solid var(--line)}
 .report h2{font-size:17px;text-align:center;margin-bottom:2px}
 .report .r-sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--line)}
-.report h4{font-size:14px;color:var(--primary);margin:16px 0 8px;padding-left:10px;border-left:3px solid var(--primary)}
+.report h4{font-size:15px;font-weight:800;color:var(--primary);margin:18px 0 10px;padding:7px 12px;background:linear-gradient(90deg,#eaf3fc,#f8fbff);border-left:4px solid var(--primary);border-radius:0 8px 8px 0;letter-spacing:.5px}
 .report .kv{display:flex;padding:5px 0;font-size:13.5px;border-bottom:1px dashed var(--line)}
-.report .kv .k{flex:none;width:96px;color:var(--muted)}
+.report .kv .k{flex:none;width:96px;color:var(--primary);font-weight:700}
 .report .kv .v{flex:1}
+.report b.hl-d{color:#b03a2e;background:#fdecea;padding:0 3px;border-radius:4px;font-weight:700}
+.report b.hl-n{color:#1b5e8f;background:#e8f2fb;padding:0 3px;border-radius:4px;font-weight:700}
+.r-key{border:1.5px solid var(--accent);background:linear-gradient(135deg,#f0fbfd,#eef7ff);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.r-key .rk-t{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px;letter-spacing:.5px}
+.r-key .r-key-row{display:flex;gap:8px;padding:3px 0;font-size:13.5px;line-height:1.7}
+.r-key .r-key-l{flex:none;min-width:72px;color:var(--primary);font-weight:700}
 .report .note{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px}
 /* 报告量表逐项 */
 .sr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
@@ -1180,6 +1186,12 @@ const VIDEOS = {
 /* ---- 通用 ---- */
 const $ = s => document.querySelector(s);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/* ---- 报告重点高亮：诊断/风险词（红） + 关键数值（蓝），重点一眼可见 ---- */
+const HL_TERMS=['脑梗死后遗症','脑梗死','脑出血','脑卒中','高血压','糖尿病','冠心病','高脂血症','房颤','心力衰竭','腰椎间盘突出','颈椎病','肩周炎','肩袖损伤','脊髓损伤','骨折','骨质疏松','网球肘','偏瘫','吞咽障碍','跌倒','误吸','血栓','压疮'];
+const HL_RE=new RegExp('(?:'+HL_TERMS.slice().sort((a,b)=>b.length-a.length).join('|')+'|\\d{1,3}\\s*[／/]\\s*\\d{1,3}|[0-9]+(?:\\.[0-9]+)?\\s*(?:mmHg|次/分|mm|cm|%|级))','g');
+function hlk(t){ return esc(t).replace(HL_RE, m=>'<b class="'+(/[0-9]/.test(m)?'hl-n':'hl-d')+'">'+m+'</b>'); }
+/* 用于已 esc 过的文本（不重复转义，仅加高亮） */
+function hlSafe(t){ return String(t==null?'':t).replace(HL_RE, m=>'<b class="'+(/[0-9]/.test(m)?'hl-n':'hl-d')+'">'+m+'</b>'); }
 function toast(msg){
   const t=document.createElement('div');
   t.textContent=msg;t.style.cssText='position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:#1c2733;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.25)';
@@ -2652,11 +2664,12 @@ const OCR_HX_KW=['高血压','糖尿病','高脂','房颤','心脏病','冠心�
 const OCR_TEND_KW=['压痛','肿胀','水肿','肌张力','皮温','温度'];
 // 强诊断词（症状/部位里不常见），用于无段落标记时的归类；「诊断」段内用全量 OCR_DIAG_KEYWORDS
 const OCR_DIAG_STRONG=['脑梗死后遗症','腰椎间盘突出','间盘突出','腰肌劳损','颈椎病','肩袖损伤','肩周炎','半月板','前交叉韧带','交叉韧带','网球肘','肱骨外上髁炎','脊髓损伤','骨质疏松','脑梗死','脑出血','脑梗','骨折'];
-const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科情况|专科检查|影像|辅助检查|实验室检查|既往史|初步诊断|诊断|疼痛)[：:、\s]*/;
+const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科情况|专科检查|影像|辅助检查|实验室检查|既往史|初步诊断|诊断|长期医嘱|临时医嘱|医嘱|疼痛)[：:、\s]*/;
 function normLine(s){ return (s||'').replace(/^\s*(?:[•·\-—>、]|(?:[0-9]+[、.．）)]))\s*/,'').replace(/[，。；;：:]$/,'').trim(); }
 function hasCJK(s){ return /[一-龥]/.test(s); }
 function isStrongImg(line){ return /硬膜囊|受压|节段|退行|骨质增生|关节间隙|积液|CT|MRI|X线|影像学?/.test(line) || /L\s*[1-5]\s*-?\s*[1-5S]/i.test(line); }
 function classifyOcrLine(line, sec){
+  if(sec==='医嘱') return 'skip';
   if(sec==='初步诊断'||sec==='诊断') return 'diag';
   if(sec==='影像'||sec==='辅助检查'||sec==='实验室检查') return 'img';
   if(sec==='既往史') return 'hx';
@@ -2793,7 +2806,7 @@ function ocrFill(){
     const m=line.match(OCR_SECTION_RE);
     if(m){ sec=m[1]; line=normLine(line.slice(m[0].length)); if(!line) continue; }
     // 基本信息（姓名/性别/年龄等）→ 对应字段；其余基本信息行消费掉不污染主诉
-    const bm=line.match(/^(姓名|性别|年龄|住院号|床号|科别|民族|职业|婚配|入院时间|出院时间|病史采集时间|病史陈述者|出生地|现在住址|住址|单位|联系人|与患者关系|电话|联系住址|发病节气|可靠程度|日期|医师姓名|医师工号|文书类型)[：:]\s*(.*)$/);
+    const bm=line.match(/^(姓名|性别|年龄|住院号|床号|科别|民族|职业|婚配|入院时间|出院时间|病史采集时间|病史陈述者|出生地|现在住址|住址|单位|联系人|联系人住址|联系人地址|与患者关系|电话|联系住址|发病节气|可靠程度|日期|医师姓名|医师工号|文书类型)[：:]\s*(.*)$/);
     if(bm){
       const bk=bm[1], bv=bm[2].trim();
       if(bk==='姓名'&&bv&&!p.name){ p.name=bv; add('姓名：'+bv); }
@@ -2830,6 +2843,7 @@ function ocrFill(){
     // 纯量表行（无结构化查体）不再走段落归类，避免被「诊断」段误收
     if(hadScale) continue;
     const cls=classifyOcrLine(line, sec);
+    if(cls==='skip') continue;
     if(cls==='diag'){
       let matched=false;
       if(!diagSet){
@@ -2851,6 +2865,19 @@ function ocrFill(){
     if(cls==='pain'){ painParts.push(line); continue; }
     if(cls==='present'){ presentParts.push(line); continue; }
     if(!hadScale && line.length<=60) complaintParts.push(line);
+  }
+  // 诊断段没匹配到主诊断时，从主诉/现病史里找强诊断词补上（如主诉提到脑梗死）
+  if(!diagSet){
+    const src=complaintParts.concat(presentParts).join('；');
+    for(const kw of OCR_DIAG_STRONG){
+      const pair=OCR_DIAG_KEYWORDS.find(x=>x[0]===kw);
+      if(pair && fuzzyIncludes(src,kw)){
+        const d=DIAGNOSES.find(x=>x.v===pair[1]);
+        p.diagnosis.type=pair[1]; if(d&&d.d) p.planDisease=d.d; p.planSel=defaultPlanSel(p);
+        diagSet=true; add('主诊断（据主诉）：'+(d?d.t:pair[1]));
+        break;
+      }
+    }
   }
   // 诊断备注：诊断段内未匹配主诊断下拉的正文，不丢信息
   const note=diagNote.join('；').trim();
@@ -2899,6 +2926,14 @@ function ocrFill(){
   if(presentParts.length){ const s=presentParts.join(''); p.presentHistory=p.presentHistory?p.presentHistory+s:s; add('现病史：'+short(s)); }
   // 主诉：只剩真正的症状类内容
   if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=p.complaint?p.complaint+'；'+s:s; add('主诉：'+short(s)); } }
+  // 诊断联动量表：按疾病自动添加对应套餐（脑卒中→脑卒中套餐、脊髓损伤→脊髓套餐、腰痛→腰痛套餐）
+  if(p.diagnosis.type){
+    const d=DIAGNOSES.find(x=>x.v===p.diagnosis.type);
+    const bundle=d&&SCALE_BUNDLES.find(b=>b.name===d.d);
+    if(bundle) bundle.scales.forEach(sid=>{
+      if(!p.scales.includes(sid)){ p.scales.push(sid); add('量表：'+scaleName(sid)+'（'+d.d+'套餐）'); }
+    });
+  }
   savePatients(); refreshAll();
   Object.keys(scaleAdded).forEach(sid=>{
     if(scaleVal[sid]) add('量表：'+scaleName(sid)+'：'+scaleVal[sid]);
@@ -4118,7 +4153,7 @@ $('#therInput').addEventListener('keydown',e=>{ if(e.key==='Enter')$('#btnAddThe
 function buildReportHTML(){
   const p=cur();
   const missBar=buildMissBar(p);
-  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${hlSafe(v)}</span></div>`;
   const diagTxt = (p.diagnosis&&p.diagnosis.type)||p.planDisease||'康复';
   const histStr = p.history.items.map(id=>{ const it=HISTORY_ITEMS.find(x=>x.id===id); return it?it.name:id; }).join('、');
   const scaleRows = p.scales.map(sid=>{
@@ -4530,7 +4565,7 @@ const AI_SAMPLE = {
 };
 
 function buildAIReportHTML(json){
-  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const kv=(k,v)=>`<div class="kv"><span class="k">${k}</span><span class="v">${hlSafe(v)}</span></div>`;
   const list=(arr,fn)=>Array.isArray(arr)&&arr.length?arr.map(fn).join(''):'';
   const p=json.patient||{}, rlc=json.red_line_check||{}, goals=json.goals||{};
   const now=new Date();
@@ -4571,10 +4606,11 @@ function buildPlainReportHTML(text){
   const SEC_KW=['主诉','现病史','既往史','个人史','婚育史','家族史','查体','体格检查','专科检查','辅助检查','实验室检查','影像学','影像','诊断','康复诊断','功能诊断','康复评定','评定','评估','量表','主要问题','问题','功能障碍','康复目标','治疗目标','目标','治疗方案','康复方案','康复计划','治疗计划','训练方案','物理因子','运动治疗','作业治疗','言语治疗','吞咽训练','手法治疗','康复指导','健康宣教','宣教','居家指导','出院指导','随访','复评','总结','结论','注意事项','禁忌'];
   const splitRe=new RegExp('(?=(?:'+SEC_KW.join('|')+')[：:])');
   const secHeadRe=new RegExp('^(?:'+SEC_KW.join('|')+')[：:]');
-  const kv=(k,v)=>`<div class="kv"><span class="k" style="min-width:100px;width:auto;color:var(--primary);font-weight:700">${esc(k)}</span><span class="v" style="font-size:14px;line-height:1.8">${esc(v)}</span></div>`;
+  const KEY_LABELS=['主诉','诊断','初步诊断','西医诊断','康复诊断','治疗方案','康复方案','康复计划','治疗计划','康复目标','治疗目标','主要问题','量表','随访'];
+  const kv=(k,v)=>`<div class="kv"><span class="k" style="min-width:100px;width:auto;color:var(--primary);font-weight:700">${esc(k)}</span><span class="v" style="font-size:14px;line-height:1.8">${hlk(v)}</span></div>`;
   const hd=t=>`<h4 style="font-size:15px;margin:18px 0 8px">${esc(t)}</h4>`;
-  const blocks=[];
-  const push=(k,v)=>blocks.push((v&&v.trim())?kv(k,v):hd(k));
+  const blocks=[], keyRows=[];
+  const push=(k,v)=>{ if(v&&v.trim()){ blocks.push(kv(k,v)); if(KEY_LABELS.includes(k)) keyRows.push([k,v]); } else blocks.push(hd(k)); };
   text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(raw=>{
     let l=raw, bullet=false, m;
     if(/^[•·\-*]\s+/.test(l)){ bullet=true; l=l.replace(/^[•·\-*]\s+/,''); }
@@ -4588,13 +4624,15 @@ function buildPlainReportHTML(text){
       if(parts.length>1){ parts.forEach(part=>{ const mm=part.match(/^([^：:]{1,14})[：:]\s*(.*)$/); push(mm?mm[1].trim():part, mm?mm[2]:''); }); return; }
     }
     if((m=l.match(/^([^：:]{1,14})[：:]\s*(.*)$/))){ push(m[1].trim(),m[2]); return; }
-    if(bullet){ blocks.push(`<div class="ritem"><span class="rk" style="font-size:13.5px">· ${esc(l)}</span></div>`); return; }
-    blocks.push(`<p style="margin:7px 0;line-height:1.8;font-size:14px">${esc(l)}</p>`);
+    if(bullet){ blocks.push(`<div class="ritem"><span class="rk" style="font-size:13.5px">· ${hlk(l)}</span></div>`); return; }
+    blocks.push(`<p style="margin:7px 0;line-height:1.8;font-size:14px">${hlk(l)}</p>`);
   });
+  const keyBox=keyRows.length?`<div class="r-key"><div class="rk-t">▎重点速览</div>${keyRows.map(([k,v])=>{ const s=v.length>48?v.slice(0,48)+'…':v; return `<div class="r-key-row"><span class="r-key-l">${esc(k)}</span><span>${hlk(s)}</span></div>`; }).join('')}</div>`:'';
   const now=new Date();
   const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   return `<div class="report"><h2>${esc(p.name||'康复')} · 康复评估文书</h2>
     <div class="r-sub">中文文书 · 生成日期 ${dateStr}</div>
+    ${keyBox}
     ${blocks.join('')}
     <div class="note">本输出为持证治疗师辅助参考，需治疗师复核后执行；不替代临床决策。</div></div>`;
 }
