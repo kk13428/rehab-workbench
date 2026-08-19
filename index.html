@@ -354,6 +354,16 @@ input[type=range]::-webkit-slider-thumb{
 .note-full-ta{flex:1;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;line-height:1.9;outline:none;background:#fbfcfe;resize:none}
 .note-full-ta:focus{border-color:var(--primary)}
 .modal.note-full .btn-row{margin-top:10px;justify-content:flex-end}
+/* 半屏编辑器：长文本格子点击放大 */
+.hbox{position:relative}
+.hbox .hbox-x{position:absolute;top:7px;right:8px;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:7px;padding:2px 7px;cursor:pointer;opacity:.85;z-index:2;line-height:1.5}
+.hbox .hbox-x:hover{opacity:1;color:var(--primary);border-color:var(--primary)}
+.halfedit{cursor:pointer}
+.modal.half{max-width:760px;border-radius:18px;height:72vh;display:flex;flex-direction:column;padding:16px;overflow:hidden}
+.modal.half h3{margin-bottom:8px;flex:none}
+.modal.half .half-ta{flex:1;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;line-height:1.9;outline:none;background:#fbfcfe;resize:none;min-height:0}
+.modal.half .half-ta:focus{border-color:var(--primary)}
+.modal.half .btn-row{margin-top:10px;flex:none;justify-content:flex-end}
 .qphrases{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .qp{padding:5px 10px;border:1.5px solid var(--line);border-radius:16px;font-size:12px;color:var(--muted);background:#fbfcfe;cursor:pointer}
 .qp:active{background:#e7f0fa;color:var(--primary)}
@@ -545,7 +555,10 @@ input[type=range]::-webkit-slider-thumb{
       </div>
       <div class="field">
         <label>诊断备注</label>
-        <textarea id="fDiagNote" placeholder="如：L4-5 椎间盘突出伴神经根受压"></textarea>
+        <div class="hbox">
+          <textarea id="fDiagNote" placeholder="如：L4-5 椎间盘突出伴神经根受压"></textarea>
+          <span class="hbox-x" data-full="fDiagNote" title="半屏查看/编辑">✎</span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -553,12 +566,18 @@ input[type=range]::-webkit-slider-thumb{
       <div class="step-desc">症状 / 体征描述</div>
       <div class="field">
         <label>主诉内容</label>
-        <textarea id="fComplaint" placeholder="例：腰痛伴右下肢放射痛 2 周，久坐加重"></textarea>
+        <div class="hbox">
+          <textarea id="fComplaint" placeholder="例：腰痛伴右下肢放射痛 2 周，久坐加重"></textarea>
+          <span class="hbox-x" data-full="fComplaint" title="半屏查看/编辑">✎</span>
+        </div>
         <div class="qphrases" id="cmpPhrases"></div>
       </div>
       <div class="field" style="margin-top:10px">
         <label>现病史</label>
-        <textarea id="fPresent" placeholder="例：起病诱因、演变经过、伴随症状、诊治过程"></textarea>
+        <div class="hbox">
+          <textarea id="fPresent" placeholder="例：起病诱因、演变经过、伴随症状、诊治过程"></textarea>
+          <span class="hbox-x" data-full="fPresent" title="半屏查看/编辑">✎</span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -623,7 +642,10 @@ input[type=range]::-webkit-slider-thumb{
         <div id="historyChips" class="cust-chips"></div>
         <div class="field" style="margin-top:10px">
           <label>用药史 / 其他</label>
-          <textarea id="fMeds" placeholder="如：抗凝药、降压药等"></textarea>
+          <div class="hbox">
+            <textarea id="fMeds" placeholder="如：抗凝药、降压药等"></textarea>
+            <span class="hbox-x" data-full="fMeds" title="半屏查看/编辑">✎</span>
+          </div>
         </div>
       </div>
     </div>
@@ -643,7 +665,10 @@ input[type=range]::-webkit-slider-thumb{
       <div id="imagingChips" class="cust-chips"></div>
       <div class="field">
         <label>检查所见 / 影像学发现</label>
-        <textarea id="fImg" placeholder="如：L4-5 椎间盘突出，硬膜囊受压"></textarea>
+        <div class="hbox">
+          <textarea id="fImg" placeholder="如：L4-5 椎间盘突出，硬膜囊受压"></textarea>
+          <span class="hbox-x" data-full="fImg" title="半屏查看/编辑">✎</span>
+        </div>
         <div class="qphrases" id="imgPhrases"></div>
       </div>
     </div>
@@ -940,6 +965,19 @@ input[type=range]::-webkit-slider-thumb{
     <div class="btn-row">
       <button class="btn" id="noteFullSave">保存</button>
       <button class="btn ghost" id="noteFullCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 半屏编辑弹窗 -->
+<div class="modal-mask" id="halfMask">
+  <div class="modal half">
+    <span class="close" id="halfClose">✕</span>
+    <h3 id="halfTitle">编辑</h3>
+    <textarea id="halfEditor" class="half-ta" placeholder="编辑内容…"></textarea>
+    <div class="btn-row">
+      <button class="btn" id="halfSave">保存</button>
+      <button class="btn ghost" id="halfCancel">取消</button>
     </div>
   </div>
 </div>
@@ -2765,6 +2803,11 @@ function ocrFill(){
     }
     // 过滤「标签：。」这类截图碎片（无实际内容）
     if(/^[^：:，。]{1,6}[：:][。，;；、\s]*$/.test(line)) continue;
+    // 过滤检验/执行/操作记录（不进任何字段，避免影像学/主诉被过度添加）
+    if(/^\d{4}[-/年]\d{1,2}[-/月]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\s+执行/.test(line)) continue;
+    if(/^\d{2}-\d{2}-\d{2}\s+\S+\s+执行/.test(line)) continue;
+    if(/检验记录/.test(line)) continue;
+    if(/执行\s+一次性/.test(line)) continue;
     // VAS 优先（任意位置），只填一次
     if(!p.vas){
       const vm=line.match(/(?:VAS|NRS)\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||line.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
@@ -2807,7 +2850,7 @@ function ocrFill(){
     if(cls==='exam'){ examParts.push(line); continue; }
     if(cls==='pain'){ painParts.push(line); continue; }
     if(cls==='present'){ presentParts.push(line); continue; }
-    if(!hadScale) complaintParts.push(line);
+    if(!hadScale && line.length<=60) complaintParts.push(line);
   }
   // 诊断备注：诊断段内未匹配主诊断下拉的正文，不丢信息
   const note=diagNote.join('；').trim();
@@ -2852,8 +2895,8 @@ function ocrFill(){
     if(!p.pain.aggravate){ const am=e.match(/(?:久坐|久站|弯腰|咳嗽|用力|行走|活动|劳累)[^\s，。；;]{0,8}(?:加重|明显)/); if(am){ p.pain.aggravate=am[0]; add('加重：'+am[0]); } }
     if(!p.pain.relieve){ const rm=e.match(/(?:休息|平卧|热敷|药物|改变体位|卧床)[^\s，。；;]{0,8}(?:缓解|减轻)/); if(rm){ p.pain.relieve=rm[0]; add('缓解：'+rm[0]); } }
   });
-  // 现病史
-  if(presentParts.length){ const s=presentParts.join('；'); p.presentHistory=p.presentHistory?p.presentHistory+'；'+s:s; add('现病史：'+short(s)); }
+  // 现病史：多行段落直接拼接成连贯叙述（避免 OCR 拆行处出现「无恶心、；呕吐」式断句）
+  if(presentParts.length){ const s=presentParts.join(''); p.presentHistory=p.presentHistory?p.presentHistory+s:s; add('现病史：'+short(s)); }
   // 主诉：只剩真正的症状类内容
   if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=p.complaint?p.complaint+'；'+s:s; add('主诉：'+short(s)); } }
   savePatients(); refreshAll();
@@ -3998,6 +4041,35 @@ function bindPlanNote(){
   $('#noteFullSave').addEventListener('click',()=>{ cur().planNote=$('#noteFull').value; savePatients(); renderPlanNote(); $('#noteMask').classList.remove('show'); toast('已保存'); });
   $('#btnNoteOcr').addEventListener('click', fillPlanFromOcr);
   $('#btnNoteRisk').addEventListener('click', riskAnalysis);
+  /* ---- 半屏编辑器：主诉/现病史/影像/诊断备注/用药史 点击格子弹出 ---- */
+  const HALF_FIELDS=[['fComplaint','主诉内容'],['fPresent','现病史'],['fImg','影像学检查'],['fDiagNote','诊断备注'],['fMeds','用药史 / 其他']];
+  let halfTarget=null;
+  const openHalf=(id,label)=>{
+    const el=document.getElementById(id); if(!el) return;
+    halfTarget=id;
+    $('#halfTitle').textContent='✎ '+label+' · 半屏';
+    $('#halfEditor').value=el.value;
+    $('#halfMask').classList.add('show');
+    setTimeout(()=>$('#halfEditor').focus(),80);
+  };
+  const closeHalf=()=>{ $('#halfMask').classList.remove('show'); halfTarget=null; };
+  HALF_FIELDS.forEach(([id,label])=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.classList.add('halfedit');
+    el.title='点击半屏查看/编辑';
+    el.addEventListener('click',()=>openHalf(id,label));
+    const x=document.querySelector('[data-full="'+id+'"]');
+    if(x) x.addEventListener('click',e=>{ e.stopPropagation(); openHalf(id,label); });
+  });
+  $('#halfClose').addEventListener('click',closeHalf);
+  $('#halfCancel').addEventListener('click',closeHalf);
+  $('#halfSave').addEventListener('click',()=>{
+    if(!halfTarget) return;
+    const el=document.getElementById(halfTarget);
+    if(el){ el.value=$('#halfEditor').value; el.dispatchEvent(new Event('input',{bubbles:true})); }
+    savePatients(); closeHalf(); toast('已保存');
+  });
+  $('#halfMask').addEventListener('click',e=>{ if(e.target.id==='halfMask') closeHalf(); });
 }
 $('#btnPhysioLib').addEventListener('click',()=>{ renderPhysioLib(); $('#physioMask').classList.add('show'); });
 function renderPhysioLib(){
