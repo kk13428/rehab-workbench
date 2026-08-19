@@ -2696,6 +2696,9 @@ const OCR_DIAG_STRONG=['脑梗死后遗症','腰椎间盘突出','间盘突出',
 const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科情况|专科检查|影像|辅助检查|实验室检查|既往史|初步诊断|诊断|长期医嘱|临时医嘱|医嘱|疼痛)[：:、\s]*/;
 function normLine(s){ return (s||'').replace(/^\s*(?:[•·\-—>、]|(?:[0-9]+[、.．）)]))\s*/,'').replace(/[，。；;：:]$/,'').trim(); }
 function hasCJK(s){ return /[一-龥]/.test(s); }
+/* 临床内容判定：无段落标记的散行，只有像症状/体征/病程的才允许进主诉，其余（姓名/地址/单位/电话等）一律丢弃 */
+const CLINICAL_RE=/疼|痛|麻|肿|乏力|无力|头晕|头痛|恶心|呕吐|行走|步态|平衡|言语|吞咽|进食|呛咳|受限|僵硬|障碍|减退|加重|缓解|减轻|不适|发作|病史|血压|血糖|心慌|胸闷|气促|咳嗽|痰|发热|失眠|记忆|活动不利|感觉|触觉|肌力|肌张|反射|病理征|关节|四肢|患侧|肢[体端]|坐|站|翻身|起床|穿衣|如厕|小时|天|周|月|年|mmHg|cm|mm|级|度|分|秒/;
+function isClinicalLine(s){ return CLINICAL_RE.test(s); }
 function isStrongImg(line){ return /硬膜囊|受压|节段|退行|骨质增生|关节间隙|积液|CT|MRI|X线|影像学?/.test(line) || /L\s*[1-5]\s*-?\s*[1-5S]/i.test(line); }
 function classifyOcrLine(line, sec){
   if(sec==='医嘱') return 'skip';
@@ -2865,11 +2868,15 @@ function ocrFill(){
     if(/^[\d\s\-+()]{6,20}$/.test(line)) continue;
     // 过滤「标签：。」这类截图碎片（无实际内容）
     if(/^[^：:，。]{1,6}[：:][。，;；、\s]*$/.test(line)) continue;
-    // 过滤检验/执行/操作记录（不进任何字段，避免影像学/主诉被过度添加）
+    // 过滤检验/执行/操作记录/一次性耗材（不进任何字段，避免影像学/主诉被过度添加）
     if(/^\d{4}[-/年]\d{1,2}[-/月]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?\s+执行/.test(line)) continue;
     if(/^\d{2}-\d{2}-\d{2}\s+\S+\s+执行/.test(line)) continue;
     if(/检验记录/.test(line)) continue;
     if(/执行\s+一次性/.test(line)) continue;
+    // 医嘱/检查「执行」记录（医生名+执行+耗材/化验等），非临床内容；但保留「能执行指令性动作」这类查体描述
+    if(/执行/.test(line) && !/能执行|可执行|执行(指令|命令|动作)/.test(line)) continue;
+    if(/一次性(?:使用)?(?:真空)?(?:采血|采血管|采血针|注射器|标本|留置针|输液器)/.test(line)) continue;
+    if(/采血针|真空采血管|血常规|尿常规|血脂类?检测|肝肾功能检测|生化|化验单?/.test(line)) continue;
     // 专科情况/查体段落：原文整体存进「专科情况」格子（结构化字段仍照常解析）
     if(sec==='专科情况'||sec==='查体'||sec==='体格检查'||sec==='专科检查'){ if(line) examNoteParts.push(line); }
     // VAS 优先（任意位置），只填一次
@@ -2916,7 +2923,7 @@ function ocrFill(){
     if(cls==='exam'){ examParts.push(line); continue; }
     if(cls==='pain'){ painParts.push(line); continue; }
     if(cls==='present'){ presentParts.push(line); continue; }
-    if(!hadScale && line.length<=60) complaintParts.push(line);
+    if(!hadScale && line.length<=60 && isClinicalLine(line)) complaintParts.push(line);
   }
   // 诊断段没匹配到主诊断时，从整个识别文本找强诊断词补上（主诉/现病史/影像任意处提到脑梗死等即补），带「否认/无」否定保护
   if(!diagSet){
@@ -2937,10 +2944,15 @@ function ocrFill(){
   if(note){ p.diagnosis.note=p.diagnosis.note?p.diagnosis.note+'；'+note:note; add('诊断备注：'+short(note)); }
   // 影像所见 + 自动勾选检查类型（MRI/CT/X线…）
   if(imgParts.length){
-    const s=imgParts.join('；');
-    p.imaging.findings=cleanMetaText(p.imaging.findings?p.imaging.findings+'；'+s:s);
-    IMAGING_TYPES.forEach(t=>{ if(s.includes(t)&&!p.imaging.types.includes(t)){ p.imaging.types.push(t); add('影像检查：'+t); } });
-    add('影像所见：'+short(s));
+    // 影像学检查 = 只保留像「影像学」的内容（检查名称/征象），检验记录、执行、医生名、耗材等一律不进
+    const IMG_KEEP=/(MRI|MRA|CT|X线|X-ray|影像|磁共振|平扫|增强|血管成像|弥散|DWI|梗塞|梗死|出血|密度|信号|结节|占位|影|结石|积液|骨折|关节|间盘|椎体|椎管|骨质|囊肿|炎症|动脉|静脉|节段|受压|退行|增厚|腔隙|陈旧|未见|钙化)/;
+    const kept=imgParts.filter(l=>IMG_KEEP.test(l));
+    if(kept.length){
+      const s=kept.join('；');
+      p.imaging.findings=cleanMetaText(p.imaging.findings?p.imaging.findings+'；'+s:s);
+      IMAGING_TYPES.forEach(t=>{ if(s.includes(t)&&!p.imaging.types.includes(t)){ p.imaging.types.push(t); add('影像检查：'+t); } });
+      add('影像所见：'+short(s));
+    }
   }
   // 既往史：命中 HISTORY_ITEMS 就勾选对应项（排除「否认/无X」否定表述）
   HISTORY_ITEMS.forEach(it=>{
