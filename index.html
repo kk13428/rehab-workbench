@@ -556,6 +556,10 @@ input[type=range]::-webkit-slider-thumb{
         <textarea id="fComplaint" placeholder="例：腰痛伴右下肢放射痛 2 周，久坐加重"></textarea>
         <div class="qphrases" id="cmpPhrases"></div>
       </div>
+      <div class="field" style="margin-top:10px">
+        <label>现病史</label>
+        <textarea id="fPresent" placeholder="例：起病诱因、演变经过、伴随症状、诊治过程"></textarea>
+      </div>
     </div>
     <div class="card">
       <h3><span class="n">2</span>疼痛问卷</h3>
@@ -2246,6 +2250,7 @@ ensureCurrent();
 function normalize(p){
   if(!p) return p;
   p.diagnosis = p.diagnosis || { type:'', note:'' };
+  p.presentHistory = p.presentHistory || '';
   p.history = p.history || { items:[], meds:'' };
   p.imaging = p.imaging || { types:[], findings:'' };
   p.pain = p.pain || { nature:'', location:'', radiation:'', aggravate:'', relieve:'', night:false };
@@ -2276,7 +2281,7 @@ function makePatient(name,age,gender,complaint,vas){
   return normalize({
     id: 'p' + Date.now() + Math.random().toString(36).slice(2,6),
     name: name||'', age: age||'', gender: gender||'男',
-    complaint: complaint||'', vas: vas!=null?vas:0,
+    complaint: complaint||'', presentHistory: '', vas: vas!=null?vas:0,
     onset: '', diagnosis: { type:'', note:'' },
     pain: { nature:'', location:'', radiation:'', aggravate:'', relieve:'', night:false },
     history: { items:[], meds:'' },
@@ -2580,7 +2585,7 @@ const OCR_DIAG_KEYWORDS = [
   ['半月板','半月板损伤'], ['前交叉韧带','前交叉韧带损伤'], ['交叉韧带','前交叉韧带损伤'],
   ['肱骨外上髁炎','网球肘'], ['网球肘','网球肘'],
   ['脊髓损伤','脊髓损伤'], ['骨折','骨折术后'], ['骨质疏松','骨质疏松'],
-  ['脑梗死','脑梗死恢复期'], ['脑梗','脑梗死恢复期'], ['脑出血','脑出血恢复期'],
+  ['脑梗死后遗症','脑梗死后遗症期'], ['脑梗死','脑梗死恢复期'], ['脑梗','脑梗死恢复期'], ['脑出血','脑出血恢复期'],
 ];
 /* ---- 拍照识别：PaddleOCR.js 本地引擎（图片不上传，隐私安全） ---- */
 // 模型(PP-OCRv5 中英)从百度对象存储拉取(国内快)；OpenCV 从 jsdelivr(首次约1分钟,缓存后秒开)；ONNX wasm 走 npmmirror(国内快)
@@ -2608,18 +2613,19 @@ const OCR_IMG_KW=['影像','CT','MRI','核磁','X线','拍片','间盘','硬膜�
 const OCR_HX_KW=['高血压','糖尿病','高脂','房颤','心脏病','冠心病','心梗','卒中','吸烟','饮酒','手术史','外伤史','过敏史','脑血管'];
 const OCR_TEND_KW=['压痛','肿胀','水肿','肌张力','皮温','温度'];
 // 强诊断词（症状/部位里不常见），用于无段落标记时的归类；「诊断」段内用全量 OCR_DIAG_KEYWORDS
-const OCR_DIAG_STRONG=['腰椎间盘突出','间盘突出','腰肌劳损','颈椎病','肩袖损伤','肩周炎','半月板','前交叉韧带','交叉韧带','网球肘','肱骨外上髁炎','脊髓损伤','骨质疏松','脑梗死','脑出血','脑梗','骨折'];
-const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科检查|影像|辅助检查|实验室检查|既往史|诊断|疼痛)[：:、\s]*/;
+const OCR_DIAG_STRONG=['脑梗死后遗症','腰椎间盘突出','间盘突出','腰肌劳损','颈椎病','肩袖损伤','肩周炎','半月板','前交叉韧带','交叉韧带','网球肘','肱骨外上髁炎','脊髓损伤','骨质疏松','脑梗死','脑出血','脑梗','骨折'];
+const OCR_SECTION_RE=/^(主诉|现病史|查体|体格检查|专科情况|专科检查|影像|辅助检查|实验室检查|既往史|初步诊断|诊断|疼痛)[：:、\s]*/;
 function normLine(s){ return (s||'').replace(/^\s*(?:[•·\-—>、]|(?:[0-9]+[、.．）)]))\s*/,'').replace(/[，。；;：:]$/,'').trim(); }
 function hasCJK(s){ return /[一-龥]/.test(s); }
 function isStrongImg(line){ return /硬膜囊|受压|节段|退行|骨质增生|关节间隙|积液|CT|MRI|X线|影像学?/.test(line) || /L\s*[1-5]\s*-?\s*[1-5S]/i.test(line); }
 function classifyOcrLine(line, sec){
-  if(sec==='诊断') return 'diag';
+  if(sec==='初步诊断'||sec==='诊断') return 'diag';
   if(sec==='影像'||sec==='辅助检查'||sec==='实验室检查') return 'img';
   if(sec==='既往史') return 'hx';
-  if(sec==='查体'||sec==='体格检查'||sec==='专科检查') return 'exam';
+  if(sec==='查体'||sec==='体格检查'||sec==='专科情况'||sec==='专科检查') return 'exam';
   if(sec==='疼痛') return 'pain';
-  if(sec==='主诉'||sec==='现病史') return 'complaint';
+  if(sec==='主诉') return 'complaint';
+  if(sec==='现病史') return 'present';
   // 无段落标记时：影像特征词（硬膜囊/节段/退行/L节段）优先于诊断，避免「L4-L5椎间盘突出」被当成诊断
   if(isStrongImg(line)) return 'img';
   if(OCR_DIAG_STRONG.some(k=>fuzzyIncludes(line,k))) return 'diag';
@@ -2629,21 +2635,25 @@ function classifyOcrLine(line, sec){
   return 'complaint';
 }
 /* ---- 结构化解析：肌力/肌张力Ashworth/关节活动度/反射 ---- */
+const ROMAN2NUM={'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5'};
 function parseMmt(line){
   const out=[];
+  const gNum=s=>{ if(!s) return null; if(/^[0-5]$/.test(s)) return s; return ROMAN2NUM[s]||null; };
   const push=(n,g)=>{ if(n&&g!=null&&g>=0&&g<=5&&!out.find(x=>x[0]===n)) out.push([n,String(g)]); };
-  const m4=line.match(/四肢肌力\s*([0-5])\s*级/);
-  if(m4){ ['左上肢','右上肢','左下肢','右下肢'].forEach(n=>push(n,m4[1])); return out; }
-  const re=/(左上肢|右上肢|左下肢|右下肢|躯干核心)\s*肌力?\s*([0-5])\s*级/g;
-  let mm, any=false;
-  while((mm=re.exec(line))){ push(mm[1],mm[2]); any=true; }
-  if(any) return out;
-  const re2=/(左上肢|右上肢|左下肢|右下肢|躯干核心)\s*([0-5])\s*级/g;
-  while((mm=re2.exec(line))){ push(mm[1],mm[2]); }
+  const m4=line.match(/四肢肌力\s*([0-5ⅠⅡⅢⅣⅤ])\s*级/);
+  if(m4){ const g=gNum(m4[1]); ['左上肢','右上肢','左下肢','右下肢'].forEach(n=>push(n,g)); return out; }
+  const re=/(左上肢|右上肢|左下肢|右下肢|左侧肢体|右侧肢体|躯干核心)\s*肌力?\s*([0-5ⅠⅡⅢⅣⅤ])\s*级/g;
+  let mm;
+  while((mm=re.exec(line))){ push(mm[1],gNum(mm[2])); }
+  const re2=/(左上肢|右上肢|左下肢|右下肢|左侧肢体|右侧肢体|躯干核心)\s*([0-5ⅠⅡⅢⅣⅤ])\s*级/g;
+  while((mm=re2.exec(line))){ push(mm[1],gNum(mm[2])); }
+  // 徒手肌力细项：如「肩关节前屈（三角肌、喙肱肌）…肌力均Ⅲ级」
+  const re3=/((?:左|右)?(?:肩关节|肘关节|腕关节|髋关节|膝关节|踝关节|手指|拇指)(?:前屈|后伸|外展|内收|屈曲|伸展|旋前|旋后|内旋|外旋|环转|对掌|背伸|跖屈))(?:\S{0,60}?)肌力(?:均)?\s*([0-5ⅠⅡⅢⅣⅤ])\s*级/g;
+  while((mm=re3.exec(line))){ push(mm[1],gNum(mm[2])); }
   return out;
 }
 function parseAshworth(line){
-  const m=line.match(/Ashworth\s*[:：]?\s*([0-4])\s*级/i)||line.match(/肌张力\s*[:：]?\s*Ashworth\s*([0-4])\s*级/i);
+  const m=line.match(/Ashworth\s*[:：]?\s*([0-4])\s*级/i)||line.match(/肌张力\s*[:：]?\s*Ashworth\s*([0-4])\s*级/i)||line.match(/肌张力\s*[:：]?\s*([0-4])\s*级/i);
   if(m){ const map={'0':'0 级 · 无肌张力增高','1':'1 级 · 轻度增高','2':'2 级 · 明显增高','3':'3 级 · 严重增高','4':'4 级 · 僵硬'}; return map[m[1]]||null; }
   return null;
 }
@@ -2695,6 +2705,9 @@ function setScaleValueFromLine(sid, line, p){
   if(sid==='brunnstrom'){
     const order=[['上肢',0],['手',1],['下肢',2]];
     let got=false;
+    // 组合式「左(右)上肢-手-下肢：Ⅲ-Ⅱ-Ⅲ期」
+    const cmb=line.match(/(?:左|右)?上肢[-—－](?:左|右)?手[-—－](?:左|右)?下肢\s*[：:]\s*([ⅠⅡⅢⅣⅤⅥ])[-—－]([ⅠⅡⅢⅣⅤⅥ])[-—－]([ⅠⅡⅢⅣⅤⅥ])\s*期/);
+    if(cmb){ [0,1,2].forEach(i=>{ (p.scores[sid]=p.scores[sid]||[])[i]=cmb[i+1]+'期'; }); got=true; }
     for(const [kw,idx] of order){
       const m=line.match(new RegExp(kw+'[^，。；;]{0,8}?([ⅠⅡⅢⅣⅤⅥ])期'));
       if(m){ (p.scores[sid]=p.scores[sid]||[])[idx]=m[1]+'期'; got=true; }
@@ -2733,7 +2746,7 @@ function scaleScoreHint(sid, line){
 function ocrFill(){
   const p=cur(); const txt=$('#ocrText').value||''; const filled=[];
   const add=l=>{ if(!filled.includes(l)) filled.push(l); };
-  const complaintParts=[], imgParts=[], hxParts=[], diagNote=[], examParts=[], painParts=[];
+  const complaintParts=[], presentParts=[], imgParts=[], hxParts=[], diagNote=[], examParts=[], painParts=[];
   const scaleAdded={}, scaleVal={}, scaleHint={};
   let diagSet=false, sec='';
   const lines=txt.split(/\n+/).map(normLine).filter(Boolean);
@@ -2741,6 +2754,17 @@ function ocrFill(){
     let line=raw;
     const m=line.match(OCR_SECTION_RE);
     if(m){ sec=m[1]; line=normLine(line.slice(m[0].length)); if(!line) continue; }
+    // 基本信息（姓名/性别/年龄等）→ 对应字段；其余基本信息行消费掉不污染主诉
+    const bm=line.match(/^(姓名|性别|年龄|住院号|床号|科别|民族|职业|婚配|入院时间|出院时间|病史采集时间|病史陈述者|出生地|现在住址|住址|单位|联系人|与患者关系|电话|联系住址|发病节气|可靠程度|日期|医师姓名|医师工号|文书类型)[：:]\s*(.*)$/);
+    if(bm){
+      const bk=bm[1], bv=bm[2].trim();
+      if(bk==='姓名'&&bv&&!p.name){ p.name=bv; add('姓名：'+bv); }
+      else if(bk==='性别'){ const gm=bv.match(/^(男|女|其他)/); if(gm){ p.gender=gm[1]; add('性别：'+p.gender); } }
+      else if(bk==='年龄'){ const am=bv.match(/(\d{1,3})\s*岁/); if(am&&!p.age){ p.age=am[1]; add('年龄：'+p.age+' 岁'); } }
+      continue;
+    }
+    // 过滤「标签：。」这类截图碎片（无实际内容）
+    if(/^[^：:，。]{1,6}[：:][。，;；、\s]*$/.test(line)) continue;
     // VAS 优先（任意位置），只填一次
     if(!p.vas){
       const vm=line.match(/(?:VAS|NRS)\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*分?/i)||line.match(/疼痛\s*(?:评分|程度)?\s*[:：]?\s*(\d+(?:\.\d+)?)\s*[\/分]/);
@@ -2766,12 +2790,12 @@ function ocrFill(){
     if(cls==='diag'){
       let matched=false;
       if(!diagSet){
-        const kws=sec==='诊断'?OCR_DIAG_KEYWORDS:OCR_DIAG_KEYWORDS.filter(([kw])=>OCR_DIAG_STRONG.includes(kw));
+        const kws=(sec==='诊断'||sec==='初步诊断')?OCR_DIAG_KEYWORDS:OCR_DIAG_KEYWORDS.filter(([kw])=>OCR_DIAG_STRONG.includes(kw));
         for(const [kw,v] of kws){
           if(fuzzyIncludes(line,kw)){
             const d=DIAGNOSES.find(x=>x.v===v);
             p.diagnosis.type=v; if(d&&d.d) p.planDisease=d.d; p.planSel=defaultPlanSel(p);
-            add('主诊断：'+(d?d.t:v)); diagSet=true; matched=true; break;
+            diagNote.push(line); add('主诊断：'+(d?d.t:v)); diagSet=true; matched=true; break;
           }
         }
       }
@@ -2782,16 +2806,31 @@ function ocrFill(){
     if(cls==='hx'){ hxParts.push(line); continue; }
     if(cls==='exam'){ examParts.push(line); continue; }
     if(cls==='pain'){ painParts.push(line); continue; }
+    if(cls==='present'){ presentParts.push(line); continue; }
     if(!hadScale) complaintParts.push(line);
   }
   // 诊断备注：诊断段内未匹配主诊断下拉的正文，不丢信息
   const note=diagNote.join('；').trim();
   if(note){ p.diagnosis.note=p.diagnosis.note?p.diagnosis.note+'；'+note:note; add('诊断备注：'+short(note)); }
-  // 影像所见
-  if(imgParts.length){ const s=imgParts.join('；'); p.imaging.findings=p.imaging.findings?p.imaging.findings+'；'+s:s; add('影像所见：'+short(s)); }
-  // 既往史：命中 HISTORY_ITEMS 就勾选对应项
+  // 影像所见 + 自动勾选检查类型（MRI/CT/X线…）
+  if(imgParts.length){
+    const s=imgParts.join('；');
+    p.imaging.findings=p.imaging.findings?p.imaging.findings+'；'+s:s;
+    IMAGING_TYPES.forEach(t=>{ if(s.includes(t)&&!p.imaging.types.includes(t)){ p.imaging.types.push(t); add('影像检查：'+t); } });
+    add('影像所见：'+short(s));
+  }
+  // 既往史：命中 HISTORY_ITEMS 就勾选对应项（排除「否认/无X」否定表述）
   HISTORY_ITEMS.forEach(it=>{
-    if(it.name && hxParts.some(x=>fuzzyIncludes(x,it.name)) && !p.history.items.includes(it.id)){ p.history.items.push(it.id); add('既往史：'+it.name); }
+    if(!it.name || p.history.items.includes(it.id)) return;
+    const hit=hxParts.find(x=>fuzzyIncludes(x,it.name));
+    if(!hit) return;
+    if(new RegExp('(?:否认|无)\\s*'+it.name).test(hit)) return;
+    p.history.items.push(it.id); add('既往史：'+it.name);
+  });
+  // 用药史：从既往史提取「口服…（治疗/逗号/句号）」
+  hxParts.forEach(e=>{
+    const dm=e.match(/口服\s*([^。；，]{2,80}?)(?:治疗|，|。|；|$)/);
+    if(dm&&dm[1]&&!(p.history.meds||'').includes(dm[1])){ p.history.meds=p.history.meds? p.history.meds+'；'+dm[1] : dm[1]; add('用药史：'+short(dm[1])); }
   });
   // 查体 → 触诊勾选项 + 肌力/Ashworth/关节活动度/反射 结构化解析
   examParts.forEach(e=>{
@@ -2813,6 +2852,8 @@ function ocrFill(){
     if(!p.pain.aggravate){ const am=e.match(/(?:久坐|久站|弯腰|咳嗽|用力|行走|活动|劳累)[^\s，。；;]{0,8}(?:加重|明显)/); if(am){ p.pain.aggravate=am[0]; add('加重：'+am[0]); } }
     if(!p.pain.relieve){ const rm=e.match(/(?:休息|平卧|热敷|药物|改变体位|卧床)[^\s，。；;]{0,8}(?:缓解|减轻)/); if(rm){ p.pain.relieve=rm[0]; add('缓解：'+rm[0]); } }
   });
+  // 现病史
+  if(presentParts.length){ const s=presentParts.join('；'); p.presentHistory=p.presentHistory?p.presentHistory+'；'+s:s; add('现病史：'+short(s)); }
   // 主诉：只剩真正的症状类内容
   if(complaintParts.length){ const s=complaintParts.join('；'); if(!(p.complaint||'').includes(s.slice(0,20))){ p.complaint=p.complaint?p.complaint+'；'+s:s; add('主诉：'+short(s)); } }
   savePatients(); refreshAll();
@@ -2936,8 +2977,8 @@ renderQuickPhrases();
 const SCALE_BUNDLES = [
   { name:'腰痛', scales:['vas','oddi'] },
   { name:'疼痛评估', scales:['vas','mpq','oddi'] },
-  { name:'脑卒中', scales:['mrs','nihss','brunnstrom','barthel','holden','moca','mmse'] },
-  { name:'脊髓损伤', scales:['scim','fim'] },
+  { name:'脑卒中', scales:['brunnstrom','mas','hhd','rom','watian','barthel','moca','mmse'] },
+  { name:'脊髓损伤', scales:['asia','neurop'] },
 ];
 function applyBundle(b){
   const p=cur();
@@ -2973,6 +3014,7 @@ function refreshComplaint(){
   renderOptChips('diag', diagPresets, refreshComplaint);
   $('#fDiagNote').value=p.diagnosis.note;
   $('#fComplaint').value=p.complaint;
+  $('#fPresent').value=p.presentHistory;
   refreshCustomSelect('#fPainNature','painNature',p.pain.nature);
   renderCustChips('painNature', refreshComplaint);
   $('#fPainLoc').value=p.pain.location;
@@ -3036,6 +3078,7 @@ function bindComplaint(){
   });
   $('#fDiagNote').addEventListener('input',e=>{ cur().diagnosis.note=e.target.value; savePatients(); });
   $('#fComplaint').addEventListener('input',e=>{ cur().complaint=e.target.value; savePatients(); });
+  $('#fPresent').addEventListener('input',e=>{ cur().presentHistory=e.target.value; savePatients(); });
   $('#fPainNature').addEventListener('change',e=>{ cur().pain.nature=e.target.value; savePatients(); });
   bindCustomSelect('#painNaturePlus','#painNatureCust','#fPainNature','painNature', refreshComplaint);
   $('#fPainLoc').addEventListener('input',e=>{ cur().pain.location=e.target.value; savePatients(); });
@@ -3840,6 +3883,7 @@ function buildPlanLogText(){
   const sec=(h,b)=>{ if(b&&String(b).trim()) parts.push('【'+h+'】'+String(b).trim()); };
   const ocr=((document.querySelector('#ocrText')&&document.querySelector('#ocrText').value)||'').trim();
   sec('主诉', p.complaint);
+  sec('现病史', p.presentHistory);
   if(p.vas>0) sec('疼痛评分', 'VAS '+p.vas+' 分');
   if(p.diagnosis.type) sec('诊断', p.diagnosis.type+(p.diagnosis.note?'（'+p.diagnosis.note+'）':''));
   if(p.imaging.findings) sec('影像', p.imaging.findings);
@@ -4065,6 +4109,7 @@ function buildReportHTML(){
       ${p.diagnosis&&p.diagnosis.note?kv('诊断备注', esc(p.diagnosis.note)):''}
       <h4>主诉</h4>
       ${kv('主诉', esc(p.complaint)||'—')}
+      ${p.presentHistory?kv('现病史', esc(p.presentHistory)):''}
       <h4>疼痛问卷</h4>
       ${kv('疼痛性质', esc(pain.nature)||'—')}
       ${kv('疼痛部位', esc(pain.location)||'—')}
@@ -4451,17 +4496,34 @@ function buildAIReportHTML(json){
 }
 function buildPlainReportHTML(text){
   const p=cur();
-  const lines=text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
-  const body=lines.map(l=>{
-    if(/^#{1,4}\s+/.test(l)){ const m=l.match(/^#+\s+(.*)/); return `<h4>${esc(m[1])}</h4>`; }
-    if(/^[•·\-]\s+/.test(l)) return `<div class="ritem"><span class="rk">· ${esc(l.replace(/^[•·\-]\s+/,''))}</span></div>`;
-    return `<p style="margin:6px 0;line-height:1.75;font-size:13.5px">${esc(l)}</p>`;
-  }).join('');
+  const SEC_KW=['主诉','现病史','既往史','个人史','婚育史','家族史','查体','体格检查','专科检查','辅助检查','实验室检查','影像学','影像','诊断','康复诊断','功能诊断','康复评定','评定','评估','量表','主要问题','问题','功能障碍','康复目标','治疗目标','目标','治疗方案','康复方案','康复计划','治疗计划','训练方案','物理因子','运动治疗','作业治疗','言语治疗','吞咽训练','手法治疗','康复指导','健康宣教','宣教','居家指导','出院指导','随访','复评','总结','结论','注意事项','禁忌'];
+  const splitRe=new RegExp('(?=(?:'+SEC_KW.join('|')+')[：:])');
+  const secHeadRe=new RegExp('^(?:'+SEC_KW.join('|')+')[：:]');
+  const kv=(k,v)=>`<div class="kv"><span class="k" style="min-width:100px;width:auto;color:var(--primary);font-weight:700">${esc(k)}</span><span class="v" style="font-size:14px;line-height:1.8">${esc(v)}</span></div>`;
+  const hd=t=>`<h4 style="font-size:15px;margin:18px 0 8px">${esc(t)}</h4>`;
+  const blocks=[];
+  const push=(k,v)=>blocks.push((v&&v.trim())?kv(k,v):hd(k));
+  text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(raw=>{
+    let l=raw, bullet=false, m;
+    if(/^[•·\-*]\s+/.test(l)){ bullet=true; l=l.replace(/^[•·\-*]\s+/,''); }
+    else if((m=l.match(/^[1-9]\d*[.、．](?!\d)\s*(.*)$/))){ bullet=true; l=m[1]; }
+    if((m=l.match(/^#{1,4}\s+(.*)/))){ blocks.push(hd(m[1].trim())); return; }
+    if((m=l.match(/^【([^】]+)】\s*(.*)$/))){ m[2]?push(m[1].trim(),m[2]):blocks.push(hd(m[1].trim())); return; }
+    if((m=l.match(/^(一|二|三|四|五|六|七|八|九|十|百)[、.]\s*(.*)$/))){ blocks.push(hd(m[2].trim()||m[1])); return; }
+    if(SEC_KW.includes(l)){ blocks.push(hd(l)); return; }
+    if(secHeadRe.test(l)&&l.length>18){
+      const parts=l.split(splitRe).map(s=>s.trim()).filter(Boolean);
+      if(parts.length>1){ parts.forEach(part=>{ const mm=part.match(/^([^：:]{1,14})[：:]\s*(.*)$/); push(mm?mm[1].trim():part, mm?mm[2]:''); }); return; }
+    }
+    if((m=l.match(/^([^：:]{1,14})[：:]\s*(.*)$/))){ push(m[1].trim(),m[2]); return; }
+    if(bullet){ blocks.push(`<div class="ritem"><span class="rk" style="font-size:13.5px">· ${esc(l)}</span></div>`); return; }
+    blocks.push(`<p style="margin:7px 0;line-height:1.8;font-size:14px">${esc(l)}</p>`);
+  });
   const now=new Date();
   const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   return `<div class="report"><h2>${esc(p.name||'康复')} · 康复评估文书</h2>
     <div class="r-sub">中文文书 · 生成日期 ${dateStr}</div>
-    ${body}
+    ${blocks.join('')}
     <div class="note">本输出为持证治疗师辅助参考，需治疗师复核后执行；不替代临床决策。</div></div>`;
 }
 function renderAIReport(){
